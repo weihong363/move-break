@@ -79,11 +79,11 @@ Build mode: fast
   Learner check: Compare the seated rig, standing rig, and manual arm-pivot preview with the original translucent figure style.
   Commit: `Build static translucent avatar rigs`
 
-- [ ] **8. Drive the approved art rig from upper-body landmarks**
-  Becomes usable: The approved seated and standing translucent art rigs respond smoothly to local head, torso, and arm landmarks.
+- [x] **8. Drive the approved standing art rig from upper-body landmarks**
+  Becomes usable: The approved standing translucent art rig responds smoothly to local head, torso, and arm landmarks while seated monitoring stays static.
   Why now: Static reconstruction and pivots must be accepted before pose transforms can be trusted.
-  Build: Reconnect the existing pose adapter; map smoothed shoulder, elbow, wrist, head, and hip landmarks to bounded hierarchical transforms.
-  Verify (mechanical): Run tests and `pnpm build`; confirm transform values respond to supplied pose frames while the neutral pose remains visually aligned.
+  Build: Reconnect the existing pose adapter only during rise and movement verification; map smoothed shoulder, elbow, wrist, head, and torso landmarks to bounded hierarchical transforms with dead zones and per-limb freeze behavior.
+  Verify (mechanical): Run tests and `pnpm build`; confirm neutral alignment, head/arm/torso response, clamp behavior, and missing-limb stability with supplied pose frames.
   Learner check: Compare arm and upper-body response with the hidden-preview camera input.
   Commit: `Drive approved art rig from landmarks`
 
@@ -116,4 +116,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
 - The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
-- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The rig now uses shared-canvas layers from that artwork; pose driving remains paused until static reconstruction and joint pivots are accepted.
+- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The static rig passed reconstruction and pivot checks, then the standing-only upper-body landmark adapter was reconnected with bounded transforms.

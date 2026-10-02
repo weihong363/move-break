@@ -1,101 +1,93 @@
 import type { PoseFrame, PoseLandmark } from './types';
 
 type Point = { x: number; y: number };
-export type ArmTransform = { x: number; y: number; angle: number; length: number };
+export type RigTransform = { x: number; y: number; rotate: number; scale: number };
 
 export type AvatarRigPose = {
-  posture: 'seated' | 'standing';
-  root: Point;
-  torsoScale: number;
-  head: Point;
-  leftUpperArm: ArmTransform;
-  leftLowerArm: ArmTransform;
-  rightUpperArm: ArmTransform;
-  rightLowerArm: ArmTransform;
+  head: RigTransform;
+  torso: RigTransform;
+  leftUpperArm: RigTransform;
+  leftForearm: RigTransform;
+  rightUpperArm: RigTransform;
+  rightForearm: RigTransform;
 };
 
-const leftShoulder = 11;
-const rightShoulder = 12;
-const leftElbow = 13;
-const rightElbow = 14;
-const leftWrist = 15;
-const rightWrist = 16;
-const leftHip = 23;
-const rightHip = 24;
-const nose = 0;
+type ArmPoints = { shoulder: Point; elbow: Point; wrist: Point };
+type RigBaseline = { center: Point; scale: number; torsoAngle: number; head: Point; left: ArmPoints; right: ArmPoints };
 
-const visible = (landmark: PoseLandmark | undefined) => landmark && (landmark.visibility ?? 1) >= 0.5;
-const midpoint = (left: Point, right: Point): Point => ({ x: (left.x + right.x) / 2, y: (left.y + right.y) / 2 });
-const distance = (left: Point, right: Point) => Math.hypot(left.x - right.x, left.y - right.y);
+const indexes = { nose: 0, leftEye: 2, rightEye: 5, leftEar: 7, rightEar: 8, leftShoulder: 11, rightShoulder: 12, leftElbow: 13, rightElbow: 14, leftWrist: 15, rightWrist: 16 };
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, value));
+const visible = (landmark: PoseLandmark | undefined): landmark is PoseLandmark => Boolean(landmark && (landmark.visibility ?? 1) >= 0.55);
+const midpoint = (left: Point, right: Point): Point => ({ x: (left.x + right.x) / 2, y: (left.y + right.y) / 2 });
+const angle = (start: Point, end: Point) => Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+const distance = (left: Point, right: Point) => Math.hypot(left.x - right.x, left.y - right.y);
+const neutral = (): RigTransform => ({ x: 0, y: 0, rotate: 0, scale: 1 });
+const deadZone = (value: number, threshold: number) => Math.abs(value) < threshold ? 0 : value;
+const point = (frame: PoseFrame, index: number): Point | undefined => visible(frame.landmarks[index]) ? frame.landmarks[index] : undefined;
+const average = (values: number[]) => values.reduce((total, value) => total + value, 0) / values.length;
 
-const averagePoint = (points: Point[]): Point => ({
-  x: points.reduce((total, point) => total + point.x, 0) / points.length,
-  y: points.reduce((total, point) => total + point.y, 0) / points.length,
+const smoothedPoint = (frames: PoseFrame[], index: number): Point | undefined => {
+  const points = frames.map((frame) => point(frame, index)).filter((sample): sample is Point => sample !== undefined);
+  return points.length === 0 ? undefined : { x: average(points.map((sample) => sample.x)), y: average(points.map((sample) => sample.y)) };
+};
+
+const headPoint = (frames: PoseFrame[]): Point | undefined => {
+  const points = [indexes.nose, indexes.leftEye, indexes.rightEye, indexes.leftEar, indexes.rightEar]
+    .map((index) => smoothedPoint(frames, index)).filter((sample): sample is Point => sample !== undefined);
+  return points.length === 0 ? undefined : { x: average(points.map((sample) => sample.x)), y: average(points.map((sample) => sample.y)) };
+};
+
+const armPoints = (frames: PoseFrame[], side: 'left' | 'right'): ArmPoints | undefined => {
+  const shoulder = smoothedPoint(frames, indexes[`${side}Shoulder`]);
+  const elbow = smoothedPoint(frames, indexes[`${side}Elbow`]);
+  const wrist = smoothedPoint(frames, indexes[`${side}Wrist`]);
+  return shoulder && elbow && wrist ? { shoulder, elbow, wrist } : undefined;
+};
+
+const segment = (current: ArmPoints, baseline: ArmPoints, part: 'upper' | 'forearm'): RigTransform => {
+  const start = part === 'upper' ? current.shoulder : current.elbow;
+  const end = part === 'upper' ? current.elbow : current.wrist;
+  const baseStart = part === 'upper' ? baseline.shoulder : baseline.elbow;
+  const baseEnd = part === 'upper' ? baseline.elbow : baseline.wrist;
+  return { ...neutral(), rotate: clamp(deadZone(angle(start, end) - angle(baseStart, baseEnd), 3), -28, 28) };
+};
+
+const torso = (center: Point, baseline: RigBaseline, torsoAngle: number): RigTransform => ({
+  x: clamp(deadZone((center.x - baseline.center.x) / baseline.scale * 36, 1.5), -10, 10),
+  y: clamp(deadZone((center.y - baseline.center.y) / baseline.scale * 36, 1.5), -16, 16),
+  rotate: clamp(deadZone(torsoAngle - baseline.torsoAngle, 2), -7, 7), scale: 1,
 });
 
-const averageLandmark = (frames: PoseFrame[], index: number): Point | undefined => {
-  const points = frames.map((frame) => frame.landmarks[index]).filter(visible);
-  return points.length === 0 ? undefined : averagePoint(points);
-};
-
-const segmentTransform = (start: Point, end: Point) => {
-  const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI - 90;
-  const length = clamp(distance(start, end), 20, 72) / 50;
-  return { x: start.x, y: start.y, angle, length };
-};
-
-const toRigPoint = (point: Point, center: Point, bodyScale: number): Point => ({
-  x: (point.x - center.x) / bodyScale * 56,
-  y: (point.y - center.y) / bodyScale * 56,
+const head = (current: Point, baseline: RigBaseline, ears: [Point | undefined, Point | undefined]): RigTransform => ({
+  x: clamp(deadZone((current.x - baseline.head.x) / baseline.scale * 28, 1), -8, 8),
+  y: clamp(deadZone((current.y - baseline.head.y) / baseline.scale * 28, 1), -5, 5),
+  rotate: ears[0] && ears[1] ? clamp(deadZone(angle(ears[0], ears[1]) - baseline.torsoAngle, 2), -10, 10) : 0, scale: 1,
 });
 
 export const createAvatarRigDriver = (smoothingWindow = 4) => {
   let frames: PoseFrame[] = [];
-  let baselineTorsoY: number | undefined;
-  let baselineBodyScale: number | undefined;
+  let baseline: RigBaseline | undefined;
+  let pose: AvatarRigPose = { head: neutral(), torso: neutral(), leftUpperArm: neutral(), leftForearm: neutral(), rightUpperArm: neutral(), rightForearm: neutral() };
 
-  const reset = () => {
-    frames = [];
-    baselineTorsoY = undefined;
-    baselineBodyScale = undefined;
-  };
+  const reset = () => { frames = []; baseline = undefined; pose = { head: neutral(), torso: neutral(), leftUpperArm: neutral(), leftForearm: neutral(), rightUpperArm: neutral(), rightForearm: neutral() }; };
 
   const update = (frame: PoseFrame): AvatarRigPose | undefined => {
-    if (!visible(frame.landmarks[leftShoulder]) || !visible(frame.landmarks[rightShoulder])) return undefined;
     frames = [...frames, frame].slice(-smoothingWindow);
-    const leftShoulderPoint = averageLandmark(frames, leftShoulder);
-    const rightShoulderPoint = averageLandmark(frames, rightShoulder);
-    const leftElbowPoint = averageLandmark(frames, leftElbow);
-    const rightElbowPoint = averageLandmark(frames, rightElbow);
-    const leftWristPoint = averageLandmark(frames, leftWrist);
-    const rightWristPoint = averageLandmark(frames, rightWrist);
-    if (!leftShoulderPoint || !rightShoulderPoint || !leftElbowPoint || !rightElbowPoint || !leftWristPoint || !rightWristPoint) return undefined;
-
-    const shoulderCenter = midpoint(leftShoulderPoint, rightShoulderPoint);
-    const hips = [averageLandmark(frames, leftHip), averageLandmark(frames, rightHip)].filter((point): point is Point => point !== undefined);
-    const torsoCenter = hips.length === 2 ? midpoint(shoulderCenter, midpoint(hips[0], hips[1])) : shoulderCenter;
-    const bodyScale = hips.length === 2 ? distance(leftShoulderPoint, hips[0]) : distance(leftShoulderPoint, rightShoulderPoint);
-    if (bodyScale === 0) return undefined;
-
-    baselineTorsoY ??= torsoCenter.y;
-    baselineBodyScale ??= bodyScale;
-    const posture = (baselineTorsoY - torsoCenter.y) / bodyScale > 0.14 ? 'standing' : 'seated';
-    const headSource = averageLandmark(frames, nose) ?? { x: shoulderCenter.x, y: shoulderCenter.y - bodyScale * 0.7 };
-    const rigShoulders = [leftShoulderPoint, rightShoulderPoint].map((point) => toRigPoint(point, shoulderCenter, bodyScale));
-    const rigElbows = [leftElbowPoint, rightElbowPoint].map((point) => toRigPoint(point, shoulderCenter, bodyScale));
-    const rigWrists = [leftWristPoint, rightWristPoint].map((point) => toRigPoint(point, shoulderCenter, bodyScale));
-
-    return {
-      posture,
-      root: { x: 120, y: posture === 'standing' ? 118 : 137 },
-      torsoScale: clamp(bodyScale / baselineBodyScale, 0.84, 1.18),
-      head: toRigPoint(headSource, shoulderCenter, bodyScale),
-      leftUpperArm: segmentTransform(rigShoulders[0], rigElbows[0]),
-      leftLowerArm: segmentTransform(rigElbows[0], rigWrists[0]),
-      rightUpperArm: segmentTransform(rigShoulders[1], rigElbows[1]),
-      rightLowerArm: segmentTransform(rigElbows[1], rigWrists[1]),
-    };
+    const leftShoulder = smoothedPoint(frames, indexes.leftShoulder);
+    const rightShoulder = smoothedPoint(frames, indexes.rightShoulder);
+    if (!leftShoulder || !rightShoulder) return undefined;
+    const center = midpoint(leftShoulder, rightShoulder);
+    const scale = distance(leftShoulder, rightShoulder);
+    const currentHead = headPoint(frames) ?? { x: center.x, y: center.y - scale * 0.7 };
+    const left = armPoints(frames, 'left');
+    const right = armPoints(frames, 'right');
+    if (!baseline && left && right && scale > 0) baseline = { center, scale, torsoAngle: angle(leftShoulder, rightShoulder), head: currentHead, left, right };
+    if (!baseline) return undefined;
+    pose.torso = torso(center, baseline, angle(leftShoulder, rightShoulder));
+    pose.head = head(currentHead, baseline, [smoothedPoint(frames, indexes.leftEar), smoothedPoint(frames, indexes.rightEar)]);
+    if (left) { pose.leftUpperArm = segment(left, baseline.left, 'upper'); pose.leftForearm = segment(left, baseline.left, 'forearm'); }
+    if (right) { pose.rightUpperArm = segment(right, baseline.right, 'upper'); pose.rightForearm = segment(right, baseline.right, 'forearm'); }
+    return pose;
   };
 
   return { reset, update };

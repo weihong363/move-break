@@ -59,8 +59,23 @@ button, select { font: inherit; }
 [data-rig-test="arms"] .rig-left-forearm { transform: rotate(9deg); }
 [data-rig-test="arms"] .rig-right-upper { transform: rotate(6deg); }
 [data-rig-test="arms"] .rig-right-forearm { transform: rotate(-9deg); }
+[data-rig-test="arms"] .standing-left-upper { transform: rotate(-6deg); }
+[data-rig-test="arms"] .standing-left-forearm { transform: rotate(9deg); }
+[data-rig-test="arms"] .standing-right-upper { transform: rotate(6deg); }
+[data-rig-test="arms"] .standing-right-forearm { transform: rotate(-9deg); }
+.standing-rig, .standing-transform { position: absolute; inset: 0; display: block; }
 .standing-rig { display: none; }
-.standing-layer { position: absolute; inset: 0; display: block; background-image: var(--standing-art); background-position: center; background-repeat: no-repeat; background-size: 100% 100%; }
+.standing-layer, .standing-arm::before { position: absolute; inset: 0; display: block; background-image: var(--standing-art); background-position: center; background-repeat: no-repeat; background-size: 100% 100%; content: ""; }
+.standing-transform { transform: translate(var(--torso-x, 0), var(--torso-y, 0)) rotate(var(--torso-rotate, 0deg)) scale(var(--torso-scale, 1)); transform-origin: 50% 62%; }
+.standing-torso { mask-image: radial-gradient(ellipse 38% 44% at 50% 62%, #000 85%, transparent 100%); }
+.standing-head { transform: translate(var(--head-x, 0), var(--head-y, 0)) rotate(var(--head-rotate, 0deg)); transform-origin: 50% 31%; mask-image: radial-gradient(ellipse 23% 21% at 50% 30%, #000 86%, transparent 100%); }
+.standing-arm { position: absolute; inset: 0; display: block; z-index: 2; }
+.standing-left-upper { transform: rotate(var(--left-upper-rotate, 0deg)); transform-origin: 34% 51%; }
+.standing-left-upper::before { mask-image: radial-gradient(ellipse 29% 32% at 29% 56%, #000 80%, transparent 100%); }
+.standing-left-forearm { transform: rotate(var(--left-forearm-rotate, 0deg)); transform-origin: 29% 70%; mask-image: radial-gradient(ellipse 28% 27% at 27% 72%, #000 80%, transparent 100%); }
+.standing-right-upper { transform: rotate(var(--right-upper-rotate, 0deg)); transform-origin: 66% 51%; }
+.standing-right-upper::before { mask-image: radial-gradient(ellipse 29% 32% at 71% 56%, #000 80%, transparent 100%); }
+.standing-right-forearm { transform: rotate(var(--right-forearm-rotate, 0deg)); transform-origin: 71% 70%; mask-image: radial-gradient(ellipse 28% 27% at 73% 72%, #000 80%, transparent 100%); }
 [data-avatar="standing"] .seated-rig, [data-avatar="moving"] .seated-rig, [data-avatar="celebrate"] .seated-rig { display: none; }
 [data-avatar="standing"] .standing-rig, [data-avatar="moving"] .standing-rig, [data-avatar="celebrate"] .standing-rig { display: block; }
 [data-avatar="alert"] .seated-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }

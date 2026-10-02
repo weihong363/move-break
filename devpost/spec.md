@@ -52,7 +52,7 @@ Owns monitoring, prompt, and verification UI state. It translates camera, detect
 
 ### Companion Avatar
 
-Uses one layered rig built from the translucent cyan human artwork supplied by the learner. The seated front-facing head, torso, four arm layers, desk/base, and standing torso share that art source. The rig maps smoothed shoulder, elbow, wrist, head, and hip landmarks into torso, head, and arm-part transforms. During movement, a coarse arm-displacement signal adds responsive glow. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
+Uses the translucent cyan human artwork supplied by the learner. The seated front-facing rig remains static. The standing upper-body rig layers its head, torso, upper arms, and forearms from the same clean art source. MediaPipe landmarks drive head offset and tilt, bounded torso translation and shoulder tilt, and shoulder-to-elbow / elbow-to-wrist arm rotations. A short rolling average, dead zones, angle limits, and per-limb freeze behavior prevent small jitter, spikes, or missing landmarks from destabilizing the avatar. During movement, a coarse arm-displacement signal adds responsive glow. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
 
 ### Camera
 
@@ -121,7 +121,7 @@ move-break/
 │   ├── main.ts                  # Bootstrap and DOM event wiring
 │   ├── styles.css               # Global visual system and layouts
 │   ├── app-controller.ts        # App phase transitions and rendering
-│   ├── avatar-rig.ts            # Future smoothed upper-body landmark adapter for the art rig
+│   ├── avatar-rig.ts            # Smoothed, bounded landmark adapter for the standing art rig
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup
@@ -165,4 +165,4 @@ move-break/
 - **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
 - **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → sustained general movement, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
-- **Avatar implementation checkpoint:** the current build deliberately keeps the landmark-to-avatar adapter disconnected while the shared-canvas seated and standing art rigs are checked. MediaPipe continues to power the verifier; it will drive the rig only after the static reconstruction and manual pivot previews are approved.
+- **Avatar implementation checkpoint:** static seated and standing reconstruction plus manual pivot previews were accepted. MediaPipe now drives only the standing rig during rise and movement verification; seated monitoring remains static.

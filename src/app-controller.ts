@@ -1,4 +1,5 @@
 import { requestCamera, stopCamera } from './camera';
+import { createAvatarRigDriver, type AvatarRigPose } from './avatar-rig';
 import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
@@ -15,7 +16,14 @@ const characterMarkup = () => `
       <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
       <span class="rig-arm-parent rig-right-upper"><span class="rig-layer rig-right-forearm"></span></span>
     </span>
-    <span class="standing-rig"><span class="standing-layer"></span></span>
+    <span class="standing-rig">
+      <span class="standing-transform">
+        <span class="standing-layer standing-torso"></span>
+        <span class="standing-layer standing-head"></span>
+        <span class="standing-arm standing-left-upper"><span class="standing-layer standing-left-forearm"></span></span>
+        <span class="standing-arm standing-right-upper"><span class="standing-layer standing-right-forearm"></span></span>
+      </span>
+    </span>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {
@@ -32,6 +40,7 @@ export const createAppController = (root: HTMLElement) => {
   let notificationAudio: AudioContext | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
+  const avatarRig = createAvatarRigDriver(demoConfig.smoothingWindow);
   let verifier = createVerifier();
 
   function createVerifier() {
@@ -40,6 +49,7 @@ export const createAppController = (root: HTMLElement) => {
 
   const resetMonitoring = () => {
     verifier = createVerifier();
+    avatarRig.reset();
   };
 
   const primeNotificationAudio = async () => {
@@ -79,7 +89,13 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
+      await detector.start(activeVideo, (frame) => {
+        const snapshot = verifier.processFrame(frame);
+        const startsStanding = snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise';
+        if (startsStanding) avatarRig.reset();
+        const rigPose = ['awaiting-rise', 'moving', 'completed'].includes(snapshot.phase) ? avatarRig.update(frame) : undefined;
+        updateVerification(snapshot, rigPose);
+      }, handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -104,6 +120,22 @@ export const createAppController = (root: HTMLElement) => {
     avatar?.setAttribute('data-avatar-motion', motion);
   };
 
+  const applyStandingRig = (pose: AvatarRigPose | undefined) => {
+    if (!pose) return;
+    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
+    if (!avatar) return;
+    const transforms = {
+      torso: pose.torso, head: pose.head, 'left-upper': pose.leftUpperArm, 'left-forearm': pose.leftForearm,
+      'right-upper': pose.rightUpperArm, 'right-forearm': pose.rightForearm,
+    };
+    Object.entries(transforms).forEach(([part, transform]) => {
+      avatar.style.setProperty(`--${part}-x`, `${transform.x}px`);
+      avatar.style.setProperty(`--${part}-y`, `${transform.y}px`);
+      avatar.style.setProperty(`--${part}-rotate`, `${transform.rotate}deg`);
+      avatar.style.setProperty(`--${part}-scale`, String(transform.scale));
+    });
+  };
+
   const updateRigPreview = () => {
     const avatar = root.querySelector<HTMLElement>('[data-avatar]');
     avatar?.setAttribute('data-avatar', rigPreview);
@@ -120,7 +152,7 @@ export const createAppController = (root: HTMLElement) => {
     if (toggle) toggle.textContent = debugPreview ? 'Hide camera debug' : 'Show camera debug';
   };
 
-  const updateVerification = (snapshot: VerifierSnapshot) => {
+  const updateVerification = (snapshot: VerifierSnapshot, rigPose?: AvatarRigPose) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
@@ -130,6 +162,7 @@ export const createAppController = (root: HTMLElement) => {
     }
     if (snapshot.phase !== 'awaiting-rise') promptStartedAt = undefined;
     lastVerifierPhase = snapshot.phase;
+    if (['awaiting-rise', 'moving', 'completed'].includes(snapshot.phase)) applyStandingRig(rigPose);
 
     if (snapshot.phase === 'paused-tracking') {
       setAvatar('inspect');
