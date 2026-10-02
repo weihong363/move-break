@@ -3,56 +3,46 @@ doc: checklist
 status: approved
 ---
 
-# MoveBreak Build Checklist
+# MoveBreak Build Checklist — Automatic Sedentary Detection Revision
 
 Build mode: fast
 
 ## Slices
 
-- [x] **1. Start a short work session in the finished timer interface**
-  Becomes usable: A polished local app opens to the warm MoveBreak timer screen; the user can select a short duration, start a 10-second work session, see the countdown, and pause or reset it.
-  Why now: Establishes the real product surface and the first three steps of the core journey while keeping bootstrapping inside a usable feature.
-  PRD ref: `prd.md > The Core Journey`, `prd.md > Screens and Layout`, `prd.md > Look and Feel`
-  Spec ref: `spec.md > Stack`, `spec.md > Components > App Controller`, `spec.md > Components > Timer`, `spec.md > File Structure`
-  Build: Scaffold the Vite TypeScript app, install dependencies, create the typed configuration, timer, controller, HTML, and CSS, then implement the work-timer UI and controls.
-  Verify (mechanical): Run `pnpm build`; run the dev server; confirm a 10-second session counts down, pause holds time, reset restores the selected duration, and no camera permission is requested.
-  Learner check: Open the local app, start, pause, and reset a short work session. Confirm it feels like a simple timer rather than a dashboard.
-  Commit: `Add MoveBreak work timer`
+- [ ] **1. Start local low-movement monitoring**
+  Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, and see a clear local monitoring state with a configurable 5-second demo inactivity threshold.
+  Why now: Replaces the timer immediately with the new kernel while preserving the proven camera and pose pipeline.
+  PRD ref: `prd.md > The Core Journey`, `prd.md > Features and Behavior > Inactivity monitoring`
+  Spec ref: `spec.md > Components > Inactivity Monitor`, `spec.md > Components > Camera`, `spec.md > Data Model`
+  Build: Remove timer states and controls; add inactivity configuration, a low-movement monitor, active monitoring UI, and reliable-frame pause behavior.
+  Verify (mechanical): Run tests and `pnpm build`; confirm a valid low-movement sequence accumulates to the threshold, meaningful movement resets it, and invalid frames pause it.
+  Learner check: Enable the camera, complete the baseline, remain still, and confirm monitoring progress appears without a work timer.
+  Commit: `Add sedentary monitoring`
 
-- [x] **2. Prove local camera and pose-tracking readiness**
-  Becomes usable: A finished work session enters a deliberately plain movement-break proof screen. The user can enable the camera, see a local preview, and receive clear ready, retry, or framing feedback based on real local pose-tracking input.
-  Why now: This is the unique kernel's highest-risk dependency, so it must be proven before investing in the verifier or polished movement-break UI.
-  PRD ref: `prd.md > Core Journey`, `prd.md > Features and Behavior > Movement verification`, `prd.md > Feedback and recovery`
-  Spec ref: `spec.md > Components > Camera`, `spec.md > Components > Pose Detector`, `spec.md > External Services and Dependencies`, `spec.md > Important Failure Modes`
-  Build: Add camera lifecycle management, the MediaPipe model asset and detector, throttled video-frame processing, and only the plain permission, preview, readiness, and framing UI necessary for the proof. Do not polish the movement-break screen in this slice.
-  Verify (mechanical): Run `pnpm build`; with a local camera, enter a break and confirm the preview and usable upper-body landmarks are reported; deny permission and confirm the break remains incomplete with retry guidance.
-  Learner check: Complete one short timer cycle, enable the camera, and confirm the preview, usable-landmark readiness, and denial/retry message are clear enough to proceed.
-  Commit: `Prove local camera pose tracking`
-
-- [x] **3. Complete a camera-verified movement break**
-  Becomes usable: After a brief still baseline, the user can stand, move with short natural pauses, and see the activity break complete only after accumulated valid movement time reaches the configured threshold.
-  Why now: Delivers the differentiating end-to-end behavior immediately after the technical spike has proven the necessary input is real.
+- [ ] **2. Prompt and verify the automatic movement break**
+  Becomes usable: Reaching the inactivity threshold clearly prompts the user to stand and move; the existing rise and accumulated movement verifier completes the break and resets monitoring in the same camera session.
+  Why now: Connects the new automatic trigger to the already-proven local movement verification.
   PRD ref: `prd.md > Features and Behavior > Movement verification`, `prd.md > Acceptance Criteria`
-  Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Data Model > Signal Rules`, `spec.md > Decisions and Open Issues`
-  Build: Implement the typed verifier state machine, rolling-window smoothing, landmark-coverage guard, baseline, stable rise confirmation, accumulated valid movement timing, paused-tracking behavior, configurable thresholds, and state-specific UI feedback. Add deterministic verifier tests using sample landmark sequences.
-  Verify (mechanical): Run verifier tests and `pnpm build`; confirm sample sequences reject a one-frame rise, pause on invalid tracking without advancing, retain progress across short low-motion frames, and complete after four accumulated valid seconds. Confirm the live demo completes after stillness, rise, and movement.
-  Learner check: Use the live camera flow: remain still, stand, move with a brief natural pause, and confirm that progress resumes and completion appears only after enough valid movement.
-  Commit: `Add movement break verification`
+  Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Core Journey Through the System`
+  Build: Add prompted state, route frames from monitoring into the rise and movement states, reset inactivity data after completion, and update completion copy.
+  Verify (mechanical): Run tests and `pnpm build`; confirm a low-movement threshold prompts a break, a stable rise plus accumulated movement completes it, and completion restarts monitoring without a new permission request.
+  Learner check: Run the short live flow: baseline, 5 seconds still, prompt, stand, move, complete, then observe monitoring restart.
+  Commit: `Add automatic break prompt`
 
-- [x] **4. Finish recovery behavior and demo readiness**
-  Becomes usable: The full loop is coherent and presentation-ready: success stops the camera, **Start next session** resets only after an explicit action, all required recovery states are understandable, and the production build is valid.
-  Why now: Finishes the demonstrated journey after the core verification is already usable, without expanding the product.
-  PRD ref: `prd.md > States and Boundaries`, `prd.md > What We're Building`, `prd.md > Non-Goals`
-  Spec ref: `spec.md > Core Journey Through the System`, `spec.md > Important Failure Modes`, `spec.md > Look and Feel`
-  Build: Refine all state transitions and copy, ensure camera tracks stop on completion/reset/retry, add the completion and next-session flow, tune the visual hierarchy, document local demo steps, and verify the static build.
-  Verify (mechanical): Run tests and `pnpm build`; manually exercise the full 10-second demo, permission denial, no-pose/framing guidance, tracking pause, completion, camera shutdown, and explicit next-session action.
-  Learner check: Record or rehearse the complete one-minute demo and identify any confusing wording, timing, or visual state before final review.
-  Commit: `Finish MoveBreak demo flow`
+- [ ] **3. Finish the revised demo flow**
+  Becomes usable: The automatic sedentary-detection loop has clear recovery states, no timer language, accurate privacy copy, and documented rapid demo instructions.
+  Why now: Finishes the new end-to-end experience after its core trigger and verification are working.
+  PRD ref: `prd.md > States and Boundaries`, `prd.md > What We're Building`
+  Spec ref: `spec.md > Important Failure Modes`, `spec.md > Look and Feel`
+  Build: Refine monitoring, prompt, tracking-pause, permission, and completion states; update README and remove obsolete timer code.
+  Verify (mechanical): Run tests and `pnpm build`; exercise baseline, inactivity prompt, permission denial, tracking pause, completion, and monitoring reset.
+  Learner check: Rehearse the full automatic demo and report any confusing copy or timing.
+  Commit: `Finish automatic MoveBreak demo`
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 2, test the timer-to-camera transition and local readiness feedback before verifier implementation.
-- [x] Final kick-the-tires exploration and feedback completed
+- [ ] Early usable behavior explored — after slice 1, test baseline and low-movement monitoring before the automatic prompt is connected.
+- [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
 
@@ -71,3 +61,5 @@ Reflection: pending build completion
 Activity mode: focused alternative for an experienced plan-first developer
 
 ## Revisions
+
+- Automatic sedentary detection replaced the Pomodoro-style work timer — the learner changed the kernel to prolonged low movement → prompt → verified movement → monitoring reset.

@@ -5,38 +5,36 @@ status: approved
 
 # MoveBreak — Product Requirements
 
-A friendly, local-first break timer for desk workers that confirms a short movement break before starting the next work session. Source: `scope.md > The Unique Kernel`, `The Core Loop`, and `The POC Boundary`.
+A friendly, local-first sedentary-break companion for desk workers that prompts and verifies a short movement break after prolonged low movement. Source: `scope.md > The Unique Kernel`, `The Core Loop`, and `The POC Boundary`.
 
 ## The Core Journey
 
-1. The user opens MoveBreak and sees a simple work-timer home screen; the camera is inactive.
-2. They select or retain a short demo-friendly work duration and press **Start**.
-3. The app shows the countdown and **Work session** state. Pause and reset, if present, remain secondary.
-4. At zero, the app transitions to the movement-break screen and explains why camera access is needed.
-5. The user presses **Enable camera**, grants permission, and sees a live preview. Without permission, the movement break cannot be completed.
-6. The app establishes a low-movement or seated baseline, asks the user to stand or clearly rise, then acknowledges the detected transition.
-7. The user continues general visible movement until a short configurable duration is met.
-8. The app shows **Movement break completed**. The user explicitly presses **Start next session** to begin again.
+1. The user opens MoveBreak and sees a simple monitoring home screen; the camera is inactive.
+2. They select or retain a short demo-friendly inactivity threshold and press **Enable camera**.
+3. The app shows the live preview, establishes a low-movement or seated baseline, then monitors local pose movement.
+4. When the inactivity threshold is reached, the UI clearly prompts the user to stand and move.
+5. The app confirms a stable rise, then accumulates general visible movement until the configurable duration is met.
+6. The app shows **Movement break completed**, resets inactivity monitoring, and returns to local low-movement observation with the camera session active.
 
 ## Screens and Layout
 
-### Work timer
+### Monitoring home
 
-- App name, large central timer, and current state have visual priority.
-- The primary action is **Start** before a session and the prominent countdown during one.
-- A small secondary duration control supports short development and demo runs.
-- A short bottom note explains that the later break asks the user to move and that camera processing remains on-device.
-- The first screen never requests camera permission; it has no dashboard, stats, streaks, exercise library, or account controls.
+- App name, current monitoring state, one primary **Enable camera** action, and a small inactivity-threshold control have visual priority.
+- Before the camera is enabled, a short note explains why monitoring is needed and that processing stays on-device.
+- After permission, the live preview and elapsed low-movement progress replace the setup controls.
+- The MVP has no dashboard, stats, streaks, exercise library, account controls, or work-session timer.
 
 ### Movement break
 
 - One consistent layout: **Movement break** title, camera preview, one primary instruction, lightweight progress/status indicator, and local-processing privacy note.
 - No extra navigation or settings appear during verification.
-- Permission state shows **Time to move**, an **Enable camera** action, and a simple local-only explanation.
-- Baseline state says **Hold still for a moment** and visibly shows progress.
+- Initial permission state shows **Start gentle monitoring**, an **Enable camera** action, and a simple local-only explanation.
+- Baseline state says **Hold still for a moment** and visibly shows progress, then changes to a calm monitoring state.
+- Inactivity state says **Time to move** and makes the movement prompt unmissable.
 - Rise state says **Stand up** or **Now get up and move**; a detected rise immediately changes the feedback to **Nice — keep moving**.
 - Sustained-movement state shows remaining time or equivalent progress without requiring a specific exercise.
-- Completion state shows a visible success indicator, **Movement break completed**, supporting encouragement, and **Start next session**.
+- Completion state shows a visible success indicator, **Movement break completed**, supporting encouragement, then resets local inactivity monitoring.
 
 ## Look and Feel
 
@@ -44,15 +42,17 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 
 ## Features and Behavior
 
-### Work session
+### Inactivity monitoring
 
-- The user starts the timer with one obvious action.
-- At zero, the app visibly enters the break flow; it does not silently restart a timer.
+- The user explicitly enables the camera once, after a clear local-only explanation.
+- After a usable baseline, the app accumulates only reliable low-movement time.
+- The inactivity threshold is configurable and has a short demo-friendly default.
+- Low movement triggers the break prompt; this is the product's differentiating behavior.
 
 ### Movement verification
 
-- Verification begins only after the user explicitly enables the camera.
-- Completion requires: low-movement or seated baseline → clear rise or standing transition → general visible movement for a configurable short threshold.
+- Verification uses the same active local camera session after the inactivity prompt.
+- Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → general visible movement for a configurable short threshold.
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
 - A visual suggestion may guide the user, but does not change completion requirements.
 
@@ -64,12 +64,13 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 
 ## Acceptance Criteria
 
-- [ ] A user can start a short work session from the home screen without a camera prompt.
-- [ ] At zero, the user sees the movement-break screen and can explicitly enable the camera.
+- [ ] A user can explicitly enable the local camera from the home screen and see a preview.
+- [ ] A usable baseline leads to a visible low-movement monitoring state.
+- [ ] Sustained reliable low movement for the configured threshold triggers a clear movement-break prompt.
 - [ ] If camera permission is denied, the UI explains that the break cannot be completed without it and offers retry; no camera-free completion path exists.
 - [ ] With camera access, the UI visibly progresses through baseline, rise, and sustained-movement feedback.
 - [ ] A baseline followed by a clear rise and general movement for the configured threshold produces the completion state.
-- [ ] Completion never automatically starts another work timer; **Start next session** is required.
+- [ ] Completion resets the inactivity monitor without requiring a work-session timer or new camera permission.
 - [ ] Permission denial and insufficient visibility have understandable retry or guidance states.
 - [ ] The UI tells users that camera processing stays on their device.
 
@@ -77,21 +78,22 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 
 - **Camera unavailable or denied** — verification does not start; the user sees that camera verification is required to complete this MVP break and a retry action. The break remains incomplete.
 - **Tracking uncertain** — the app keeps the user in the applicable verification step with simple framing or movement guidance.
-- **Completed** — the current break ends and awaits an explicit next-session action.
-- **Privacy boundary** — camera use is opt-in at break time, frames stay local, and the MVP has no account, recording, or uploaded user data.
+- **Monitoring** — the camera session is active after explicit user consent; only reliable low-movement time advances the inactivity threshold.
+- **Completed** — the current break ends, the inactivity monitor resets, and observation resumes in the same camera session.
+- **Privacy boundary** — camera use is opt-in at the start of monitoring, frames stay local, and the MVP has no account, recording, or uploaded user data.
 
 ## Product Decisions
 
-- The home screen is a timer first, not a camera or fitness interface, so camera permission is deferred until the break begins.
+- The home screen offers explicit camera-enabled monitoring, because automatic low-movement detection is the core product behavior.
 - General standing and movement prove the kernel; no exercise type or form is required.
 - Camera verification is required to complete a movement break; there is no camera-free fallback for this MVP.
-- A configurable short timer and movement threshold make the end-to-end loop demonstrable without a full Pomodoro wait.
+- Configurable short inactivity and movement thresholds make the end-to-end loop demonstrable in seconds.
 - One movement-break layout changes its message by state to keep the flow easy to follow.
-- The next session always requires an explicit user action.
+- Completing a break resets monitoring in the existing camera session.
 
 ## What We're Building
 
-One browser-based flow containing a configurable work timer, an explicit movement-break transition, an opt-in local camera preview, understandable verification feedback, recovery guidance, completion, and a manual next-session action.
+One browser-based flow containing opt-in local camera monitoring, a configurable inactivity threshold, an explicit movement-break prompt, understandable verification feedback, recovery guidance, movement completion, and monitoring reset.
 
 ## Deferred From the POC
 
@@ -103,8 +105,8 @@ One browser-based flow containing a configurable work timer, an explicit movemen
 
 - Exercise classification, form evaluation, fitness tracking, or health recommendations: MoveBreak validates a micro-break, not a workout.
 - Accounts, backends, cloud processing, recording, social features, and camera-free completion: the complete MVP remains local, single-user, and camera-verified.
-- Additional screens, dashboards, and automatic timer cycles: they weaken the focused end-to-end loop.
+- Work timers, Pomodoro cycles, productivity dashboards, and background monitoring: they are not required to prove the focused low-movement-to-break loop.
 
 ## Open Questions
 
-- Exact default work duration and movement threshold values: decide during `4-spec`; they must remain short and configurable for demo use.
+- Exact default inactivity and movement threshold values: decide during `4-spec`; they must remain short and configurable for demo use.

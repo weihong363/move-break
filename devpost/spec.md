@@ -7,7 +7,7 @@ status: approved
 
 ## How This Works, In Plain Language
 
-MoveBreak is one static browser app. The timer controls when a break begins. At that point the camera module asks for permission and sends video frames to an on-device pose model. The verifier smooths visible upper-body landmarks, establishes a still baseline, confirms a sustained upward torso movement, then confirms continued general movement. It advances a small state machine only while the landmarks are usable. The UI controller renders the corresponding message and progress.
+MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier smooths visible upper-body landmarks, establishes a still baseline, accumulates reliable low-movement time, then prompts a break. It confirms a sustained upward torso movement followed by continued general movement, resets low-movement timing on completion, and advances only while landmarks are usable.
 
 This keeps the kernel real—camera-verified movement—without a server, stored data, exercise classifier, or precise seated-pose requirement. A local technical spike is the first build stage: MediaPipe Pose Landmarker remains the implementation unless MoveNet proves materially simpler or more reliable for this exact sequence.
 
@@ -15,19 +15,18 @@ This keeps the kernel real—camera-verified movement—without a server, stored
 
 Implements `prd.md > The Core Journey`.
 
-1. **Start** sets the app state to `working` and the timer module counts down from the configurable work duration.
-2. At zero, the UI changes to `camera-permission`; no camera stream exists before this point.
-3. **Enable camera** calls the browser camera API. On success, the preview receives the stream and the pose detector loads/runs locally. On rejection or failure, state is `camera-required` and the break remains incomplete.
-4. The detector emits landmarks with a timestamp. The verifier accepts only frames with sufficient visible torso/upper-body landmarks, smooths them in a rolling window, and collects the baseline for 1.5 seconds by default.
-5. From the baseline, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
-6. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
-7. The UI shows `completed` and enables **Start next session**. It stops the camera stream and returns to the initial timer state only when the user starts again.
+1. **Enable camera** moves the app to `camera-loading`, requests camera access, attaches the stream to the preview, and starts local pose detection. On rejection or failure, state is `camera-required`.
+2. The detector emits landmarks with a timestamp. The verifier accepts only frames with sufficient visible torso/upper-body landmarks, smooths them, and collects the baseline for 1.5 seconds by default.
+3. After the baseline, an inactivity monitor accumulates only valid low-movement time. The short demo default triggers a movement prompt after 5 seconds.
+4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
+5. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
+6. The UI shows `completed`, resets the inactivity monitor, and resumes monitoring in the active camera session.
 
 ## Stack
 
 - **TypeScript + Vite** — learner-selected lightweight browser build and static output. [Vite documentation](https://vite.dev/guide/) and [static deployment guide](https://vite.dev/guide/static-deploy).
 - **Native HTML, CSS, and DOM rendering** — no UI framework; one controlled render function is enough for this one-screen stateful flow.
-- **MediaDevices `getUserMedia()`** — requests a video-only `MediaStream` when the break starts. [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
+- **MediaDevices `getUserMedia()`** — requests a video-only `MediaStream` when the user starts monitoring. [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
 - **`@mediapipe/tasks-vision` Pose Landmarker** — preferred local landmark detector, configured for one pose and video frames. The app bundles a compatible pose model as a static asset. [MediaPipe web guide](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js).
 - **No backend or persistence** — all operational data lives only in memory for the current page session.
 
@@ -38,7 +37,7 @@ The technical spike must confirm the browser build can load the model asset and 
 - Runs in a modern desktop browser on `localhost` during development. Camera access requires a secure context; `localhost` is suitable for development and the deployed site must use HTTPS.
 - No API key, account, server, or data store is required.
 - Install dependencies with `pnpm install`, then run `pnpm dev` and open the local Vite URL.
-- For the demo, use the default 10-second work duration, remain still for roughly 1.5 seconds after enabling the camera, stand, then move for 4 seconds. Record this local flow for the submission video.
+- For the demo, enable the camera, remain still for roughly 1.5 seconds to establish a baseline, remain inactive for the 5-second demo threshold, then stand and move for 4 seconds. Record this local flow for the submission video.
 - After the local end-to-end flow is stable, deploy the Vite static output to Vercel or GitHub Pages. Deployment is optional and supplements, not replaces, the required video and public repository.
 
 ## Look and Feel
@@ -49,15 +48,15 @@ Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream b
 
 ### App Controller
 
-Owns the application state and a single render path for the timer and break layouts. It translates timer, camera, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
+Owns monitoring, prompt, and verification UI state. It translates camera, detector, inactivity monitor, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
 
-### Timer
+### Inactivity Monitor
 
-Starts, ticks, pauses, resets, and finishes the work countdown. It reads the configurable work duration and emits completion once. Implements `prd.md > Features and Behavior > Work session`.
+Accumulates reliable low-movement time after the baseline. Meaningful movement clears the accumulated inactivity time; invalid tracking pauses it. Crossing the configurable threshold prompts the break. Implements `prd.md > Features and Behavior > Inactivity monitoring`.
 
 ### Camera
 
-Requests video-only access only after **Enable camera**, attaches the resulting stream to the preview, exposes frames to the detector, and stops tracks on completion, reset, or retry. It maps permission and device errors to the required plain-language UI state. Implements `prd.md > States and Boundaries`.
+Requests video-only access after **Enable camera**, attaches the resulting stream to the preview, exposes frames to the detector, and stops tracks only when monitoring ends, reset, or retry requires it. It maps permission and device errors to the required plain-language UI state. Implements `prd.md > States and Boundaries`.
 
 ### Pose Detector
 
@@ -65,11 +64,11 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, detects a sustained rise, then measures general movement across visible upper-body landmarks. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `prompted`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, detects low movement over time, then detects a sustained rise and general movement. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
-Exports one typed configuration object for defaults and tuning: work duration (10 seconds), baseline window (1.5 seconds), movement duration (4 seconds), rolling-window size, required landmark coverage, rise displacement, movement score, and required consecutive rise frames. It keeps tuning explicit and avoids a complex scoring system.
+Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, required landmark coverage, low-movement threshold, rise displacement, movement score, and required consecutive rise frames. It keeps tuning explicit and avoids a complex scoring system.
 
 ## Data Model
 
@@ -78,9 +77,10 @@ All state is in memory and resets on page refresh.
 ```ts
 type AppPhase =
   | 'ready'
-  | 'working'
   | 'camera-permission'
   | 'baseline'
+  | 'monitoring'
+  | 'break-prompted'
   | 'awaiting-rise'
   | 'moving'
   | 'paused-tracking'
@@ -88,7 +88,7 @@ type AppPhase =
   | 'completed';
 
 type DemoConfig = {
-  workDurationMs: number;
+  inactivityDurationMs: number;
   baselineDurationMs: number;
   movementDurationMs: number;
   smoothingWindow: number;
@@ -99,8 +99,8 @@ type DemoConfig = {
 };
 ```
 
-- **Timer state**: phase, remaining work milliseconds, and selected configuration. Updated by user actions and timer ticks; not persisted.
-- **Camera state**: active `MediaStream` and error category. Created only during a break and released when that break ends.
+- **Inactivity state**: phase, accumulated valid low-movement milliseconds, and selected configuration. Updated by user actions and reliable landmark frames; not persisted.
+- **Camera state**: active `MediaStream` and error category. Created when monitoring starts and remains active across the completed break reset.
 - **Landmark samples**: a bounded rolling window of timestamped, visible torso/upper-body landmark coordinates. Discarded as it slides.
 - **Verifier state**: baseline torso-center statistic, stable multi-frame rise confirmation count, accumulated valid movement time, and tracking pause status. It is derived from current samples and resets for each break.
 
@@ -108,7 +108,7 @@ type DemoConfig = {
 
 Torso center is the midpoint or average of usable shoulder and hip landmarks. Body scale is the shoulder-to-hip distance when available; if hips are unavailable, a stable upper-body fallback scale is used. Rise is a decrease in image-space torso-center `y` from the baseline, divided by current body scale, sustained over the configured frame count. General movement is the mean smoothed frame-to-frame displacement of visible shoulders, hips, elbows, and wrists, normalized by body scale.
 
-The verifier requires a configurable minimum number of visible landmarks. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. Missing coverage, no detected person, or detector confidence below the selected quality threshold pauses movement-time accumulation and tells the UI to request better framing or movement. Brief low-motion frames do not clear accumulated valid movement time. The verifier resets only when the user retries or restarts.
+The verifier requires a configurable minimum number of visible landmarks. During monitoring, only frames whose normalized movement is below the low-movement threshold accumulate inactivity time; meaningful motion resets it. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. Missing coverage, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time. Completion resets inactivity monitoring in the same camera session.
 
 ## File Structure
 
@@ -123,7 +123,7 @@ move-break/
 │   ├── app-controller.ts        # App phase transitions and rendering
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
-│   ├── timer.ts                 # Work countdown behavior
+│   ├── inactivity-monitor.ts    # Low-movement accumulation and break trigger
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup
 │   ├── pose-detector.ts         # MediaPipe initialization and frame detection
 │   ├── movement-verifier.ts     # Baseline, rise, and movement state machine
@@ -142,14 +142,14 @@ move-break/
 
 ## Important Failure Modes
 
-- **Permission denied, no camera, or insecure deployment** → show that camera verification is required, keep the break incomplete, and provide retry guidance. When the browser retains a denied permission, explain that the user must re-allow the camera in browser settings before retrying.
+- **Permission denied, no camera, or insecure deployment** → show that local monitoring cannot start, and provide retry guidance. When the browser retains a denied permission, explain that the user must re-allow the camera in browser settings before retrying.
 - **No usable pose or inadequate framing** → pause verification and show “Step back so your upper body is visible”; do not progress or expose debug data.
 - **Temporary landmark-quality drop** → retain the current verifier stage but stop its progress timer until usable landmarks return.
 - **Detector blocks the interface on a slow machine** → lower the inference cadence first; move to a worker only if the technical spike shows that throttling is insufficient.
 
 ## What Was Simplified and Why
 
-- **One general movement verifier** instead of exercise classification or form scoring — it directly proves `scope.md > The Unique Kernel`.
+- **One heuristic monitor and movement verifier** instead of posture classification or form scoring — it directly proves `scope.md > The Unique Kernel`.
 - **Upper-body and torso signals** instead of mandatory full-body or seated-pose detection — desk occlusion and camera framing can hide legs.
 - **One in-memory state controller** instead of a UI framework or global store — one page and one loop do not need more infrastructure.
 - **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
@@ -159,7 +159,7 @@ move-break/
 
 - **Learner decision:** use TypeScript, Vite, native HTML/CSS, MediaDevices, local-only inference, and static hosting after local validation.
 - **Learner decision:** prefer MediaPipe Pose Landmarker; consider MoveNet only if the first technical spike produces evidence that it is materially easier or more reliable for baseline → rise → movement.
-- **Learner decision:** use the accepted 10-second work, 1.5-second baseline, and 4-second movement defaults, all exposed in `config.ts`.
+- **Learner decision:** use 1.5-second baseline, 5-second demo inactivity, and 4-second movement defaults, all exposed in `config.ts`.
 - **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
 - **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → sustained general movement, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
