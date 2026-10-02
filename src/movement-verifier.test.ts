@@ -56,15 +56,12 @@ describe('movement verifier', () => {
     expect(verifier.processFrame(frameWithShouldersOnly(700)).phase).toBe('awaiting-rise');
   });
 
-  it('does not make a standing position the new baseline', () => {
+  it('keeps monitoring through torso shifts until the reminder is due', () => {
     const verifier = createMovementVerifier(config);
     [0, 100, 200, 300].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
-    verifier.processFrame(frameAt(400, -0.2));
-    verifier.processFrame(frameAt(500, -0.2));
-    const upright = verifier.processFrame(frameAt(600, -0.2));
-    expect(upright.phase).toBe('awaiting-return');
-    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
-    expect(verifier.processFrame(frameAt(1_000)).phase).toBe('monitoring');
+    expect(verifier.processFrame(frameAt(400, -0.2)).phase).toBe('monitoring');
+    expect(verifier.processFrame(frameAt(500, -0.2)).phase).toBe('monitoring');
+    expect(verifier.processFrame(frameAt(600, -0.2)).phase).toBe('awaiting-rise');
   });
 
   it('requires several stable rise frames before entering movement', () => {

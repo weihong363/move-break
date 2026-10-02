@@ -60,7 +60,7 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates seated/stationary time through small upper-body movement, and pauses that time after a sustained rise. It then detects a sustained rise and general movement for the break, and always waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, and accumulates seated/stationary time through small upper-body movement. Only after the reminder appears does it detect a sustained rise and general movement for the break. It then waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
