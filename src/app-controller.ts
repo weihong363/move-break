@@ -1,5 +1,6 @@
 import { demoConfig } from './config';
 import { requestCamera, stopCamera } from './camera';
+import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import { createTimer } from './timer';
 import type { AppState } from './types';
@@ -22,6 +23,7 @@ export const createAppController = (root: HTMLElement) => {
   let readinessMessage = '';
   let cameraErrorMessage = 'Camera verification is required to complete this break.';
   const detector = createPoseDetector();
+  let verifier = createMovementVerifier({ ...demoConfig });
 
   const timer = createTimer({
     onTick: (remainingMs) => {
@@ -72,24 +74,18 @@ export const createAppController = (root: HTMLElement) => {
     if (!video) return;
 
     try {
+      verifier = createMovementVerifier({ ...demoConfig });
       stream = await requestCamera(video);
       state.phase = 'camera-active';
-      readinessMessage = 'Checking whether MoveBreak can see enough of your upper body…';
+      readinessMessage = 'Hold still for a moment. MoveBreak is getting a baseline.';
       render();
       const activeVideo = root.querySelector<HTMLVideoElement>('video');
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (readiness) => {
-        const status = root.querySelector<HTMLElement>('[data-readiness]');
-        if (!status) return;
-        if (readiness.kind === 'ready') {
-          status.textContent = `Ready — MoveBreak can see ${readiness.usableLandmarks} useful upper-body landmarks.`;
-        } else if (readiness.kind === 'framing') {
-          status.textContent = 'Step back so your upper body is visible.';
-        } else {
-          status.textContent = readiness.message;
-        }
+      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), (message) => {
+        readinessMessage = message;
+        root.querySelector<HTMLElement>('[data-readiness]')?.replaceChildren(message);
       });
     } catch (error) {
       state.phase = 'camera-required';
@@ -100,7 +96,51 @@ export const createAppController = (root: HTMLElement) => {
     }
   };
 
+  const updateVerification = (snapshot: VerifierSnapshot) => {
+    const status = root.querySelector<HTMLElement>('[data-readiness]');
+    const progress = root.querySelector<HTMLElement>('[data-progress]');
+    if (!status || !progress) return;
+    if (snapshot.phase === 'paused-tracking') {
+      status.textContent = 'Step back so your upper body is visible.';
+      progress.textContent = 'Verification is paused until tracking is reliable.';
+      return;
+    }
+    if (snapshot.phase === 'baseline') {
+      status.textContent = 'Hold still for a moment. MoveBreak is getting a baseline.';
+      progress.textContent = `Getting ready… ${Math.round(snapshot.baselineProgress * 100)}%`;
+      return;
+    }
+    if (snapshot.phase === 'awaiting-rise') {
+      status.textContent = 'Now get up and move.';
+      progress.textContent = 'Waiting for a clear rise.';
+      return;
+    }
+    if (snapshot.phase === 'moving') {
+      status.textContent = 'Nice — keep moving.';
+      progress.textContent = `${Math.max(0, Math.ceil((1 - snapshot.movementProgress) * demoConfig.movementDurationMs / 1_000))} seconds remaining`;
+      return;
+    }
+    detector.stop();
+    stopCamera(stream);
+    stream = undefined;
+    state.phase = 'completed';
+    render();
+  };
+
   const render = () => {
+    if (state.phase === 'completed') {
+      root.innerHTML = `
+        <section class="proof-card" aria-live="polite">
+          <p class="eyebrow">MOVE BREAK</p>
+          <div class="companion" aria-hidden="true">✓</div>
+          <h1>Movement break completed</h1>
+          <p class="description">Nice. You’re ready for the next work session.</p>
+          <button class="primary-button" type="button" data-action="reset">Start next session</button>
+        </section>`;
+      root.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener('click', reset);
+      return;
+    }
+
     if (state.phase.startsWith('camera-')) {
       const isLoading = state.phase === 'camera-loading';
       const isError = state.phase === 'camera-required';
@@ -110,7 +150,7 @@ export const createAppController = (root: HTMLElement) => {
           <h1>Movement break</h1>
           <p class="description">${isError ? cameraErrorMessage : 'Time to move. Stand up and move for a few seconds.'}</p>
           ${state.phase === 'camera-active' || isLoading ? '<video class="camera-preview" autoplay muted playsinline></video>' : ''}
-          ${state.phase === 'camera-active' ? `<p class="readiness" data-readiness>${readinessMessage}</p>` : ''}
+          ${state.phase === 'camera-active' ? `<p class="readiness" data-readiness>${readinessMessage}</p><p class="progress" data-progress>Getting ready… 0%</p>` : ''}
           ${isLoading ? '<p class="readiness">Opening your camera…</p>' : ''}
           ${state.phase !== 'camera-active' ? `<button class="primary-button" type="button" data-action="enable-camera" ${isLoading ? 'disabled' : ''}>${isError ? 'Try camera again' : 'Enable camera'}</button>` : ''}
           <p class="privacy-note">Camera processing stays on your device.</p>

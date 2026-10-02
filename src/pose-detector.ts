@@ -1,19 +1,10 @@
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-
-type Readiness =
-  | { kind: 'ready'; usableLandmarks: number }
-  | { kind: 'framing'; usableLandmarks: number }
-  | { kind: 'error'; message: string };
+import type { PoseFrame, PoseLandmark } from './types';
 
 type Detector = {
-  start: (video: HTMLVideoElement, onReadiness: (value: Readiness) => void) => Promise<void>;
+  start: (video: HTMLVideoElement, onFrame: (frame: PoseFrame) => void, onError: (message: string) => void) => Promise<void>;
   stop: () => void;
 };
-
-const upperBodyIndexes = [11, 12, 13, 14, 15, 16, 23, 24];
-
-const countUsableLandmarks = (landmarks: Array<{ visibility?: number }>) =>
-  upperBodyIndexes.filter((index) => (landmarks[index]?.visibility ?? 0) >= 0.5).length;
 
 export const createPoseDetector = (): Detector => {
   let landmarker: PoseLandmarker | undefined;
@@ -27,7 +18,7 @@ export const createPoseDetector = (): Detector => {
     landmarker = undefined;
   };
 
-  const start = async (video: HTMLVideoElement, onReadiness: (value: Readiness) => void) => {
+  const start = async (video: HTMLVideoElement, onFrame: (frame: PoseFrame) => void, onError: (message: string) => void) => {
     try {
       const vision = await FilesetResolver.forVisionTasks('/wasm');
       landmarker = await PoseLandmarker.createFromOptions(vision, {
@@ -39,7 +30,7 @@ export const createPoseDetector = (): Detector => {
         minTrackingConfidence: 0.5,
       });
     } catch {
-      onReadiness({ kind: 'error', message: 'MoveBreak could not start local pose tracking. Please try again.' });
+      onError('MoveBreak could not start local pose tracking. Please try again.');
       return;
     }
 
@@ -48,8 +39,7 @@ export const createPoseDetector = (): Detector => {
       if (timestamp - lastDetectionAt >= 150 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         lastDetectionAt = timestamp;
         const result = landmarker.detectForVideo(video, timestamp);
-        const usableLandmarks = countUsableLandmarks(result.landmarks[0] ?? []);
-        onReadiness(usableLandmarks >= 4 ? { kind: 'ready', usableLandmarks } : { kind: 'framing', usableLandmarks });
+        onFrame({ timestamp, landmarks: (result.landmarks[0] ?? []) as PoseLandmark[] });
       }
       frameId = window.requestAnimationFrame(detect);
     };

@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Complete one short timer cycle, enable the camera, and confirm the preview, usable-landmark readiness, and denial/retry message are clear enough to proceed.
   Commit: `Prove local camera pose tracking`
 
-- [ ] **3. Complete a camera-verified movement break**
+- [x] **3. Complete a camera-verified movement break**
   Becomes usable: After a brief still baseline, the user can stand, move with short natural pauses, and see the activity break complete only after accumulated valid movement time reaches the configured threshold.
   Why now: Delivers the differentiating end-to-end behavior immediately after the technical spike has proven the necessary input is real.
   PRD ref: `prd.md > Features and Behavior > Movement verification`, `prd.md > Acceptance Criteria`
