@@ -21,6 +21,7 @@ const visible = (landmark: PoseLandmark | undefined): landmark is PoseLandmark =
 const midpoint = (left: Point, right: Point): Point => ({ x: (left.x + right.x) / 2, y: (left.y + right.y) / 2 });
 const angle = (start: Point, end: Point) => Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
 const distance = (left: Point, right: Point) => Math.hypot(left.x - right.x, left.y - right.y);
+const angleDelta = (value: number) => ((value + 540) % 360) - 180;
 const neutral = (): RigTransform => ({ x: 0, y: 0, rotate: 0, scale: 1 });
 const deadZone = (value: number, threshold: number) => Math.abs(value) < threshold ? 0 : value;
 const point = (frame: PoseFrame, index: number): Point | undefined => visible(frame.landmarks[index]) ? frame.landmarks[index] : undefined;
@@ -44,24 +45,29 @@ const armPoints = (frames: PoseFrame[], side: 'left' | 'right'): ArmPoints | und
   return shoulder && elbow && wrist ? { shoulder, elbow, wrist } : undefined;
 };
 
+const segmentAngle = (arm: ArmPoints, part: 'upper' | 'forearm') => part === 'upper'
+  ? angle(arm.shoulder, arm.elbow)
+  : angle(arm.elbow, arm.wrist);
+
 const segment = (current: ArmPoints, baseline: ArmPoints, part: 'upper' | 'forearm'): RigTransform => {
-  const start = part === 'upper' ? current.shoulder : current.elbow;
-  const end = part === 'upper' ? current.elbow : current.wrist;
-  const baseStart = part === 'upper' ? baseline.shoulder : baseline.elbow;
-  const baseEnd = part === 'upper' ? baseline.elbow : baseline.wrist;
-  return { ...neutral(), rotate: clamp(deadZone(angle(start, end) - angle(baseStart, baseEnd), 3), -28, 28) };
+  const currentAngle = segmentAngle(current, part);
+  const baselineAngle = segmentAngle(baseline, part);
+  const relative = part === 'upper'
+    ? angleDelta(currentAngle - baselineAngle)
+    : angleDelta(angleDelta(currentAngle - segmentAngle(current, 'upper')) - angleDelta(baselineAngle - segmentAngle(baseline, 'upper')));
+  return { ...neutral(), rotate: clamp(deadZone(relative, 3), part === 'upper' ? -24 : -30, part === 'upper' ? 24 : 30) };
 };
 
 const torso = (center: Point, baseline: RigBaseline, torsoAngle: number): RigTransform => ({
   x: clamp(deadZone((center.x - baseline.center.x) / baseline.scale * 36, 1.5), -10, 10),
   y: clamp(deadZone((center.y - baseline.center.y) / baseline.scale * 36, 1.5), -16, 16),
-  rotate: clamp(deadZone(torsoAngle - baseline.torsoAngle, 2), -7, 7), scale: 1,
+  rotate: clamp(deadZone(torsoAngle - baseline.torsoAngle, 2), -4, 4), scale: 1,
 });
 
 const head = (current: Point, baseline: RigBaseline, ears: [Point | undefined, Point | undefined]): RigTransform => ({
   x: clamp(deadZone((current.x - baseline.head.x) / baseline.scale * 28, 1), -8, 8),
   y: clamp(deadZone((current.y - baseline.head.y) / baseline.scale * 28, 1), -5, 5),
-  rotate: ears[0] && ears[1] ? clamp(deadZone(angle(ears[0], ears[1]) - baseline.torsoAngle, 2), -10, 10) : 0, scale: 1,
+  rotate: ears[0] && ears[1] ? clamp(deadZone(angle(ears[0], ears[1]) - baseline.torsoAngle, 2), -6, 6) : 0, scale: 1,
 });
 
 export const createAvatarRigDriver = (smoothingWindow = 4) => {

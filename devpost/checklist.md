@@ -117,3 +117,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
 - The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The static rig passed reconstruction and pivot checks, then the standing-only upper-body landmark adapter was reconnected with bounded transforms.
+- The first standing pose-driven version exposed incorrect image-space pivots. The rig now uses local shoulder and elbow transform origins, fixed segment lengths, a stable torso layer, fixed z-order, and an opt-in joint geometry overlay for validation.

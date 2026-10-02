@@ -18,7 +18,7 @@ describe('avatar rig', () => {
   it('raises the left arm when the wrist rises', () => {
     const rig = createAvatarRigDriver(1);
     rig.update(frameAt(0));
-    expect(rig.update(frameAt(100, 0.3))?.leftForearm.rotate).toBeLessThan(-3);
+    expect(rig.update(frameAt(100, 0.3))?.leftForearm.rotate).toBeGreaterThan(3);
   });
 
   it('maps a visible head turn but freezes an unreliable limb', () => {

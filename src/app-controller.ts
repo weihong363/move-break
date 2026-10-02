@@ -10,7 +10,7 @@ import standingRigUrl from './assets/translucent-standing-clean.png';
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
-  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-art:url('${standingRigUrl}')">
+  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-art:url('${standingRigUrl}')">
     <span class="seated-rig" data-rig-root>
       <span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
       <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
@@ -20,8 +20,9 @@ const characterMarkup = () => `
       <span class="standing-transform">
         <span class="standing-layer standing-torso"></span>
         <span class="standing-layer standing-head"></span>
-        <span class="standing-arm standing-left-upper"><span class="standing-layer standing-left-forearm"></span></span>
-        <span class="standing-arm standing-right-upper"><span class="standing-layer standing-right-forearm"></span></span>
+        <span class="standing-arm standing-left-upper"><span class="standing-layer standing-left-forearm"><i class="rig-joint rig-left-wrist"></i></span><i class="rig-joint rig-left-elbow"></i></span>
+        <span class="standing-arm standing-right-upper"><span class="standing-layer standing-right-forearm"><i class="rig-joint rig-right-wrist"></i></span><i class="rig-joint rig-right-elbow"></i></span>
+        <i class="rig-joint rig-left-shoulder"></i><i class="rig-joint rig-right-shoulder"></i>
       </span>
     </span>
   </div>`;
@@ -35,6 +36,7 @@ export const createAppController = (root: HTMLElement) => {
   let debugPreview = false;
   let rigPreview: 'seated' | 'standing' = 'seated';
   let pivotPreview = false;
+  let rigDebug = false;
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   let promptStartedAt: number | undefined;
   let notificationAudio: AudioContext | undefined;
@@ -140,10 +142,13 @@ export const createAppController = (root: HTMLElement) => {
     const avatar = root.querySelector<HTMLElement>('[data-avatar]');
     avatar?.setAttribute('data-avatar', rigPreview);
     avatar?.setAttribute('data-rig-test', pivotPreview ? 'arms' : '');
+    avatar?.setAttribute('data-rig-debug', String(rigDebug));
     const poseButton = root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pose"]');
     const pivotButton = root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pivots"]');
+    const debugButton = root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-debug"]');
     if (poseButton) poseButton.textContent = rigPreview === 'seated' ? 'Preview standing rig' : 'Preview seated rig';
     if (pivotButton) pivotButton.textContent = pivotPreview ? 'Reset arm pivots' : 'Preview arm pivots';
+    if (debugButton) debugButton.textContent = rigDebug ? 'Hide rig geometry' : 'Show rig geometry';
   };
 
   const setPreviewVisible = (visible: boolean) => {
@@ -224,11 +229,16 @@ export const createAppController = (root: HTMLElement) => {
             <p>Local camera debug view</p>
           </div>
           ${isLoading ? '' : '<button class="text-button debug-toggle" type="button" data-action="toggle-debug">Show camera debug</button>'}
+          ${isLoading ? '' : '<button class="text-button debug-toggle" type="button" data-action="toggle-rig-debug">Show rig geometry</button>'}
           <p class="privacy-note">Camera processing stays on your device.</p>
         </section>`;
       root.querySelector<HTMLButtonElement>('[data-action="toggle-debug"]')?.addEventListener('click', () => {
         debugPreview = !debugPreview;
         setPreviewVisible(debugPreview);
+      });
+      root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-debug"]')?.addEventListener('click', () => {
+        rigDebug = !rigDebug;
+        updateRigPreview();
       });
       return;
     }
@@ -243,7 +253,7 @@ export const createAppController = (root: HTMLElement) => {
         <p class="description">${isError ? cameraErrorMessage : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>
         ${!isError ? `<label class="duration-control">Inactivity reminder after<select data-action="duration">${demoConfig.inactivityDurationOptions.map((seconds) => `<option value="${seconds}" ${state.inactivityDurationMs === seconds * 1_000 ? 'selected' : ''}>${inactivityLabel(seconds)}</option>`).join('')}</select></label>` : ''}
         <button class="primary-button" type="button" data-action="enable-camera">${isError ? 'Try camera again' : 'Enable camera'}</button>
-        ${!isError ? '<div class="rig-preview-controls"><button class="text-button" type="button" data-action="toggle-rig-pose">Preview standing rig</button><button class="text-button" type="button" data-action="toggle-rig-pivots">Preview arm pivots</button></div>' : ''}
+        ${!isError ? '<div class="rig-preview-controls"><button class="text-button" type="button" data-action="toggle-rig-pose">Preview standing rig</button><button class="text-button" type="button" data-action="toggle-rig-pivots">Preview arm pivots</button><button class="text-button" type="button" data-action="toggle-rig-debug">Show rig geometry</button></div>' : ''}
         <p class="privacy-note">Camera processing stays on your device. Nothing is recorded or uploaded.</p>
       </section>`;
     root.querySelector<HTMLButtonElement>('[data-action="enable-camera"]')?.addEventListener('click', enableCamera);
@@ -256,6 +266,10 @@ export const createAppController = (root: HTMLElement) => {
     });
     root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pivots"]')?.addEventListener('click', () => {
       pivotPreview = !pivotPreview;
+      updateRigPreview();
+    });
+    root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-debug"]')?.addEventListener('click', () => {
+      rigDebug = !rigDebug;
       updateRigPreview();
     });
   };
