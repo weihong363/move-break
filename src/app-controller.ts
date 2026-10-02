@@ -5,12 +5,12 @@ import { createMovementVerifier, type VerifierSnapshot } from './movement-verifi
 import { createPoseDetector } from './pose-detector';
 import type { AppState } from './types';
 import seatedRigUrl from './assets/translucent-seated-clean.png';
-import standingRigUrl from './assets/translucent-standing-clean.png';
+import standingRigSheetUrl from './assets/translucent-standing-rig-sheet.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
-  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-art:url('${standingRigUrl}')">
+  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-rig-art:url('${standingRigSheetUrl}')">
     <span class="seated-rig" data-rig-root>
       <span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
       <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
@@ -18,10 +18,10 @@ const characterMarkup = () => `
     </span>
     <span class="standing-rig">
       <span class="standing-transform">
-        <span class="standing-layer standing-torso"></span>
-        <span class="standing-layer standing-head"></span>
-        <span class="standing-arm standing-left-upper"><span class="standing-layer standing-left-forearm"><i class="rig-joint rig-left-wrist"></i></span><i class="rig-joint rig-left-elbow"></i></span>
-        <span class="standing-arm standing-right-upper"><span class="standing-layer standing-right-forearm"><i class="rig-joint rig-right-wrist"></i></span><i class="rig-joint rig-right-elbow"></i></span>
+        <span class="standing-piece standing-torso"></span>
+        <span class="standing-piece standing-head"></span>
+        <span class="standing-segment standing-left-upper"><span class="standing-segment standing-left-forearm"><i class="rig-joint rig-left-wrist"></i></span><i class="rig-joint rig-left-elbow"></i></span>
+        <span class="standing-segment standing-right-upper"><span class="standing-segment standing-right-forearm"><i class="rig-joint rig-right-wrist"></i></span><i class="rig-joint rig-right-elbow"></i></span>
         <i class="rig-joint rig-left-shoulder"></i><i class="rig-joint rig-right-shoulder"></i>
       </span>
     </span>
@@ -91,13 +91,7 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => {
-        const snapshot = verifier.processFrame(frame);
-        const startsStanding = snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise';
-        if (startsStanding) avatarRig.reset();
-        const rigPose = ['awaiting-rise', 'moving', 'completed'].includes(snapshot.phase) ? avatarRig.update(frame) : undefined;
-        updateVerification(snapshot, rigPose);
-      }, handleDetectorError);
+      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'

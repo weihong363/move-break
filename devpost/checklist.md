@@ -79,13 +79,20 @@ Build mode: fast
   Learner check: Compare the seated rig, standing rig, and manual arm-pivot preview with the original translucent figure style.
   Commit: `Build static translucent avatar rigs`
 
-- [x] **8. Drive the approved standing art rig from upper-body landmarks**
-  Becomes usable: The approved standing translucent art rig responds smoothly to local head, torso, and arm landmarks while seated monitoring stays static.
+- [x] **8. Rebuild the standing art rig for animation**
+  Becomes usable: The standing companion uses a neutral, joint-friendly head, singular torso, and straight capsule arm segments in the approved translucent cyan style.
   Why now: Static reconstruction and pivots must be accepted before pose transforms can be trusted.
-  Build: Reconnect the existing pose adapter only during rise and movement verification; map smoothed shoulder, elbow, wrist, head, and torso landmarks to bounded hierarchical transforms with dead zones and per-limb freeze behavior.
-  Verify (mechanical): Run tests and `pnpm build`; confirm neutral alignment, head/arm/torso response, clamp behavior, and missing-limb stability with supplied pose frames.
-  Learner check: Compare arm and upper-body response with the hidden-preview camera input.
-  Commit: `Drive approved art rig from landmarks`
+  Build: Replace fixed-bend standing art with neutral rig parts; assemble a single torso and nested straight limb segments; leave the pose adapter disconnected; retain a geometry overlay and manual pivot preview.
+  Verify (mechanical): Run tests and `pnpm build`; confirm the neutral pose has no baked bend, intersecting glass layers, or outer part halo, and that manual arm pivots remain attached.
+  Learner check: Compare the neutral standing pose and manual pivots before enabling camera-driven motion.
+  Commit: `Rebuild standing rig assets`
+
+- [ ] **9. Drive the rebuilt standing rig from upper-body landmarks**
+  Becomes usable: The approved standing rig follows coarse local head, torso, and arm movement during rise and movement verification.
+  Build: Reconnect the existing bounded pose adapter after static approval; verify shoulder, elbow, and wrist chains with the geometry overlay before hiding it.
+  Verify (mechanical): Run tests and `pnpm build`; confirm bounded transform values, missing-limb freeze behavior, and clean neutral reset.
+  Learner check: Compare coarse avatar response with the camera debug view.
+  Commit: `Drive rebuilt standing rig from landmarks`
 
 ## Hands-on Checkpoints
 
@@ -116,5 +123,5 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
 - The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
-- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The static rig passed reconstruction and pivot checks, then the standing-only upper-body landmark adapter was reconnected with bounded transforms.
-- The first standing pose-driven version exposed incorrect image-space pivots. The rig now uses local shoulder and elbow transform origins, fixed segment lengths, a stable torso layer, fixed z-order, and an opt-in joint geometry overlay for validation.
+- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The first standing pose-driven version exposed that fixed-bend artwork was unsuitable for joint animation, so camera-driven transforms are paused.
+- The standing rig now uses a purpose-built neutral asset sheet with straight capsules, a singular torso, nested local arm segments, fixed z-order, and an opt-in joint geometry overlay for static validation.
