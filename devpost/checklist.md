@@ -87,12 +87,12 @@ Build mode: fast
   Learner check: Compare the neutral standing pose and manual pivots before enabling camera-driven motion.
   Commit: `Rebuild standing rig assets`
 
-- [ ] **9. Drive the rebuilt standing rig from upper-body landmarks**
-  Becomes usable: The approved standing rig follows coarse local head, torso, and arm movement during rise and movement verification.
-  Build: Reconnect the existing bounded pose adapter after static approval; verify shoulder, elbow, and wrist chains with the geometry overlay before hiding it.
-  Verify (mechanical): Run tests and `pnpm build`; confirm bounded transform values, missing-limb freeze behavior, and clean neutral reset.
-  Learner check: Compare coarse avatar response with the camera debug view.
-  Commit: `Drive rebuilt standing rig from landmarks`
+- [x] **9. Add the four-pose movement routine**
+  Becomes usable: After a verified rise, MoveBreak demonstrates and checks Overhead Reach, Side Bend Left, Side Bend Right, and Torso Rotation with a short hold timer and audible ticks.
+  Build: Replace free-form movement completion with a routine verifier; use normalized wrist, shoulder, hip, width, and depth rules; pause rather than reset progress on brief tracking loss; show avatar demonstrations and countdown audio.
+  Verify (mechanical): Run tests and `pnpm build`; exercise each rule, two-direction rotation, and paused tracking with deterministic landmark frames.
+  Learner check: Run the complete camera routine and tune the hold thresholds if needed.
+  Commit: `Add guided movement routine`
 
 ## Hands-on Checkpoints
 
@@ -125,3 +125,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
 - The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The first standing pose-driven version exposed that fixed-bend artwork was unsuitable for joint animation, so camera-driven transforms are paused.
 - The standing rig now uses a purpose-built neutral asset sheet with straight capsules, a singular torso, nested local arm segments, fixed z-order, and an opt-in joint geometry overlay for static validation.
+- Free-form motion mirroring was replaced with one short camera-verified routine. The avatar now demonstrates the expected pose instead of tracking every limb continuously.

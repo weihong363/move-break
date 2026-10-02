@@ -1,15 +1,13 @@
 import type { PoseFrame, PoseLandmark } from './types';
 
-export type VerifierPhase = 'baseline' | 'monitoring' | 'awaiting-rise' | 'moving' | 'awaiting-return' | 'paused-tracking' | 'completed';
+export type VerifierPhase = 'baseline' | 'monitoring' | 'awaiting-rise' | 'routine' | 'awaiting-return' | 'paused-tracking' | 'completed';
 
 export type MovementConfig = {
   baselineDurationMs: number;
   inactivityDurationMs: number;
-  movementDurationMs: number;
   smoothingWindow: number;
   riseThreshold: number;
   returnThreshold: number;
-  movementThreshold: number;
   consecutiveRiseFrames: number;
 };
 
@@ -59,7 +57,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
     phase: nextPhase,
     baselineProgress: Math.min(1, baselineElapsedMs / config.baselineDurationMs),
     inactivityProgress: Math.min(1, inactivityElapsedMs / config.inactivityDurationMs),
-    movementProgress: Math.min(1, movementElapsedMs / config.movementDurationMs),
+    movementProgress: 0,
     avatarMotion,
   });
 
@@ -121,20 +119,11 @@ export const createMovementVerifier = (config: MovementConfig) => {
     if (phase === 'awaiting-rise' && baselineTorsoY !== undefined) {
       const normalizedRise = (baselineTorsoY - metrics.torsoY) / metrics.bodyScale;
       riseFrames = normalizedRise >= config.riseThreshold ? riseFrames + 1 : 0;
-      if (riseFrames >= config.consecutiveRiseFrames) phase = 'moving';
+      if (riseFrames >= config.consecutiveRiseFrames) phase = 'routine';
       return snapshot(phase);
     }
 
-    if (phase === 'moving') {
-      const shoulderChange = baselineShoulderWidth === undefined
-        ? 0
-        : Math.abs(metrics.shoulderWidth - baselineShoulderWidth) / baselineShoulderWidth;
-      avatarMotion = shoulderChange > 0.2 ? 'turning' : metrics.armMovement >= config.movementThreshold ? 'arms' : 'still';
-      if (metrics.movement >= config.movementThreshold) movementElapsedMs += elapsedMs;
-      if (movementElapsedMs < config.movementDurationMs) return snapshot(phase);
-      phase = 'awaiting-return';
-      return snapshot('completed');
-    }
+    if (phase === 'routine') return snapshot(phase);
 
     if (phase === 'awaiting-return' && baselineTorsoY !== undefined) {
       const normalizedReturn = Math.abs(metrics.torsoY - baselineTorsoY) / metrics.bodyScale;
@@ -152,5 +141,9 @@ export const createMovementVerifier = (config: MovementConfig) => {
     return snapshot(phase);
   };
 
-  return { processFrame };
+  const completeRoutine = () => {
+    if (phase === 'routine') phase = 'awaiting-return';
+  };
+
+  return { processFrame, completeRoutine };
 };

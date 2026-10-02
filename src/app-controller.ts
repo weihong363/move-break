@@ -1,13 +1,19 @@
 import { requestCamera, stopCamera } from './camera';
-import { createAvatarRigDriver, type AvatarRigPose } from './avatar-rig';
 import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
-import type { AppState } from './types';
+import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
+import type { AppState, PoseFrame } from './types';
 import seatedRigUrl from './assets/translucent-seated-clean.png';
 import standingRigSheetUrl from './assets/translucent-standing-rig-sheet.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
+const routineLabel = (movement: RoutineSnapshot['movement']) => ({
+  'overhead-reach': 'Overhead Reach',
+  'side-bend-left': 'Side Bend Left',
+  'side-bend-right': 'Side Bend Right',
+  'torso-rotation': 'Torso Rotation',
+}[movement]);
 
 const characterMarkup = () => `
   <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-rig-art:url('${standingRigSheetUrl}')">
@@ -40,10 +46,20 @@ export const createAppController = (root: HTMLElement) => {
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   let promptStartedAt: number | undefined;
   let notificationAudio: AudioContext | undefined;
+  let routineAdvanceTimer: number | undefined;
+  let routineCompleteTimer: number | undefined;
+  let lastRoutineSecond: number | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
-  const avatarRig = createAvatarRigDriver(demoConfig.smoothingWindow);
   let verifier = createVerifier();
+  const routine = createRoutineVerifier({
+    holdDurationMs: demoConfig.routineHoldDurationMs,
+    smoothingWindow: demoConfig.smoothingWindow,
+    overheadReachThreshold: 0.3,
+    sideBendThreshold: 0.15,
+    rotationWidthThreshold: 0.78,
+    rotationDepthThreshold: 0.2,
+  });
 
   function createVerifier() {
     return createMovementVerifier({ ...demoConfig, inactivityDurationMs: state.inactivityDurationMs });
@@ -51,7 +67,12 @@ export const createAppController = (root: HTMLElement) => {
 
   const resetMonitoring = () => {
     verifier = createVerifier();
-    avatarRig.reset();
+    routine.reset();
+    lastRoutineSecond = undefined;
+    if (routineAdvanceTimer) window.clearTimeout(routineAdvanceTimer);
+    if (routineCompleteTimer) window.clearTimeout(routineCompleteTimer);
+    routineAdvanceTimer = undefined;
+    routineCompleteTimer = undefined;
   };
 
   const primeNotificationAudio = async () => {
@@ -75,6 +96,20 @@ export const createAppController = (root: HTMLElement) => {
     });
   };
 
+  const playRoutineTick = (finalSecond: boolean) => {
+    const context = notificationAudio;
+    if (!context || context.state !== 'running') return;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.frequency.value = finalSecond ? 880 : 660;
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.11);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.12);
+  };
+
   const enableCamera = async () => {
     state.phase = 'camera-loading';
     render();
@@ -91,7 +126,13 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
+      await detector.start(activeVideo, (frame) => {
+        const snapshot = verifier.processFrame(frame);
+        const startsRoutine = snapshot.phase === 'routine' && lastVerifierPhase !== 'routine';
+        if (startsRoutine) { routine.reset(); lastRoutineSecond = undefined; }
+        if (snapshot.phase === 'routine' || (snapshot.phase === 'paused-tracking' && lastVerifierPhase === 'routine')) { updateRoutine(routine.processFrame(frame), frame); return; }
+        updateVerification(snapshot);
+      }, handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -116,22 +157,6 @@ export const createAppController = (root: HTMLElement) => {
     avatar?.setAttribute('data-avatar-motion', motion);
   };
 
-  const applyStandingRig = (pose: AvatarRigPose | undefined) => {
-    if (!pose) return;
-    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
-    if (!avatar) return;
-    const transforms = {
-      torso: pose.torso, head: pose.head, 'left-upper': pose.leftUpperArm, 'left-forearm': pose.leftForearm,
-      'right-upper': pose.rightUpperArm, 'right-forearm': pose.rightForearm,
-    };
-    Object.entries(transforms).forEach(([part, transform]) => {
-      avatar.style.setProperty(`--${part}-x`, `${transform.x}px`);
-      avatar.style.setProperty(`--${part}-y`, `${transform.y}px`);
-      avatar.style.setProperty(`--${part}-rotate`, `${transform.rotate}deg`);
-      avatar.style.setProperty(`--${part}-scale`, String(transform.scale));
-    });
-  };
-
   const updateRigPreview = () => {
     const avatar = root.querySelector<HTMLElement>('[data-avatar]');
     avatar?.setAttribute('data-avatar', rigPreview);
@@ -151,7 +176,30 @@ export const createAppController = (root: HTMLElement) => {
     if (toggle) toggle.textContent = debugPreview ? 'Hide camera debug' : 'Show camera debug';
   };
 
-  const updateVerification = (snapshot: VerifierSnapshot, rigPose?: AvatarRigPose) => {
+  const setRoutineAvatar = (movement: RoutineSnapshot['movement']) => {
+    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
+    if (!avatar) return;
+    avatar.setAttribute('data-avatar', 'moving');
+    avatar.setAttribute('data-routine-pose', movement);
+  };
+
+  const updateRoutine = (snapshot: RoutineSnapshot, frame: PoseFrame) => {
+    const status = root.querySelector<HTMLElement>('[data-status]');
+    const progress = root.querySelector<HTMLElement>('[data-progress]');
+    if (!status || !progress) return;
+    lastVerifierPhase = 'routine';
+    setRoutineAvatar(snapshot.movement);
+    setPreviewVisible(debugPreview || snapshot.phase === 'paused-tracking');
+    if (snapshot.phase === 'paused-tracking') { status.textContent = 'Keep both shoulders and hands in view.'; progress.textContent = 'Routine progress is paused.'; return; }
+    if (snapshot.phase === 'complete') { status.textContent = 'Movement break completed'; progress.textContent = 'Nice. Sit back down when you are ready.'; if (!routineCompleteTimer) routineCompleteTimer = window.setTimeout(() => { verifier.completeRoutine(); routineCompleteTimer = undefined; }, demoConfig.routineAdvanceDelayMs); return; }
+    if (snapshot.phase === 'movement-complete') { status.textContent = 'Nice!'; progress.textContent = 'Moving to the next stretch…'; if (!routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routine.advance(); routineAdvanceTimer = undefined; lastRoutineSecond = undefined; }, demoConfig.routineAdvanceDelayMs); return; }
+    status.textContent = `${routineLabel(snapshot.movement)} · ${snapshot.instruction}`;
+    const seconds = Math.max(0, Math.ceil((1 - snapshot.progress) * demoConfig.routineHoldDurationMs / 1_000));
+    progress.textContent = snapshot.phase === 'holding' ? `Hold it · ${seconds} seconds` : 'Match the avatar to begin.';
+    if (snapshot.phase === 'holding' && seconds !== lastRoutineSecond) { lastRoutineSecond = seconds; playRoutineTick(seconds <= 1); }
+  };
+
+  const updateVerification = (snapshot: VerifierSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
@@ -161,8 +209,8 @@ export const createAppController = (root: HTMLElement) => {
     }
     if (snapshot.phase !== 'awaiting-rise') promptStartedAt = undefined;
     lastVerifierPhase = snapshot.phase;
-    if (['awaiting-rise', 'moving', 'completed'].includes(snapshot.phase)) applyStandingRig(rigPose);
 
+    root.querySelector<HTMLElement>('[data-avatar]')?.removeAttribute('data-routine-pose');
     if (snapshot.phase === 'paused-tracking') {
       setAvatar('inspect');
       setPreviewVisible(true);
@@ -184,12 +232,11 @@ export const createAppController = (root: HTMLElement) => {
       setPreviewVisible(debugPreview);
       status.textContent = justPrompted ? 'Time to move' : 'Stand up';
       progress.textContent = justPrompted ? 'Stand up and move for a few seconds.' : 'Waiting for a clear rise.';
-    } else if (snapshot.phase === 'moving') {
-      setAvatar('moving', snapshot.avatarMotion);
+    } else if (snapshot.phase === 'routine') {
+      setAvatar('standing');
       setPreviewVisible(debugPreview);
-      status.textContent = 'Keep moving';
-      const seconds = Math.max(0, Math.ceil((1 - snapshot.movementProgress) * demoConfig.movementDurationMs / 1_000));
-      progress.textContent = `${seconds} seconds remaining`;
+      status.textContent = 'Get ready to move';
+      progress.textContent = 'Follow the avatar.';
     } else if (snapshot.phase === 'completed') {
       setAvatar('celebrate');
       setPreviewVisible(debugPreview);

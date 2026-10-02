@@ -7,7 +7,7 @@ status: approved
 
 ## How This Works, In Plain Language
 
-MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier learns a stable baseline from the user's current desk position using visible shoulders, accumulates seated/stationary time through small movement, then prompts a break. It confirms a sustained upward torso movement followed by continued general movement, then waits for a return near the original seated baseline before restarting the timer. It advances only while both shoulders are usable.
+MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier learns a stable baseline from the user's current desk position using visible shoulders, accumulates seated/stationary time through small movement, then prompts a break. It confirms a sustained upward torso movement and runs a four-pose desk-relief routine before waiting for a return near the original seated baseline. It advances only while the landmarks required by the current pose are usable.
 
 This keeps the kernel real—camera-verified movement—without a server, stored data, exercise classifier, or precise seated-pose requirement. A local technical spike is the first build stage: MediaPipe Pose Landmarker remains the implementation unless MoveNet proves materially simpler or more reliable for this exact sequence.
 
@@ -18,8 +18,8 @@ Implements `prd.md > The Core Journey`.
 1. **Enable camera** moves the app to `camera-loading`, requests camera access, attaches the stream to a hidden local preview, and starts local pose detection. On rejection or failure, state is `camera-required`.
 2. The detector emits landmarks with a timestamp. The verifier accepts frames with both shoulders visible, smooths them, and collects a 1.5-second baseline at the user's current camera distance and seated position.
 3. After the baseline, it accumulates valid seated/stationary time. The short demo default triggers a movement prompt after 5 seconds.
-4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
-5. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
+4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `routine` only after the rise condition persists across several frames; a one-frame spike is ignored.
+5. The routine verifier checks four three-second holds: both wrists above shoulders, shoulder center left of hips, shoulder center right of hips, then opposite torso-rotation directions using shoulder depth or visible width change. Brief pose loss or invalid tracking pauses hold progress without clearing it.
 6. The character-led UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session. A debug toggle reveals the preview for demo proof; tracking recovery reveals it automatically. A small Web Audio notification plays when the prompt begins.
 
 ## Stack
@@ -64,7 +64,7 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, and accumulates seated/stationary time through small upper-body movement. Only after the reminder appears does it detect a sustained rise and general movement for the break. It then waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `routine`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, and accumulates seated/stationary time through small upper-body movement. It hands off to the routine verifier after a stable rise, then waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
@@ -82,7 +82,7 @@ type AppPhase =
   | 'monitoring'
   | 'break-prompted'
   | 'awaiting-rise'
-  | 'moving'
+  | 'routine'
   | 'paused-tracking'
   | 'camera-required'
   | 'completed';
@@ -90,11 +90,14 @@ type AppPhase =
 type DemoConfig = {
   inactivityDurationMs: number;
   baselineDurationMs: number;
-  movementDurationMs: number;
+  routineHoldDurationMs: number;
   smoothingWindow: number;
   riseThreshold: number;
   returnThreshold: number;
-  movementThreshold: number;
+  overheadReachThreshold: number;
+  sideBendThreshold: number;
+  rotationWidthThreshold: number;
+  rotationDepthThreshold: number;
   consecutiveRiseFrames: number;
 };
 ```
@@ -121,7 +124,7 @@ move-break/
 │   ├── main.ts                  # Bootstrap and DOM event wiring
 │   ├── styles.css               # Global visual system and layouts
 │   ├── app-controller.ts        # App phase transitions and rendering
-│   ├── avatar-rig.ts            # Smoothed, bounded landmark adapter for the standing art rig
+│   ├── routine-verifier.ts       # Four-pose local routine state machine and landmark rules
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup
@@ -163,6 +166,6 @@ move-break/
 - **Learner decision:** prefer MediaPipe Pose Landmarker; consider MoveNet only if the first technical spike produces evidence that it is materially easier or more reliable for baseline → rise → movement.
 - **Learner decision:** use 1.5-second baseline, 5-second demo inactivity, and 4-second movement defaults, all exposed in `config.ts`.
 - **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
-- **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → sustained general movement, which the first spike will verify against the available camera framing.
+- **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → four coarse upper-body pose holds, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
 - **Avatar implementation checkpoint:** static seated and standing reconstruction plus manual pivot previews were accepted. MediaPipe now drives only the standing rig during rise and movement verification; seated monitoring remains static.

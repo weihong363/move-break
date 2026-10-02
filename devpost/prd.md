@@ -13,7 +13,7 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 2. They select or retain a short demo-friendly inactivity threshold and press **Enable camera**.
 3. The app shows the MoveBreak character, learns the user's current seated/stationary baseline through the local camera pipeline, then monitors local pose movement.
 4. When the inactivity threshold is reached, the UI clearly prompts the user to stand and move.
-5. The app confirms a stable rise, then accumulates general visible movement until the configurable duration is met.
+5. The app confirms a stable rise, then guides the user through four camera-verified desk-relief poses: Overhead Reach, Side Bend Left, Side Bend Right, and Torso Rotation.
 6. The app shows **Movement break completed**, then waits for the user to sit back near their original baseline before restarting inactivity monitoring in the active camera session.
 
 ## Screens and Layout
@@ -33,8 +33,9 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 - Baseline state says **Hold still for a moment** and visibly shows progress, then changes to a calm monitoring state.
 - Monitoring state uses a subtle idle/breathing character animation and says **Monitoring**.
 - Inactivity state highlights the companion, plays a short in-browser notification sound, and says **Time to move**.
-- Rise state moves the companion from a seated to standing pose and says **Stand up**; a detected rise immediately changes the feedback to **Keep moving**.
-- Sustained-movement state shows remaining time or equivalent progress without requiring a specific exercise.
+- Rise state moves the companion from a seated to standing pose and says **Stand up**.
+- Routine state shows one movement name, its avatar demonstration, concise instruction, and a 3-second configurable hold-progress indicator. It advances automatically after each success.
+- While a pose is held, a quiet tick plays once per second and rises in pitch for the final second, so the user can follow the countdown without watching the screen.
 - Completion state uses a brief celebration animation and says **Break completed**, then waits for the user to sit back near their original baseline before restarting local inactivity monitoring.
 - Return state uses a resting character animation and says **Sit down when you're ready**.
 
@@ -54,11 +55,11 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 ### Movement verification
 
 - Verification uses the same active local camera session after the inactivity prompt.
-- Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → general visible movement for a configurable short threshold. After completion, the app waits for the user to return near their original seated baseline before restarting inactivity timing.
+- Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → four short camera-verified movement holds. After completion, the app waits for the user to return near their original seated baseline before restarting inactivity timing.
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
-- A visual suggestion may guide the user, but does not change completion requirements.
+- The routine uses coarse local landmark rules only: both wrists above shoulders for Overhead Reach; normalized shoulder-to-hip center displacement for side bends; and clear shoulder depth or width change in both directions for Torso Rotation. These rules are tolerant cues, not form scoring.
 - A small debug toggle can reveal the local camera preview during a demo. The preview also appears when tracking quality is insufficient to help the user reframe.
-- During sustained movement, coarse local signals can animate the companion: arm movement produces a wave/stretch and a large shoulder-width change flips its facing direction. This is illustrative feedback, not exercise classification.
+- During the routine, the avatar demonstrates the requested movement; it does not mirror every user motion.
 
 ### Feedback and recovery
 
@@ -73,8 +74,8 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - [ ] A usable baseline leads to a visible low-movement monitoring state.
 - [ ] A sustained seated or stationary state for the configured threshold triggers a clear movement-break prompt; small hand and head movements do not reset it.
 - [ ] If camera permission is denied, the UI explains that the break cannot be completed without it and offers retry; no camera-free completion path exists.
-- [ ] With camera access, the UI visibly progresses through baseline, rise, and sustained-movement feedback.
-- [ ] A baseline followed by a clear rise and general movement for the configured threshold produces the completion state.
+- [ ] With camera access, the UI visibly progresses through baseline, rise, and the four routine movements.
+- [ ] A baseline followed by a clear rise and the four verified movement holds produces the completion state.
 - [ ] Remaining upright after completion does not create a new baseline; returning near the original seated baseline resumes the inactivity timer.
 - [ ] Completion resets the inactivity monitor without requiring a work-session timer or new camera permission.
 - [ ] Permission denial and insufficient visibility have understandable retry or guidance states.
@@ -91,7 +92,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 ## Product Decisions
 
 - The home screen offers explicit camera-enabled monitoring, because automatic low-movement detection is the core product behavior.
-- General standing and movement prove the kernel; no exercise type or form is required.
+- A short fixed routine proves the kernel; it uses tolerant pose checks rather than exercise-form scoring.
 - Camera verification is required to complete a movement break; there is no camera-free fallback for this MVP.
 - Configurable short inactivity and movement thresholds make the end-to-end loop demonstrable in seconds.
 - One movement-break layout changes its message by state to keep the flow easy to follow.
@@ -104,7 +105,7 @@ One browser-based flow containing opt-in local camera monitoring, a configurable
 ## Deferred From the POC
 
 - Persistent streaks, longer-term history, and analytics, because the core demo does not require stored data.
-- Multiple break routines and a richer animated guide, because general movement verification is the only required behavior.
+- Multiple break routines, form scoring, and a richer animated guide, because this one four-movement routine is sufficient for the demo.
 - Camera calibration, because graceful framing guidance is sufficient for the demo.
 
 ## Non-Goals

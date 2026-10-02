@@ -85,6 +85,17 @@ button, select { font: inherit; }
 [data-rig-test="arms"] .standing-left-forearm { transform: rotate(20deg); }
 [data-rig-test="arms"] .standing-right-upper { transform: rotate(-24deg); }
 [data-rig-test="arms"] .standing-right-forearm { transform: rotate(-20deg); }
+[data-routine-pose="overhead-reach"] .standing-left-upper { transform: rotate(-58deg); }
+[data-routine-pose="overhead-reach"] .standing-left-forearm { transform: rotate(-12deg); }
+[data-routine-pose="overhead-reach"] .standing-right-upper { transform: rotate(58deg); }
+[data-routine-pose="overhead-reach"] .standing-right-forearm { transform: rotate(12deg); }
+[data-routine-pose="side-bend-left"] .standing-transform { transform: translate(-5px, 3px) rotate(-8deg); }
+[data-routine-pose="side-bend-left"] .standing-left-upper { transform: rotate(4deg); }
+[data-routine-pose="side-bend-left"] .standing-right-upper { transform: rotate(44deg); }
+[data-routine-pose="side-bend-right"] .standing-transform { transform: translate(5px, 3px) rotate(8deg); }
+[data-routine-pose="side-bend-right"] .standing-left-upper { transform: rotate(-44deg); }
+[data-routine-pose="side-bend-right"] .standing-right-upper { transform: rotate(-4deg); }
+[data-routine-pose="torso-rotation"] .standing-transform { transform: rotate(4deg) scaleX(0.9); }
 [data-avatar="standing"] .seated-rig, [data-avatar="moving"] .seated-rig, [data-avatar="celebrate"] .seated-rig { display: none; }
 [data-avatar="standing"] .standing-rig, [data-avatar="moving"] .standing-rig, [data-avatar="celebrate"] .standing-rig { display: block; }
 [data-avatar="alert"] .seated-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }

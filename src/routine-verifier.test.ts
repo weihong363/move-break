@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest';
+import { createRoutineVerifier, type RoutineConfig } from './routine-verifier';
+import type { PoseFrame, PoseLandmark } from './types';
+
+const config: RoutineConfig = { holdDurationMs: 300, smoothingWindow: 1, overheadReachThreshold: 0.25, sideBendThreshold: 0.15, rotationWidthThreshold: 0.78, rotationDepthThreshold: 0.2 };
+
+const frameAt = (timestamp: number): PoseFrame => {
+  const landmarks: PoseLandmark[] = Array.from({ length: 25 }, () => ({ x: 0.5, y: 0.5, visibility: 0 }));
+  [[11, 0.4, 0.4], [12, 0.6, 0.4], [15, 0.32, 0.62], [16, 0.68, 0.62], [23, 0.42, 0.62], [24, 0.58, 0.62]]
+    .forEach(([index, x, y]) => { landmarks[index] = { x, y, visibility: 1 }; });
+  return { timestamp, landmarks };
+};
+
+const held = (routine: ReturnType<typeof createRoutineVerifier>, makeFrame: (time: number) => PoseFrame, start = 0) => [start, start + 100, start + 200, start + 300].map((time) => routine.processFrame(makeFrame(time))).at(-1)!;
+const reach = (time: number) => { const frame = frameAt(time); frame.landmarks[15].y = 0.2; frame.landmarks[16].y = 0.2; return frame; };
+const leftBend = (time: number) => { const frame = frameAt(time); frame.landmarks[11].x -= 0.08; frame.landmarks[12].x -= 0.08; return frame; };
+const rightBend = (time: number) => { const frame = frameAt(time); frame.landmarks[11].x += 0.08; frame.landmarks[12].x += 0.08; return frame; };
+const rotate = (time: number, direction: -1 | 1) => { const frame = frameAt(time); frame.landmarks[11].z = direction * 0.08; frame.landmarks[12].z = -direction * 0.08; return frame; };
+
+describe('routine verifier', () => {
+  it('requires a held overhead reach', () => {
+    const routine = createRoutineVerifier(config);
+    expect(held(routine, reach).phase).toBe('movement-complete');
+  });
+
+  it('accepts left and right bends with normalized torso shift', () => {
+    const routine = createRoutineVerifier(config);
+    held(routine, reach); routine.advance();
+    expect(held(routine, leftBend, 400).movement).toBe('side-bend-left');
+    routine.advance();
+    expect(held(routine, rightBend, 800).phase).toBe('movement-complete');
+  });
+
+  it('requires both rotation directions', () => {
+    const routine = createRoutineVerifier(config);
+    held(routine, reach); routine.advance(); held(routine, leftBend, 400); routine.advance(); held(routine, rightBend, 800); routine.advance();
+    expect(held(routine, (time) => rotate(time, -1), 1_200).rotationStep).toBe('other-side');
+    expect(held(routine, (time) => rotate(time, 1), 1_600).phase).toBe('movement-complete');
+  });
+
+  it('pauses rather than clears progress when tracking disappears', () => {
+    const routine = createRoutineVerifier(config);
+    routine.processFrame(reach(0));
+    routine.processFrame(reach(100));
+    const hidden = reach(200); hidden.landmarks[15].visibility = 0;
+    expect(routine.processFrame(hidden).phase).toBe('paused-tracking');
+    expect(routine.processFrame(reach(300)).progress).toBeGreaterThan(0);
+  });
+});

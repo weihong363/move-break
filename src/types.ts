@@ -12,6 +12,7 @@ export type AppState = {
 export type PoseLandmark = {
   x: number;
   y: number;
+  z?: number;
   visibility?: number;
 };
 
