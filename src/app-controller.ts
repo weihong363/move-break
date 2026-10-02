@@ -12,7 +12,6 @@ export const createAppController = (root: HTMLElement) => {
     inactivityDurationMs: demoConfig.inactivityDurationSeconds * 1_000,
   };
   let stream: MediaStream | undefined;
-  let completionPending = false;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
@@ -23,7 +22,6 @@ export const createAppController = (root: HTMLElement) => {
 
   const resetMonitoring = () => {
     verifier = createVerifier();
-    completionPending = false;
   };
 
   const enableCamera = async () => {
@@ -60,15 +58,7 @@ export const createAppController = (root: HTMLElement) => {
     render();
   };
 
-  const completeBreak = (status: HTMLElement, progress: HTMLElement) => {
-    completionPending = true;
-    status.textContent = 'Movement break completed';
-    progress.textContent = 'Nice. Monitoring will restart now.';
-    window.setTimeout(resetMonitoring, 1_200);
-  };
-
   const updateVerification = (snapshot: VerifierSnapshot) => {
-    if (completionPending) return;
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
@@ -89,8 +79,12 @@ export const createAppController = (root: HTMLElement) => {
       status.textContent = 'Nice — keep moving.';
       const seconds = Math.max(0, Math.ceil((1 - snapshot.movementProgress) * demoConfig.movementDurationMs / 1_000));
       progress.textContent = `${seconds} seconds remaining`;
+    } else if (snapshot.phase === 'completed') {
+      status.textContent = 'Movement break completed';
+      progress.textContent = 'Nice. Sit back down when you are ready.';
     } else {
-      completeBreak(status, progress);
+      status.textContent = 'Waiting for you to sit back down.';
+      progress.textContent = 'Monitoring resumes from your usual seated position.';
     }
   };
 

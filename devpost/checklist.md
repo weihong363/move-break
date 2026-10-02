@@ -10,12 +10,12 @@ Build mode: fast
 ## Slices
 
 - [ ] **1. Prove the automatic movement-break loop**
-  Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, remain inactive through the configurable 5-second demo threshold, then stand and move to complete the break and restart monitoring.
+  Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, remain inactive through the configurable 5-second demo threshold, then stand and move to complete the break. Monitoring restarts only after they return near the original seated baseline.
   Why now: Low-movement accumulation and the prompt share one small verifier state machine, so proving the whole transition avoids a second integration pass.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Features and Behavior > Inactivity monitoring`
   Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Components > Camera`, `spec.md > Data Model`
   Build: Remove timer states and controls; add inactivity configuration, active monitoring UI, reliable-frame pause behavior, an automatic prompt, and same-session reset after completion.
-  Verify (mechanical): Run tests and `pnpm build`; confirm seated hand or head movement keeps accumulating inactivity time, a stable rise resets it, invalid frames pause it, and a stable rise plus accumulated movement completes the prompted break.
+  Verify (mechanical): Run tests and `pnpm build`; confirm seated hand or head movement keeps accumulating inactivity time, a stable rise resets it, invalid frames pause it, a stable rise plus accumulated movement completes the prompted break, and remaining upright does not create a new baseline.
   Learner check: Enable the camera, complete the baseline, remain still for the selected threshold, then stand and move to confirm completion and monitoring reset.
   Commit: `Add sedentary monitoring`
 

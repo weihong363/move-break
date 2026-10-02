@@ -7,7 +7,7 @@ status: approved
 
 ## How This Works, In Plain Language
 
-MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier learns a stable baseline from the user's current desk position using visible shoulders, accumulates seated/stationary time through small movement, then prompts a break. It confirms a sustained upward torso movement followed by continued general movement, resets the timer on completion, and advances only while both shoulders are usable.
+MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier learns a stable baseline from the user's current desk position using visible shoulders, accumulates seated/stationary time through small movement, then prompts a break. It confirms a sustained upward torso movement followed by continued general movement, then waits for a return near the original seated baseline before restarting the timer. It advances only while both shoulders are usable.
 
 This keeps the kernel real—camera-verified movement—without a server, stored data, exercise classifier, or precise seated-pose requirement. A local technical spike is the first build stage: MediaPipe Pose Landmarker remains the implementation unless MoveNet proves materially simpler or more reliable for this exact sequence.
 
@@ -60,11 +60,11 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates seated/stationary time through small upper-body movement, and resets that time only after a sustained rise. It then detects a sustained rise and general movement for the break. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates seated/stationary time through small upper-body movement, and pauses that time after a sustained rise. It then detects a sustained rise and general movement for the break, and always waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
-Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, rise displacement, movement score, and required consecutive rise frames. It keeps tuning explicit and avoids a complex scoring system.
+Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, rise and return displacement, movement score, and required consecutive confirmation frames. It keeps tuning explicit and avoids a complex scoring system.
 
 ## Data Model
 
@@ -89,6 +89,7 @@ type DemoConfig = {
   movementDurationMs: number;
   smoothingWindow: number;
   riseThreshold: number;
+  returnThreshold: number;
   movementThreshold: number;
   consecutiveRiseFrames: number;
 };
@@ -97,13 +98,13 @@ type DemoConfig = {
 - **Inactivity state**: phase, accumulated valid low-movement milliseconds, and selected configuration. Updated by user actions and reliable landmark frames; not persisted.
 - **Camera state**: active `MediaStream` and error category. Created when monitoring starts and remains active across the completed break reset.
 - **Landmark samples**: a bounded rolling window of timestamped, visible torso/upper-body landmark coordinates. Discarded as it slides.
-- **Verifier state**: baseline torso-center statistic, stable multi-frame rise confirmation count, accumulated valid movement time, and tracking pause status. It is derived from current samples and resets for each break.
+- **Verifier state**: original seated torso-center statistic, stable multi-frame rise and return confirmation counts, accumulated valid movement time, and tracking pause status. It is derived from current samples and resets only when a new camera session starts.
 
 ### Signal Rules
 
 Torso center is the midpoint or average of usable shoulder and hip landmarks. Body scale is the shoulder-to-hip distance when available; if hips are unavailable, a stable upper-body fallback scale is used. Rise is a decrease in image-space torso-center `y` from the baseline, divided by current body scale, sustained over the configured frame count. General movement is the mean smoothed frame-to-frame displacement of visible shoulders, hips, elbows, and wrists, normalized by body scale.
 
-The verifier uses both visible shoulders as the minimum reliable reference, so it does not prescribe a camera distance or require the full upper body. The short baseline learns the user's own stable seated position and shoulder width. During monitoring, visible hand, head, and other small upper-body movement keeps accumulating inactivity time. Only a stable, body-scale-normalized upward torso transition resets it. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. Missing shoulders, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time. Completion resets inactivity monitoring in the same camera session.
+The verifier uses both visible shoulders as the minimum reliable reference, so it does not prescribe a camera distance or require the full upper body. The short baseline learns the user's own stable seated position and shoulder width. During monitoring, visible hand, head, and other small upper-body movement keeps accumulating inactivity time. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. After break completion, the original baseline remains authoritative: the verifier waits for a stable return within the configured normalized distance before resetting the inactivity timer. Missing shoulders, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time.
 
 ## File Structure
 

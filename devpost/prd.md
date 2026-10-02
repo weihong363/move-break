@@ -52,7 +52,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 ### Movement verification
 
 - Verification uses the same active local camera session after the inactivity prompt.
-- Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → general visible movement for a configurable short threshold.
+- Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → general visible movement for a configurable short threshold. After completion, the app waits for the user to return near their original seated baseline before restarting inactivity timing.
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
 - A visual suggestion may guide the user, but does not change completion requirements.
 
@@ -70,6 +70,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - [ ] If camera permission is denied, the UI explains that the break cannot be completed without it and offers retry; no camera-free completion path exists.
 - [ ] With camera access, the UI visibly progresses through baseline, rise, and sustained-movement feedback.
 - [ ] A baseline followed by a clear rise and general movement for the configured threshold produces the completion state.
+- [ ] Remaining upright after completion does not create a new baseline; returning near the original seated baseline resumes the inactivity timer.
 - [ ] Completion resets the inactivity monitor without requiring a work-session timer or new camera permission.
 - [ ] Permission denial and insufficient visibility have understandable retry or guidance states.
 - [ ] The UI tells users that camera processing stays on their device.

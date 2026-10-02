@@ -8,6 +8,7 @@ const config: MovementConfig = {
   movementDurationMs: 400,
   smoothingWindow: 2,
   riseThreshold: 0.15,
+  returnThreshold: 0.15,
   movementThreshold: 0.001,
   consecutiveRiseFrames: 3,
 };
@@ -55,14 +56,15 @@ describe('movement verifier', () => {
     expect(verifier.processFrame(frameWithShouldersOnly(700)).phase).toBe('awaiting-rise');
   });
 
-  it('resets inactivity only after a stable upward transition', () => {
+  it('does not make a standing position the new baseline', () => {
     const verifier = createMovementVerifier(config);
     [0, 100, 200, 300].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
     verifier.processFrame(frameAt(400, -0.2));
     verifier.processFrame(frameAt(500, -0.2));
-    const reset = verifier.processFrame(frameAt(600, -0.2));
-    expect(reset.phase).toBe('monitoring');
-    expect(reset.inactivityProgress).toBe(0);
+    const upright = verifier.processFrame(frameAt(600, -0.2));
+    expect(upright.phase).toBe('awaiting-return');
+    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    expect(verifier.processFrame(frameAt(1_000)).phase).toBe('monitoring');
   });
 
   it('requires several stable rise frames before entering movement', () => {
@@ -88,10 +90,18 @@ describe('movement verifier', () => {
     [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
     verifier.processFrame(frameAt(1_000, -0.2, 0.04));
     const pausedMotion = verifier.processFrame(frameAt(1_100, -0.2, 0.04));
-    const completed = [1_200, 1_300, 1_400, 1_500, 1_600]
-      .map((timestamp, index) => verifier.processFrame(frameAt(timestamp, -0.2, 0.08 + index * 0.04)))
-      .at(-1);
+    const snapshots = [1_200, 1_300, 1_400, 1_500, 1_600]
+      .map((timestamp, index) => verifier.processFrame(frameAt(timestamp, -0.2, 0.08 + index * 0.04)));
     expect(pausedMotion.movementProgress).toBeGreaterThan(0);
-    expect(completed?.phase).toBe('completed');
+    expect(snapshots.some((snapshot) => snapshot.phase === 'completed')).toBe(true);
+  });
+
+  it('waits for the user to return to the original seated baseline after completion', () => {
+    const verifier = reachPrompt();
+    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
+    [1_000, 1_100, 1_200, 1_300, 1_400].forEach((timestamp, index) => verifier.processFrame(frameAt(timestamp, -0.2, 0.04 + index * 0.04)));
+    expect(verifier.processFrame(frameAt(1_500, -0.2, 0.28)).phase).toBe('awaiting-return');
+    [1_600, 1_700, 1_800, 1_900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    expect(verifier.processFrame(frameAt(2_000)).phase).toBe('monitoring');
   });
 });

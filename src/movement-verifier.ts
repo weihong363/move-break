@@ -1,6 +1,6 @@
 import type { PoseFrame, PoseLandmark } from './types';
 
-export type VerifierPhase = 'baseline' | 'monitoring' | 'awaiting-rise' | 'moving' | 'paused-tracking' | 'completed';
+export type VerifierPhase = 'baseline' | 'monitoring' | 'awaiting-rise' | 'moving' | 'awaiting-return' | 'paused-tracking' | 'completed';
 
 export type MovementConfig = {
   baselineDurationMs: number;
@@ -8,6 +8,7 @@ export type MovementConfig = {
   movementDurationMs: number;
   smoothingWindow: number;
   riseThreshold: number;
+  returnThreshold: number;
   movementThreshold: number;
   consecutiveRiseFrames: number;
 };
@@ -48,6 +49,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   let movementElapsedMs = 0;
   let baselineTorsoY: number | undefined;
   let riseFrames = 0;
+  let returnFrames = 0;
 
   const snapshot = (nextPhase: VerifierPhase): VerifierSnapshot => ({
     phase: nextPhase,
@@ -98,9 +100,9 @@ export const createMovementVerifier = (config: MovementConfig) => {
       const normalizedRise = baselineTorsoY === undefined ? 0 : (baselineTorsoY - metrics.torsoY) / metrics.bodyScale;
       riseFrames = normalizedRise >= config.riseThreshold ? riseFrames + 1 : 0;
       if (riseFrames >= config.consecutiveRiseFrames) {
-        baselineTorsoY = metrics.torsoY;
         inactivityElapsedMs = 0;
         riseFrames = 0;
+        phase = 'awaiting-return';
         return snapshot(phase);
       }
       inactivityElapsedMs += elapsedMs;
@@ -117,7 +119,19 @@ export const createMovementVerifier = (config: MovementConfig) => {
 
     if (phase === 'moving') {
       if (metrics.movement >= config.movementThreshold) movementElapsedMs += elapsedMs;
-      if (movementElapsedMs >= config.movementDurationMs) phase = 'completed';
+      if (movementElapsedMs < config.movementDurationMs) return snapshot(phase);
+      phase = 'awaiting-return';
+      return snapshot('completed');
+    }
+
+    if (phase === 'awaiting-return' && baselineTorsoY !== undefined) {
+      const normalizedReturn = Math.abs(metrics.torsoY - baselineTorsoY) / metrics.bodyScale;
+      returnFrames = normalizedReturn <= config.returnThreshold ? returnFrames + 1 : 0;
+      if (returnFrames >= config.consecutiveRiseFrames) {
+        inactivityElapsedMs = 0;
+        returnFrames = 0;
+        phase = 'monitoring';
+      }
       return snapshot(phase);
     }
 

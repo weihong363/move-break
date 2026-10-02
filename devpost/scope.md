@@ -17,7 +17,7 @@ A desk worker, developer, student, or remote worker who spends long stretches at
 
 ## The Core Loop
 
-The user explicitly enables the camera once. MoveBreak establishes a low-movement or seated baseline and locally monitors torso position. Once the seated or stationary state lasts past the configurable inactivity threshold, it prompts a movement break. A standing or clear upward transition followed by sustained body movement completes the break and resets inactivity monitoring.
+The user explicitly enables the camera once. MoveBreak establishes a low-movement or seated baseline and locally monitors torso position. Once the seated or stationary state lasts past the configurable inactivity threshold, it prompts a movement break. A standing or clear upward transition followed by sustained body movement completes the break. Monitoring resumes only after the user returns near their original seated baseline, so standing after the break never becomes a new sedentary baseline.
 
 ## Inspiration & Identity
 
