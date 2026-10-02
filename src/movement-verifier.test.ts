@@ -7,7 +7,6 @@ const config: MovementConfig = {
   inactivityDurationMs: 300,
   movementDurationMs: 400,
   smoothingWindow: 2,
-  minimumUsableLandmarks: 4,
   riseThreshold: 0.15,
   movementThreshold: 0.001,
   consecutiveRiseFrames: 3,
@@ -34,12 +33,26 @@ const frameWithHandMotion = (timestamp: number, handOffsetX: number): PoseFrame 
   return frame;
 };
 
+const frameWithShouldersOnly = (timestamp: number): PoseFrame => {
+  const frame = frameAt(timestamp);
+  frame.landmarks.forEach((landmark, index) => {
+    if (index !== 11 && index !== 12) landmark.visibility = 0;
+  });
+  return frame;
+};
+
 describe('movement verifier', () => {
   it('keeps seated inactivity time through hand movement', () => {
     const verifier = createMovementVerifier(config);
     [0, 100, 200, 300, 400].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
     verifier.processFrame(frameWithHandMotion(500, 0.2));
     expect(verifier.processFrame(frameAt(600)).phase).toBe('awaiting-rise');
+  });
+
+  it('establishes a baseline using only the visible shoulders', () => {
+    const verifier = createMovementVerifier(config);
+    [0, 100, 200, 300, 400, 500, 600].forEach((timestamp) => verifier.processFrame(frameWithShouldersOnly(timestamp)));
+    expect(verifier.processFrame(frameWithShouldersOnly(700)).phase).toBe('awaiting-rise');
   });
 
   it('resets inactivity only after a stable upward transition', () => {

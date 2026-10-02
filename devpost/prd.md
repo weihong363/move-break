@@ -11,7 +11,7 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 
 1. The user opens MoveBreak and sees a simple monitoring home screen; the camera is inactive.
 2. They select or retain a short demo-friendly inactivity threshold and press **Enable camera**.
-3. The app shows the live preview, establishes a low-movement or seated baseline, then monitors local pose movement.
+3. The app shows the live preview, learns the user's current seated/stationary baseline, then monitors local pose movement.
 4. When the inactivity threshold is reached, the UI clearly prompts the user to stand and move.
 5. The app confirms a stable rise, then accumulates general visible movement until the configurable duration is met.
 6. The app shows **Movement break completed**, resets inactivity monitoring, and returns to local low-movement observation with the camera session active.
@@ -45,7 +45,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 ### Inactivity monitoring
 
 - The user explicitly enables the camera once, after a clear local-only explanation.
-- After a usable baseline, the app accumulates only reliable low-movement time.
+- After a usable baseline, the app accumulates reliable seated/stationary time. Small hand, head, and upper-body movements do not interrupt it.
 - The inactivity threshold is configurable and has a short demo-friendly default.
 - Low movement triggers the break prompt; this is the product's differentiating behavior.
 

@@ -33,7 +33,7 @@ In a short recorded demo, a user enables the camera, starts seated or still unti
 
 ## The POC Boundary
 
-One static browser experience with a user-initiated camera session, a configurable short inactivity threshold, clear monitoring and break states, local webcam processing, and one simple verification sequence: low-movement or seated baseline → inactivity threshold → standing or clear upward transition → general movement for a configurable short threshold → completed → monitoring reset. Precise seated-pose classification is not required, so the flow remains viable with desk occlusion, camera-angle differences, or partial body visibility. A suggested movement may appear as guidance, but it is not measured.
+One static browser experience with a user-initiated camera session, a configurable short inactivity threshold, clear monitoring and break states, local webcam processing, and one simple verification sequence: user-specific seated baseline → inactivity threshold → standing or clear upward transition → general movement for a configurable short threshold → completed → monitoring reset. Precise seated-pose classification is not required: both visible shoulders establish the baseline at the user's normal desk distance, so the flow remains viable with desk occlusion and partial body visibility. A suggested movement may appear as guidance, but it is not measured.
 
 ## Later
 

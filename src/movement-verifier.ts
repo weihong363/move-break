@@ -7,7 +7,6 @@ export type MovementConfig = {
   inactivityDurationMs: number;
   movementDurationMs: number;
   smoothingWindow: number;
-  minimumUsableLandmarks: number;
   riseThreshold: number;
   movementThreshold: number;
   consecutiveRiseFrames: number;
@@ -38,7 +37,7 @@ const smooth = (frames: PoseFrame[], index: number) => {
   return { x: average(samples.map((sample) => sample.x)), y: average(samples.map((sample) => sample.y)) };
 };
 
-const usableCount = (landmarks: PoseLandmark[]) => upperBodyIndexes.filter((index) => visible(landmarks[index])).length;
+const shouldersVisible = (landmarks: PoseLandmark[]) => visible(landmarks[11]) && visible(landmarks[12]);
 
 export const createMovementVerifier = (config: MovementConfig) => {
   let phase: Exclude<VerifierPhase, 'paused-tracking'> = 'baseline';
@@ -80,7 +79,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   const processFrame = (frame: PoseFrame): VerifierSnapshot => {
     const elapsedMs = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
     lastTimestamp = frame.timestamp;
-    if (usableCount(frame.landmarks) < config.minimumUsableLandmarks) return snapshot('paused-tracking');
+    if (!shouldersVisible(frame.landmarks)) return snapshot('paused-tracking');
 
     samples = [...samples, frame].slice(-config.smoothingWindow);
     const metrics = calculateMetrics();

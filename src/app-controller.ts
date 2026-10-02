@@ -74,8 +74,8 @@ export const createAppController = (root: HTMLElement) => {
     if (!status || !progress) return;
 
     if (snapshot.phase === 'paused-tracking') {
-      status.textContent = 'Step back so your upper body is visible.';
-      progress.textContent = 'Monitoring is paused until tracking is reliable.';
+      status.textContent = 'Keep both shoulders in view.';
+      progress.textContent = 'Monitoring will continue when your stable baseline is visible.';
     } else if (snapshot.phase === 'baseline') {
       status.textContent = 'Hold still for a moment. MoveBreak is getting a baseline.';
       progress.textContent = `Getting ready… ${Math.round(snapshot.baselineProgress * 100)}%`;
