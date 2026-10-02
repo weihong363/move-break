@@ -39,6 +39,16 @@ Build mode: fast
   Learner check: Rehearse the character-led loop and briefly show the camera debug view during the demo.
   Commit: `Make character-led demo interface`
 
+- [x] **4. Upgrade the companion avatar**
+  Becomes usable: A seated SVG companion leads the experience, stands with the user, responds coarsely to arm movement or shoulder orientation, alerts with a short sound, and celebrates completion.
+  Why now: The character-led layout is proven, and this replaces its primitive visual with a polished discrete-state companion without changing the detection flow.
+  PRD ref: `prd.md > Screens and Layout`, `prd.md > Movement verification`
+  Spec ref: `spec.md > Components > Companion Avatar`
+  Build: Replace the CSS stick figure with a compact inline SVG avatar; map existing verifier phases and coarse movement signals; synthesize the prompt sound with Web Audio.
+  Verify (mechanical): Run tests and `pnpm build`; confirm no new dependency was added and the camera debug path still exists.
+  Learner check: Run one short demo loop and confirm the seated, alert, standing, moving, celebration, and seated-return presentations read clearly.
+  Commit: `Upgrade companion avatar`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
@@ -65,3 +75,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - Automatic sedentary detection replaced the Pomodoro-style work timer — the learner changed the kernel to prolonged low movement → prompt → verified movement → monitoring reset.
 - Low-movement accumulation and the automatic prompt were merged into the first revised slice because they are consecutive states in one verifier; this keeps the technical proof end-to-end.
 - The learner requested a character-led demo surface. The local camera and pose pipeline remain unchanged; the preview is now a debug and recovery surface.
+- The learner requested a more product-like avatar. The implementation uses a discrete inline SVG companion and existing local pose signals rather than an animation system or new product feature.

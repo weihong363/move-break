@@ -32,8 +32,8 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 - Initial permission state shows **Start gentle monitoring**, an **Enable camera** action, and a simple local-only explanation.
 - Baseline state says **Hold still for a moment** and visibly shows progress, then changes to a calm monitoring state.
 - Monitoring state uses a subtle idle/breathing character animation and says **Monitoring**.
-- Inactivity state uses an active character animation and says **Time to move**.
-- Rise state uses a standing character animation and says **Stand up**; a detected rise immediately changes the feedback to **Keep moving**.
+- Inactivity state highlights the companion, plays a short in-browser notification sound, and says **Time to move**.
+- Rise state moves the companion from a seated to standing pose and says **Stand up**; a detected rise immediately changes the feedback to **Keep moving**.
 - Sustained-movement state shows remaining time or equivalent progress without requiring a specific exercise.
 - Completion state uses a brief celebration animation and says **Break completed**, then waits for the user to sit back near their original baseline before restarting local inactivity monitoring.
 - Return state uses a resting character animation and says **Sit down when you're ready**.
@@ -58,6 +58,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
 - A visual suggestion may guide the user, but does not change completion requirements.
 - A small debug toggle can reveal the local camera preview during a demo. The preview also appears when tracking quality is insufficient to help the user reframe.
+- During sustained movement, coarse local signals can animate the companion: arm movement produces a wave/stretch and a large shoulder-width change flips its facing direction. This is illustrative feedback, not exercise classification.
 
 ### Feedback and recovery
 

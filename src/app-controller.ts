@@ -7,10 +7,21 @@ import type { AppState } from './types';
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
-  <div class="character" data-character="idle" aria-hidden="true">
-    <span class="character-head"></span><span class="character-body"></span>
-    <span class="character-arm arm-left"></span><span class="character-arm arm-right"></span>
-    <span class="character-leg leg-left"></span><span class="character-leg leg-right"></span>
+  <div class="avatar" data-avatar="seated" data-avatar-motion="still" aria-hidden="true">
+    <svg viewBox="0 0 180 170" role="presentation">
+      <ellipse class="avatar-shadow" cx="91" cy="150" rx="56" ry="10" />
+      <path class="avatar-chair" d="M113 91h25v54h-8v-45h-17z" />
+      <g class="avatar-person">
+        <path class="avatar-leg avatar-leg-left" d="M83 114v21h27" />
+        <path class="avatar-leg avatar-leg-right" d="M101 114v21h28" />
+        <path class="avatar-body" d="M76 62q15-12 30 0v55H76z" />
+        <path class="avatar-arm avatar-arm-left" d="M80 72 56 103" />
+        <path class="avatar-arm avatar-arm-right" d="m102 72 25 29" />
+        <circle class="avatar-head" cx="91" cy="45" r="20" />
+        <circle class="avatar-eye" cx="84" cy="43" r="2.4" /><circle class="avatar-eye" cx="98" cy="43" r="2.4" />
+        <path class="avatar-smile" d="M83 51q8 8 16 0" />
+      </g>
+    </svg>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {
@@ -22,6 +33,7 @@ export const createAppController = (root: HTMLElement) => {
   let debugPreview = false;
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   let promptStartedAt: number | undefined;
+  let notificationAudio: AudioContext | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
@@ -34,6 +46,27 @@ export const createAppController = (root: HTMLElement) => {
     verifier = createVerifier();
   };
 
+  const primeNotificationAudio = async () => {
+    notificationAudio ??= new AudioContext();
+    if (notificationAudio.state === 'suspended') await notificationAudio.resume();
+  };
+
+  const playNotification = () => {
+    const context = notificationAudio;
+    if (!context || context.state !== 'running') return;
+    [0, 0.12].forEach((offset, index) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = index === 0 ? 523 : 659;
+      gain.gain.setValueAtTime(0.0001, context.currentTime + offset);
+      gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + offset + 0.18);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(context.currentTime + offset);
+      oscillator.stop(context.currentTime + offset + 0.2);
+    });
+  };
+
   const enableCamera = async () => {
     state.phase = 'camera-loading';
     render();
@@ -42,6 +75,7 @@ export const createAppController = (root: HTMLElement) => {
 
     try {
       resetMonitoring();
+      void primeNotificationAudio();
       stream = await requestCamera(video);
       state.phase = 'camera-active';
       render();
@@ -68,8 +102,10 @@ export const createAppController = (root: HTMLElement) => {
     render();
   };
 
-  const setCharacter = (nextState: string) => {
-    root.querySelector<HTMLElement>('[data-character]')?.setAttribute('data-character', nextState);
+  const setAvatar = (nextState: string, motion: VerifierSnapshot['avatarMotion'] = 'still') => {
+    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
+    avatar?.setAttribute('data-avatar', nextState);
+    avatar?.setAttribute('data-avatar-motion', motion);
   };
 
   const setPreviewVisible = (visible: boolean) => {
@@ -82,44 +118,47 @@ export const createAppController = (root: HTMLElement) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
-    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') promptStartedAt = performance.now();
+    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') {
+      promptStartedAt = performance.now();
+      playNotification();
+    }
     if (snapshot.phase !== 'awaiting-rise') promptStartedAt = undefined;
     lastVerifierPhase = snapshot.phase;
 
     if (snapshot.phase === 'paused-tracking') {
-      setCharacter('inspect');
+      setAvatar('inspect');
       setPreviewVisible(true);
       status.textContent = 'Keep both shoulders in view.';
       progress.textContent = 'Monitoring will continue when your stable baseline is visible.';
     } else if (snapshot.phase === 'baseline') {
-      setCharacter('idle');
+      setAvatar('seated');
       setPreviewVisible(debugPreview);
       status.textContent = 'Hold still for a moment. MoveBreak is getting a baseline.';
       progress.textContent = `Getting ready… ${Math.round(snapshot.baselineProgress * 100)}%`;
     } else if (snapshot.phase === 'monitoring') {
-      setCharacter('idle');
+      setAvatar('seated');
       setPreviewVisible(debugPreview);
       status.textContent = 'Monitoring';
       progress.textContent = `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
     } else if (snapshot.phase === 'awaiting-rise') {
       const justPrompted = promptStartedAt !== undefined && performance.now() - promptStartedAt < 700;
-      setCharacter(justPrompted ? 'active' : 'rise');
+      setAvatar(justPrompted ? 'alert' : 'standing');
       setPreviewVisible(debugPreview);
       status.textContent = justPrompted ? 'Time to move' : 'Stand up';
       progress.textContent = justPrompted ? 'Stand up and move for a few seconds.' : 'Waiting for a clear rise.';
     } else if (snapshot.phase === 'moving') {
-      setCharacter('move');
+      setAvatar('moving', snapshot.avatarMotion);
       setPreviewVisible(debugPreview);
       status.textContent = 'Keep moving';
       const seconds = Math.max(0, Math.ceil((1 - snapshot.movementProgress) * demoConfig.movementDurationMs / 1_000));
       progress.textContent = `${seconds} seconds remaining`;
     } else if (snapshot.phase === 'completed') {
-      setCharacter('celebrate');
+      setAvatar('celebrate');
       setPreviewVisible(debugPreview);
       status.textContent = 'Break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
     } else {
-      setCharacter('rest');
+      setAvatar('seated');
       setPreviewVisible(debugPreview);
       status.textContent = 'Sit down when you are ready';
       progress.textContent = 'Monitoring resumes from your usual seated position.';

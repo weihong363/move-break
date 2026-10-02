@@ -42,6 +42,13 @@ const frameWithShouldersOnly = (timestamp: number): PoseFrame => {
   return frame;
 };
 
+const frameWithWideShoulders = (timestamp: number, offsetY = 0): PoseFrame => {
+  const frame = frameAt(timestamp, offsetY);
+  frame.landmarks[11].x -= 0.1;
+  frame.landmarks[12].x += 0.1;
+  return frame;
+};
+
 describe('movement verifier', () => {
   it('keeps seated inactivity time through hand movement', () => {
     const verifier = createMovementVerifier(config);
@@ -78,8 +85,15 @@ describe('movement verifier', () => {
     const paused = verifier.processFrame(frameAt(1_100, -0.2, 0.04, false));
     const resumed = verifier.processFrame(frameAt(1_200, -0.2, 0.08));
     expect(active.movementProgress).toBeGreaterThan(0);
+    expect(active.avatarMotion).toBe('arms');
     expect(paused.phase).toBe('paused-tracking');
     expect(resumed.movementProgress).toBeGreaterThanOrEqual(active.movementProgress);
+  });
+
+  it('maps a large shoulder-width change to the avatar turning response', () => {
+    const verifier = reachPrompt();
+    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
+    expect(verifier.processFrame(frameWithWideShoulders(1_000, -0.2)).avatarMotion).toBe('turning');
   });
 
   it('keeps prior progress through low-motion frames and completes after valid movement time', () => {

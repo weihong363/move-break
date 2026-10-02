@@ -20,7 +20,7 @@ Implements `prd.md > The Core Journey`.
 3. After the baseline, it accumulates valid seated/stationary time. The short demo default triggers a movement prompt after 5 seconds.
 4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
 5. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
-6. The character-led UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session. A debug toggle reveals the preview for demo proof; tracking recovery reveals it automatically.
+6. The character-led UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session. A debug toggle reveals the preview for demo proof; tracking recovery reveals it automatically. A small Web Audio notification plays when the prompt begins.
 
 ## Stack
 
@@ -49,6 +49,10 @@ Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream b
 ### App Controller
 
 Owns monitoring, prompt, and verification UI state. It translates camera, detector, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
+
+### Companion Avatar
+
+Uses one inline SVG with a small state set: seated idle, alert, standing, moving, celebration, and tracking recovery. It is driven by verifier phases. During movement, a coarse arm-displacement signal triggers a wave/stretch; a large shoulder-width change flips the avatar direction. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library, downloaded media, or new service is required.
 
 ### Camera
 
