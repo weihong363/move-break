@@ -29,6 +29,16 @@ Build mode: fast
   Learner check: Rehearse the full automatic demo and report any confusing copy or timing.
   Commit: `Finish automatic MoveBreak demo`
 
+- [x] **3. Make the character the primary interface**
+  Becomes usable: The animated MoveBreak character communicates monitoring, prompt, rise, movement, completion, and seated-return states while the webcam stays hidden during normal use.
+  Why now: The complete verified loop is stable, so this presentation pass makes the demo clearer without changing its camera or pose behavior.
+  PRD ref: `prd.md > Screens and Layout`, `prd.md > Look and Feel`
+  Spec ref: `spec.md > The Core Journey Through the System`
+  Build: Add state-based CSS character animations; hide the camera preview by default; provide a debug toggle and automatic preview fallback for tracking recovery.
+  Verify (mechanical): Run tests and `pnpm build`; confirm the camera pipeline remains active with the preview hidden and that the debug toggle or tracking pause reveals it.
+  Learner check: Rehearse the character-led loop and briefly show the camera debug view during the demo.
+  Commit: `Make character-led demo interface`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
@@ -54,3 +64,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 
 - Automatic sedentary detection replaced the Pomodoro-style work timer — the learner changed the kernel to prolonged low movement → prompt → verified movement → monitoring reset.
 - Low-movement accumulation and the automatic prompt were merged into the first revised slice because they are consecutive states in one verifier; this keeps the technical proof end-to-end.
+- The learner requested a character-led demo surface. The local camera and pose pipeline remain unchanged; the preview is now a debug and recovery surface.

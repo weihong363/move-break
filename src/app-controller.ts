@@ -6,12 +6,22 @@ import type { AppState } from './types';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
+const characterMarkup = () => `
+  <div class="character" data-character="idle" aria-hidden="true">
+    <span class="character-head"></span><span class="character-body"></span>
+    <span class="character-arm arm-left"></span><span class="character-arm arm-right"></span>
+    <span class="character-leg leg-left"></span><span class="character-leg leg-right"></span>
+  </div>`;
+
 export const createAppController = (root: HTMLElement) => {
   const state: AppState = {
     phase: 'ready',
     inactivityDurationMs: demoConfig.inactivityDurationSeconds * 1_000,
   };
   let stream: MediaStream | undefined;
+  let debugPreview = false;
+  let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
+  let promptStartedAt: number | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
@@ -58,32 +68,60 @@ export const createAppController = (root: HTMLElement) => {
     render();
   };
 
+  const setCharacter = (nextState: string) => {
+    root.querySelector<HTMLElement>('[data-character]')?.setAttribute('data-character', nextState);
+  };
+
+  const setPreviewVisible = (visible: boolean) => {
+    root.querySelector<HTMLElement>('[data-camera-shell]')?.classList.toggle('camera-visible', visible);
+    const toggle = root.querySelector<HTMLButtonElement>('[data-action="toggle-debug"]');
+    if (toggle) toggle.textContent = debugPreview ? 'Hide camera debug' : 'Show camera debug';
+  };
+
   const updateVerification = (snapshot: VerifierSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
+    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') promptStartedAt = performance.now();
+    if (snapshot.phase !== 'awaiting-rise') promptStartedAt = undefined;
+    lastVerifierPhase = snapshot.phase;
 
     if (snapshot.phase === 'paused-tracking') {
+      setCharacter('inspect');
+      setPreviewVisible(true);
       status.textContent = 'Keep both shoulders in view.';
       progress.textContent = 'Monitoring will continue when your stable baseline is visible.';
     } else if (snapshot.phase === 'baseline') {
+      setCharacter('idle');
+      setPreviewVisible(debugPreview);
       status.textContent = 'Hold still for a moment. MoveBreak is getting a baseline.';
       progress.textContent = `Getting ready… ${Math.round(snapshot.baselineProgress * 100)}%`;
     } else if (snapshot.phase === 'monitoring') {
-      status.textContent = 'Monitoring gentle movement.';
+      setCharacter('idle');
+      setPreviewVisible(debugPreview);
+      status.textContent = 'Monitoring';
       progress.textContent = `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
     } else if (snapshot.phase === 'awaiting-rise') {
-      status.textContent = 'Time to move. Stand up and move for a few seconds.';
-      progress.textContent = 'Waiting for a clear rise.';
+      const justPrompted = promptStartedAt !== undefined && performance.now() - promptStartedAt < 700;
+      setCharacter(justPrompted ? 'active' : 'rise');
+      setPreviewVisible(debugPreview);
+      status.textContent = justPrompted ? 'Time to move' : 'Stand up';
+      progress.textContent = justPrompted ? 'Stand up and move for a few seconds.' : 'Waiting for a clear rise.';
     } else if (snapshot.phase === 'moving') {
-      status.textContent = 'Nice — keep moving.';
+      setCharacter('move');
+      setPreviewVisible(debugPreview);
+      status.textContent = 'Keep moving';
       const seconds = Math.max(0, Math.ceil((1 - snapshot.movementProgress) * demoConfig.movementDurationMs / 1_000));
       progress.textContent = `${seconds} seconds remaining`;
     } else if (snapshot.phase === 'completed') {
-      status.textContent = 'Movement break completed';
+      setCharacter('celebrate');
+      setPreviewVisible(debugPreview);
+      status.textContent = 'Break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
     } else {
-      status.textContent = 'Waiting for you to sit back down.';
+      setCharacter('rest');
+      setPreviewVisible(debugPreview);
+      status.textContent = 'Sit down when you are ready';
       progress.textContent = 'Monitoring resumes from your usual seated position.';
     }
   };
@@ -99,12 +137,21 @@ export const createAppController = (root: HTMLElement) => {
       root.innerHTML = `
         <section class="proof-card" aria-live="polite">
           <p class="eyebrow">MOVE BREAK</p>
-          <h1>Gentle movement check</h1>
-          <video class="camera-preview" autoplay muted playsinline></video>
-          <p class="readiness" data-status>${isLoading ? 'Opening your camera…' : 'Hold still for a moment. MoveBreak is getting a baseline.'}</p>
+          ${characterMarkup()}
+          <p class="state-label">LOCAL MOVEMENT CHECK</p>
+          <h1 class="readiness" data-status>${isLoading ? 'Opening your camera…' : 'Getting ready'}</h1>
           <p class="progress" data-progress>${isLoading ? '' : 'Getting ready… 0%'}</p>
+          <div class="camera-shell" data-camera-shell>
+            <video class="camera-preview" autoplay muted playsinline></video>
+            <p>Local camera debug view</p>
+          </div>
+          ${isLoading ? '' : '<button class="text-button debug-toggle" type="button" data-action="toggle-debug">Show camera debug</button>'}
           <p class="privacy-note">Camera processing stays on your device.</p>
         </section>`;
+      root.querySelector<HTMLButtonElement>('[data-action="toggle-debug"]')?.addEventListener('click', () => {
+        debugPreview = !debugPreview;
+        setPreviewVisible(debugPreview);
+      });
       return;
     }
 
@@ -112,7 +159,7 @@ export const createAppController = (root: HTMLElement) => {
     root.innerHTML = `
       <section class="home-card" aria-live="polite">
         <p class="eyebrow">MOVE BREAK</p>
-        <div class="companion" aria-hidden="true">◔</div>
+        ${characterMarkup()}
         <p class="state-label">${isError ? 'Camera access needed' : 'A gentle nudge when you stay still'}</p>
         <h1>${isError ? 'Monitoring paused' : 'Move a little, when you need it'}</h1>
         <p class="description">${isError ? cameraErrorMessage : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>

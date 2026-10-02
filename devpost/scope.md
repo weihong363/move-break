@@ -21,7 +21,7 @@ The user explicitly enables the camera once. MoveBreak establishes a low-movemen
 
 ## Inspiration & Identity
 
-Simple, lightweight, friendly, and non-judgmental. It should feel like a smart break companion, with an immediately understandable flow: seated → reminder → stand and move → camera verifies → sit back → monitor again.
+Simple, lightweight, friendly, and non-judgmental. It should feel like a smart break companion: the animated MoveBreak character leads the interaction while the local camera pipeline runs quietly in the background. The flow remains immediately understandable: seated → reminder → stand and move → camera verifies → sit back → monitor again.
 
 ## Why This Matters to the Learner
 
@@ -33,7 +33,7 @@ In a short recorded demo, a user enables the camera, starts seated or still unti
 
 ## The POC Boundary
 
-One static browser experience with a user-initiated camera session, a configurable short inactivity threshold, clear monitoring and break states, local webcam processing, and one simple verification sequence: user-specific seated baseline → inactivity threshold → standing or clear upward transition → general movement for a configurable short threshold → completed → monitoring reset. Precise seated-pose classification is not required: both visible shoulders establish the baseline at the user's normal desk distance, so the flow remains viable with desk occlusion and partial body visibility. A suggested movement may appear as guidance, but it is not measured.
+One static browser experience with a user-initiated camera session, a configurable short inactivity threshold, character-led monitoring and break states, local webcam processing, and one simple verification sequence: user-specific seated baseline → inactivity threshold → standing or clear upward transition → general movement for a configurable short threshold → completed → monitoring reset. The camera preview is an optional debug or recovery surface, not the primary interface. Precise seated-pose classification is not required: both visible shoulders establish the baseline at the user's normal desk distance, so the flow remains viable with desk occlusion and partial body visibility. A suggested movement may appear as guidance, but it is not measured.
 
 ## Later
 

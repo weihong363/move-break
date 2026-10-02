@@ -15,12 +15,12 @@ This keeps the kernel real—camera-verified movement—without a server, stored
 
 Implements `prd.md > The Core Journey`.
 
-1. **Enable camera** moves the app to `camera-loading`, requests camera access, attaches the stream to the preview, and starts local pose detection. On rejection or failure, state is `camera-required`.
+1. **Enable camera** moves the app to `camera-loading`, requests camera access, attaches the stream to a hidden local preview, and starts local pose detection. On rejection or failure, state is `camera-required`.
 2. The detector emits landmarks with a timestamp. The verifier accepts frames with both shoulders visible, smooths them, and collects a 1.5-second baseline at the user's current camera distance and seated position.
 3. After the baseline, it accumulates valid seated/stationary time. The short demo default triggers a movement prompt after 5 seconds.
 4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
 5. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
-6. The UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session.
+6. The character-led UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session. A debug toggle reveals the preview for demo proof; tracking recovery reveals it automatically.
 
 ## Stack
 

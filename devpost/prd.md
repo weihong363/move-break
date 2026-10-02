@@ -11,7 +11,7 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 
 1. The user opens MoveBreak and sees a simple monitoring home screen; the camera is inactive.
 2. They select or retain a short demo-friendly inactivity threshold and press **Enable camera**.
-3. The app shows the live preview, learns the user's current seated/stationary baseline, then monitors local pose movement.
+3. The app shows the MoveBreak character, learns the user's current seated/stationary baseline through the local camera pipeline, then monitors local pose movement.
 4. When the inactivity threshold is reached, the UI clearly prompts the user to stand and move.
 5. The app confirms a stable rise, then accumulates general visible movement until the configurable duration is met.
 6. The app shows **Movement break completed**, then waits for the user to sit back near their original baseline before restarting inactivity monitoring in the active camera session.
@@ -22,19 +22,21 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 
 - App name, current monitoring state, one primary **Enable camera** action, and a small inactivity-threshold control have visual priority.
 - Before the camera is enabled, a short note explains why monitoring is needed and that processing stays on-device.
-- After permission, the live preview and elapsed low-movement progress replace the setup controls.
+- After permission, the animated MoveBreak character, current state, and elapsed low-movement progress replace the setup controls. The live preview stays hidden by default.
 - The MVP has no dashboard, stats, streaks, exercise library, account controls, or work-session timer.
 
 ### Movement break
 
-- One consistent layout: **Movement break** title, camera preview, one primary instruction, lightweight progress/status indicator, and local-processing privacy note.
+- One consistent layout: animated MoveBreak character, one primary instruction, lightweight progress/status indicator, and local-processing privacy note. The camera preview stays secondary.
 - No extra navigation or settings appear during verification.
 - Initial permission state shows **Start gentle monitoring**, an **Enable camera** action, and a simple local-only explanation.
 - Baseline state says **Hold still for a moment** and visibly shows progress, then changes to a calm monitoring state.
-- Inactivity state says **Time to move** and makes the movement prompt unmissable.
-- Rise state says **Stand up** or **Now get up and move**; a detected rise immediately changes the feedback to **Nice — keep moving**.
+- Monitoring state uses a subtle idle/breathing character animation and says **Monitoring**.
+- Inactivity state uses an active character animation and says **Time to move**.
+- Rise state uses a standing character animation and says **Stand up**; a detected rise immediately changes the feedback to **Keep moving**.
 - Sustained-movement state shows remaining time or equivalent progress without requiring a specific exercise.
-- Completion state shows a visible success indicator, **Movement break completed**, supporting encouragement, then waits for the user to sit back near their original baseline before restarting local inactivity monitoring.
+- Completion state uses a brief celebration animation and says **Break completed**, then waits for the user to sit back near their original baseline before restarting local inactivity monitoring.
+- Return state uses a resting character animation and says **Sit down when you're ready**.
 
 ## Look and Feel
 
@@ -55,6 +57,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - Completion requires: low-movement or seated baseline → inactivity threshold → clear rise or standing transition → general visible movement for a configurable short threshold. After completion, the app waits for the user to return near their original seated baseline before restarting inactivity timing.
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
 - A visual suggestion may guide the user, but does not change completion requirements.
+- A small debug toggle can reveal the local camera preview during a demo. The preview also appears when tracking quality is insufficient to help the user reframe.
 
 ### Feedback and recovery
 
@@ -65,6 +68,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 ## Acceptance Criteria
 
 - [ ] A user can explicitly enable the local camera from the home screen and see a preview.
+- [ ] During normal monitoring, the animated character is primary and the camera preview is hidden unless the debug toggle or tracking recovery needs it.
 - [ ] A usable baseline leads to a visible low-movement monitoring state.
 - [ ] A sustained seated or stationary state for the configured threshold triggers a clear movement-break prompt; small hand and head movements do not reset it.
 - [ ] If camera permission is denied, the UI explains that the break cannot be completed without it and offers retry; no camera-free completion path exists.
