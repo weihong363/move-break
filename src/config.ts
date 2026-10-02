@@ -1,6 +1,6 @@
 export const demoConfig = {
   workDurationSeconds: 10,
-  workDurationOptions: [10, 25, 60],
+  workDurationOptions: [1, 10, 25, 60],
   baselineDurationMs: 1_500,
   movementDurationMs: 4_000,
   smoothingWindow: 4,

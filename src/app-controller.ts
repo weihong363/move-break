@@ -12,6 +12,8 @@ const formatTime = (milliseconds: number) => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const durationLabel = (seconds: number) => seconds === 1 ? '1 second demo' : `${seconds} seconds`;
+
 export const createAppController = (root: HTMLElement) => {
   const state: AppState = {
     phase: 'ready',
@@ -83,10 +85,7 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), (message) => {
-        readinessMessage = message;
-        root.querySelector<HTMLElement>('[data-readiness]')?.replaceChildren(message);
-      });
+      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -94,6 +93,15 @@ export const createAppController = (root: HTMLElement) => {
         : 'MoveBreak could not access a camera. Check that one is available, then try again.';
       render();
     }
+  };
+
+  const handleDetectorError = (message: string) => {
+    detector.stop();
+    stopCamera(stream);
+    stream = undefined;
+    cameraErrorMessage = message;
+    state.phase = 'camera-required';
+    render();
   };
 
   const updateVerification = (snapshot: VerifierSnapshot) => {
@@ -174,7 +182,7 @@ export const createAppController = (root: HTMLElement) => {
           <label class="duration-control">
             Work duration
             <select data-action="duration">
-              ${demoConfig.workDurationOptions.map((seconds) => `<option value="${seconds}" ${state.durationMs === seconds * 1_000 ? 'selected' : ''}>${seconds} seconds</option>`).join('')}
+              ${demoConfig.workDurationOptions.map((seconds) => `<option value="${seconds}" ${state.durationMs === seconds * 1_000 ? 'selected' : ''}>${durationLabel(seconds)}</option>`).join('')}
             </select>
           </label>
           <button class="primary-button" type="button" data-action="start">Start</button>`}

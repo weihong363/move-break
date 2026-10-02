@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Use the live camera flow: remain still, stand, move with a brief natural pause, and confirm that progress resumes and completion appears only after enough valid movement.
   Commit: `Add movement break verification`
 
-- [ ] **4. Finish recovery behavior and demo readiness**
+- [x] **4. Finish recovery behavior and demo readiness**
   Becomes usable: The full loop is coherent and presentation-ready: success stops the camera, **Start next session** resets only after an explicit action, all required recovery states are understandable, and the production build is valid.
   Why now: Finishes the demonstrated journey after the core verification is already usable, without expanding the product.
   PRD ref: `prd.md > States and Boundaries`, `prd.md > What We're Building`, `prd.md > Non-Goals`
@@ -52,7 +52,7 @@ Build mode: fast
 ## Hands-on Checkpoints
 
 - [ ] Early usable behavior explored — after slice 2, test the timer-to-camera transition and local readiness feedback before verifier implementation.
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
 
