@@ -52,14 +52,14 @@ button, select { font: inherit; }
   transition: background-position 260ms ease, transform 260ms ease, filter 260ms ease;
 }
 
-[data-avatar="seated"] .avatar-sprite { background-position: 0 0; animation: avatar-breathe 2.8s ease-in-out infinite; }
-[data-avatar="alert"] .avatar-sprite { background-position: 50% 0; animation: avatar-alert 700ms ease-in-out infinite alternate; }
-[data-avatar="standing"] .avatar-sprite { background-position: 100% 0; }
-[data-avatar="moving"] .avatar-sprite { background-position: 0 100%; }
+[data-avatar="seated"] .avatar-sprite { background-position: -32px 0; animation: avatar-breathe 2.8s ease-in-out infinite; }
+[data-avatar="alert"] .avatar-sprite { background-position: calc(50% + 7px) 0; animation: avatar-alert 700ms ease-in-out infinite alternate; }
+[data-avatar="standing"] .avatar-sprite { background-position: calc(100% + 24px) 0; }
+[data-avatar="moving"] .avatar-sprite { background-position: -27px 100%; }
 [data-avatar="moving"][data-avatar-motion="arms"] .avatar-sprite { animation: avatar-wave 520ms ease-in-out infinite alternate; }
 [data-avatar="moving"][data-avatar-motion="turning"] .avatar-sprite { transform: scaleX(-1); }
-[data-avatar="celebrate"] .avatar-sprite { background-position: 50% 100%; animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
-[data-avatar="inspect"] .avatar-sprite { background-position: 100% 100%; animation: avatar-inspect 1s ease-in-out infinite; }
+[data-avatar="celebrate"] .avatar-sprite { background-position: calc(50% - 5px) 100%; animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
+[data-avatar="inspect"] .avatar-sprite { background-position: calc(100% + 24px) 100%; animation: avatar-inspect 1s ease-in-out infinite; }
 
 @keyframes avatar-breathe { 50% { transform: translateY(-4px) scale(1.015); } }
 @keyframes avatar-alert { to { transform: translateY(-7px) scale(1.04); filter: brightness(1.15); } }
