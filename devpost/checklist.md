@@ -59,6 +59,16 @@ Build mode: fast
   Learner check: Confirm the blue companion reads clearly across the normal demo flow.
   Commit: `Apply blue companion visual`
 
+- [x] **6. Drive the avatar from upper-body landmarks**
+  Becomes usable: The blue companion has a live SVG upper-body rig whose torso, head, arms, and seated/standing mode follow smoothed local pose landmarks.
+  Why now: The user requested responsive body-part motion while keeping the established camera and verifier pipeline intact.
+  PRD ref: `prd.md > Movement verification`, `prd.md > Look and Feel`
+  Spec ref: `spec.md > Components > Companion Avatar`
+  Build: Replace the static sprite with a small SVG rig; map shoulders, elbows, wrists, head, and hips into normalized transforms; add deterministic rig tests.
+  Verify (mechanical): Run tests and `pnpm build`; confirm seated/standing and arm-transform outputs change from supplied pose frames.
+  Learner check: Enable camera and compare arm and upper-body motion against the avatar in the hidden-preview experience.
+  Commit: `Drive avatar from upper-body landmarks`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
@@ -86,4 +96,5 @@ Activity mode: focused alternative for an experienced plan-first developer
 - Low-movement accumulation and the automatic prompt were merged into the first revised slice because they are consecutive states in one verifier; this keeps the technical proof end-to-end.
 - The learner requested a character-led demo surface. The local camera and pose pipeline remain unchanged; the preview is now a debug and recovery surface.
 - The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
-- The learner selected a blue luminous companion style from the provided reference; a locally bundled sprite sheet now supplies the state visuals.
+- The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
+- The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.

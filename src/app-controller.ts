@@ -3,13 +3,31 @@ import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import type { AppState } from './types';
-import avatarSpriteUrl from './assets/movebreak-blue-avatar-sheet.png';
+import { createAvatarRigDriver, type AvatarRigPose } from './avatar-rig';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
   <div class="avatar" data-avatar="seated" data-avatar-motion="still" aria-hidden="true">
-    <span class="avatar-sprite" style="background-image:url('${avatarSpriteUrl}')"></span>
+    <svg class="avatar-rig" viewBox="0 0 240 220" role="presentation">
+      <defs>
+        <linearGradient id="avatar-blue" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#5ee9ff"/><stop offset="0.55" stop-color="#1976d2"/><stop offset="1" stop-color="#0d47a1"/></linearGradient>
+        <radialGradient id="avatar-face"><stop stop-color="#b8f7ff"/><stop offset="1" stop-color="#2688df"/></radialGradient>
+      </defs>
+      <ellipse class="rig-shadow" cx="120" cy="197" rx="70" ry="12" />
+      <g data-rig-root transform="translate(120 137)">
+        <path class="rig-desk" d="M-76 51h152q10 0 10 10t-10 10H-76q-10 0-10-10t10-10" />
+        <path class="rig-seat" d="M-42 31h84v22h-84z" />
+        <g data-rig-torso transform="scale(1)">
+          <rect class="rig-torso" x="-31" y="-16" width="62" height="67" rx="29" />
+          <g data-rig-head transform="translate(0 -48)"><circle class="rig-head" r="27" /><circle class="rig-eye" cx="-9" cy="-3" r="3" /><circle class="rig-eye" cx="9" cy="-3" r="3" /><path class="rig-smile" d="M-9 8q9 8 18 0" /></g>
+          <g data-rig-left-upper><rect class="rig-arm" x="-10" y="0" width="20" height="50" rx="10" /></g>
+          <g data-rig-left-lower><rect class="rig-arm" x="-9" y="0" width="18" height="50" rx="9" /></g>
+          <g data-rig-right-upper><rect class="rig-arm" x="-10" y="0" width="20" height="50" rx="10" /></g>
+          <g data-rig-right-lower><rect class="rig-arm" x="-9" y="0" width="18" height="50" rx="9" /></g>
+        </g>
+      </g>
+    </svg>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {
@@ -25,6 +43,7 @@ export const createAppController = (root: HTMLElement) => {
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
+  const avatarRig = createAvatarRigDriver(demoConfig.smoothingWindow);
 
   function createVerifier() {
     return createMovementVerifier({ ...demoConfig, inactivityDurationMs: state.inactivityDurationMs });
@@ -32,6 +51,7 @@ export const createAppController = (root: HTMLElement) => {
 
   const resetMonitoring = () => {
     verifier = createVerifier();
+    avatarRig.reset();
   };
 
   const primeNotificationAudio = async () => {
@@ -71,7 +91,11 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
+      await detector.start(activeVideo, (frame) => {
+        const rigPose = avatarRig.update(frame);
+        if (rigPose) updateAvatarRig(rigPose);
+        updateVerification(verifier.processFrame(frame));
+      }, handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -94,6 +118,18 @@ export const createAppController = (root: HTMLElement) => {
     const avatar = root.querySelector<HTMLElement>('[data-avatar]');
     avatar?.setAttribute('data-avatar', nextState);
     avatar?.setAttribute('data-avatar-motion', motion);
+  };
+
+  const updateAvatarRig = (pose: AvatarRigPose) => {
+    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
+    avatar?.setAttribute('data-rig-posture', pose.posture);
+    root.querySelector<SVGGElement>('[data-rig-root]')?.setAttribute('transform', `translate(${pose.root.x} ${pose.root.y})`);
+    root.querySelector<SVGGElement>('[data-rig-torso]')?.setAttribute('transform', `scale(${pose.torsoScale.toFixed(2)})`);
+    root.querySelector<SVGGElement>('[data-rig-head]')?.setAttribute('transform', `translate(${pose.head.x.toFixed(1)} ${pose.head.y.toFixed(1)})`);
+    root.querySelector<SVGGElement>('[data-rig-left-upper]')?.setAttribute('transform', pose.leftUpperArm);
+    root.querySelector<SVGGElement>('[data-rig-left-lower]')?.setAttribute('transform', pose.leftLowerArm);
+    root.querySelector<SVGGElement>('[data-rig-right-upper]')?.setAttribute('transform', pose.rightUpperArm);
+    root.querySelector<SVGGElement>('[data-rig-right-lower]')?.setAttribute('transform', pose.rightLowerArm);
   };
 
   const setPreviewVisible = (visible: boolean) => {
