@@ -49,7 +49,6 @@ button, select { font: inherit; }
   background-position: 0 0;
   background-repeat: no-repeat;
   background-size: 300% 200%;
-  mix-blend-mode: screen;
   transition: background-position 260ms ease, transform 260ms ease, filter 260ms ease;
 }
 
