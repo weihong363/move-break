@@ -110,7 +110,7 @@ export const createAppController = (root: HTMLElement) => {
 
     const isError = state.phase === 'camera-required';
     root.innerHTML = `
-      <section class="timer-card" aria-live="polite">
+      <section class="home-card" aria-live="polite">
         <p class="eyebrow">MOVE BREAK</p>
         <div class="companion" aria-hidden="true">◔</div>
         <p class="state-label">${isError ? 'Camera access needed' : 'A gentle nudge when you stay still'}</p>

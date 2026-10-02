@@ -20,7 +20,7 @@ Implements `prd.md > The Core Journey`.
 3. After the baseline, it accumulates valid seated/stationary time. The short demo default triggers a movement prompt after 5 seconds.
 4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `moving` only after the rise condition persists across several frames; a one-frame spike is ignored.
 5. In `moving`, a normalized, smoothed multi-landmark displacement score accumulates valid movement time only while landmark coverage and tracking quality remain sufficient. Brief natural pauses or individual low-motion frames do not erase prior progress; invalid tracking pauses it. Four qualifying seconds complete the break by default.
-6. The UI shows `completed`, resets the inactivity monitor, and resumes monitoring in the active camera session.
+6. The UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session.
 
 ## Stack
 
@@ -42,7 +42,7 @@ The technical spike must confirm the browser build can load the model asset and 
 
 ## Look and Feel
 
-Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream background, muted green primary color, and limited warm orange active/success color. Use a clean soft sans-serif system font stack, large timer numerals, rounded controls, spacious layout, and low-contrast borders. Copy remains supportive and short. A small CSS/SVG stick figure is optional and must not delay the working verification path.
+Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream background, muted green primary color, and limited warm orange active/success color. Use a clean soft sans-serif system font stack, rounded controls, spacious layout, and low-contrast borders. Copy remains supportive and short. A small CSS/SVG stick figure is optional and must not delay the working verification path.
 
 ## Components
 

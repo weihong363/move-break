@@ -16,7 +16,7 @@ Open the Vite URL in a modern desktop browser. Camera access works on `localhost
 1. Choose the 5-second inactivity demo threshold and press **Enable camera**.
 2. Hold still for about 1.5 seconds to establish a baseline, then stay inactive until the movement prompt appears.
 3. Stand up, then move for 4 accumulated seconds. Brief natural pauses retain progress; lost tracking pauses it.
-4. Confirm **Movement break completed**, then watch local inactivity monitoring restart in the same camera session.
+4. Confirm **Movement break completed**, remain standing if you like, then sit back near the original baseline. Local inactivity monitoring restarts in the same camera session only after that return.
 
 If camera permission was denied, allow it in the browser's site settings before pressing **Try camera again**. A browser page cannot reset that permission itself.
 

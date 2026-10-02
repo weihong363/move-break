@@ -21,7 +21,7 @@ The user explicitly enables the camera once. MoveBreak establishes a low-movemen
 
 ## Inspiration & Identity
 
-Simple, lightweight, friendly, and non-judgmental. It should feel like a smart break timer, with an immediately understandable flow: work → reminder → stand and move → camera verifies → complete.
+Simple, lightweight, friendly, and non-judgmental. It should feel like a smart break companion, with an immediately understandable flow: seated → reminder → stand and move → camera verifies → sit back → monitor again.
 
 ## Why This Matters to the Learner
 
@@ -29,7 +29,7 @@ The learner wants to practice keeping an AI-assisted project small and shippable
 
 ## What "Working" Looks Like
 
-In a short recorded demo, a user enables the camera, starts seated or still until the short configurable inactivity threshold is reached, receives a movement prompt, stands or clearly rises, moves until a short configurable threshold is met, and sees “Movement break completed.” The app then resumes inactivity monitoring.
+In a short recorded demo, a user enables the camera, starts seated or still until the short configurable inactivity threshold is reached, receives a movement prompt, stands or clearly rises, moves until a short configurable threshold is met, and sees “Movement break completed.” After they sit back near their original baseline, the app resumes inactivity monitoring.
 
 ## The POC Boundary
 

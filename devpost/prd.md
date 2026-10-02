@@ -14,7 +14,7 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 3. The app shows the live preview, learns the user's current seated/stationary baseline, then monitors local pose movement.
 4. When the inactivity threshold is reached, the UI clearly prompts the user to stand and move.
 5. The app confirms a stable rise, then accumulates general visible movement until the configurable duration is met.
-6. The app shows **Movement break completed**, resets inactivity monitoring, and returns to local low-movement observation with the camera session active.
+6. The app shows **Movement break completed**, then waits for the user to sit back near their original baseline before restarting inactivity monitoring in the active camera session.
 
 ## Screens and Layout
 
@@ -34,11 +34,11 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 - Inactivity state says **Time to move** and makes the movement prompt unmissable.
 - Rise state says **Stand up** or **Now get up and move**; a detected rise immediately changes the feedback to **Nice — keep moving**.
 - Sustained-movement state shows remaining time or equivalent progress without requiring a specific exercise.
-- Completion state shows a visible success indicator, **Movement break completed**, supporting encouragement, then resets local inactivity monitoring.
+- Completion state shows a visible success indicator, **Movement break completed**, supporting encouragement, then waits for the user to sit back near their original baseline before restarting local inactivity monitoring.
 
 ## Look and Feel
 
-Warm, calm, playful desktop-companion feel: a warm off-white or cream background, muted green as the primary accent, and limited warm orange for active or success moments. Use rounded cards and controls, generous whitespace, minimal borders, and a clean, soft sans-serif with large readable timer numerals. Any movement guide is a small, friendly stick figure or flat illustration, never a realistic athletic body. Avoid harsh black, neon colors, high-contrast gym styling, technical dashboards, and corporate typography.
+Warm, calm, playful desktop-companion feel: a warm off-white or cream background, muted green as the primary accent, and limited warm orange for active or success moments. Use rounded cards and controls, generous whitespace, minimal borders, and a clean, soft sans-serif with large readable status text. Any movement guide is a small, friendly stick figure or flat illustration, never a realistic athletic body. Avoid harsh black, neon colors, high-contrast gym styling, technical dashboards, and corporate typography.
 
 ## Features and Behavior
 
@@ -80,7 +80,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - **Camera unavailable or denied** — verification does not start; the user sees that camera verification is required to complete this MVP break and a retry action. The break remains incomplete.
 - **Tracking uncertain** — the app keeps the user in the applicable verification step with simple framing or movement guidance.
 - **Monitoring** — the camera session is active after explicit user consent; only reliable low-movement time advances the inactivity threshold.
-- **Completed** — the current break ends, the inactivity monitor resets, and observation resumes in the same camera session.
+- **Completed** — the current break ends; the app waits for a return near the original seated baseline, then resumes observation in the same camera session.
 - **Privacy boundary** — camera use is opt-in at the start of monitoring, frames stay local, and the MVP has no account, recording, or uploaded user data.
 
 ## Product Decisions
@@ -90,7 +90,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - Camera verification is required to complete a movement break; there is no camera-free fallback for this MVP.
 - Configurable short inactivity and movement thresholds make the end-to-end loop demonstrable in seconds.
 - One movement-break layout changes its message by state to keep the flow easy to follow.
-- Completing a break resets monitoring in the existing camera session.
+- Completing a break resumes monitoring in the existing camera session after the user returns near the original seated baseline.
 
 ## What We're Building
 

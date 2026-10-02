@@ -23,7 +23,7 @@ button, select { font: inherit; }
   padding: 24px;
 }
 
-.timer-card, .proof-card {
+.home-card, .proof-card {
   width: min(100%, 430px);
   padding: 42px 36px 32px;
   border: 1px solid rgb(41 85 71 / 9%);
@@ -78,17 +78,6 @@ h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
   color: #e28042;
   font-size: 0.84rem;
   font-weight: 700;
-}
-
-.timer {
-  display: block;
-  margin: 10px 0 28px;
-  color: #24483d;
-  font-size: clamp(4.5rem, 20vw, 7rem);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  letter-spacing: -0.09em;
-  line-height: 0.9;
 }
 
 .primary-button, .secondary-button, .text-button, select {

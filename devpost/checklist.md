@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Prove the automatic movement-break loop**
+- [x] **1. Prove the automatic movement-break loop**
   Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, remain inactive through the configurable 5-second demo threshold, then stand and move to complete the break. Monitoring restarts only after they return near the original seated baseline.
   Why now: Low-movement accumulation and the prompt share one small verifier state machine, so proving the whole transition avoids a second integration pass.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Features and Behavior > Inactivity monitoring`
@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Enable the camera, complete the baseline, remain still for the selected threshold, then stand and move to confirm completion and monitoring reset.
   Commit: `Add sedentary monitoring`
 
-- [ ] **2. Finish the revised demo flow**
+- [x] **2. Finish the revised demo flow**
   Becomes usable: The automatic sedentary-detection loop has clear recovery states, no timer language, accurate privacy copy, and documented rapid demo instructions.
   Why now: Finishes the new end-to-end experience after its core trigger and verification are working.
   PRD ref: `prd.md > States and Boundaries`, `prd.md > What We're Building`
@@ -31,7 +31,7 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
+- [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
