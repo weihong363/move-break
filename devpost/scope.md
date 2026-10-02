@@ -9,7 +9,7 @@ A lightweight browser companion that notices prolonged low movement locally thro
 
 ## The Unique Kernel
 
-Instead of waiting for a preset work timer, MoveBreak watches for a configurable period of low movement after the user explicitly enables their camera. It then asks them to stand up and move, and verifies that transition locally in the browser.
+Instead of waiting for a preset work timer, MoveBreak watches for a configurable seated or stationary period after the user explicitly enables their camera. It then asks them to stand up and move, and verifies that transition locally in the browser. Small hand, head, and upper-body movements do not interrupt the reminder timer.
 
 ## Who It's For
 
@@ -17,7 +17,7 @@ A desk worker, developer, student, or remote worker who spends long stretches at
 
 ## The Core Loop
 
-The user explicitly enables the camera once. MoveBreak establishes a low-movement or seated baseline and locally monitors general movement. Once low movement lasts past the configurable inactivity threshold, it prompts a movement break. A standing or clear upward transition followed by sustained body movement completes the break and resets inactivity monitoring.
+The user explicitly enables the camera once. MoveBreak establishes a low-movement or seated baseline and locally monitors torso position. Once the seated or stationary state lasts past the configurable inactivity threshold, it prompts a movement break. A standing or clear upward transition followed by sustained body movement completes the break and resets inactivity monitoring.
 
 ## Inspiration & Identity
 

@@ -15,7 +15,7 @@ Build mode: fast
   PRD ref: `prd.md > The Core Journey`, `prd.md > Features and Behavior > Inactivity monitoring`
   Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Components > Camera`, `spec.md > Data Model`
   Build: Remove timer states and controls; add inactivity configuration, active monitoring UI, reliable-frame pause behavior, an automatic prompt, and same-session reset after completion.
-  Verify (mechanical): Run tests and `pnpm build`; confirm a valid low-movement sequence prompts a break, meaningful movement resets the inactivity window, invalid frames pause it, and a stable rise plus accumulated movement completes it.
+  Verify (mechanical): Run tests and `pnpm build`; confirm seated hand or head movement keeps accumulating inactivity time, a stable rise resets it, invalid frames pause it, and a stable rise plus accumulated movement completes the prompted break.
   Learner check: Enable the camera, complete the baseline, remain still for the selected threshold, then stand and move to confirm completion and monitoring reset.
   Commit: `Add sedentary monitoring`
 

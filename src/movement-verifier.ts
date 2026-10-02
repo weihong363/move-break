@@ -9,7 +9,6 @@ export type MovementConfig = {
   smoothingWindow: number;
   minimumUsableLandmarks: number;
   riseThreshold: number;
-  inactivityMovementThreshold: number;
   movementThreshold: number;
   consecutiveRiseFrames: number;
 };
@@ -97,8 +96,15 @@ export const createMovementVerifier = (config: MovementConfig) => {
     }
 
     if (phase === 'monitoring') {
-      if (metrics.movement < config.inactivityMovementThreshold) inactivityElapsedMs += elapsedMs;
-      else inactivityElapsedMs = 0;
+      const normalizedRise = baselineTorsoY === undefined ? 0 : (baselineTorsoY - metrics.torsoY) / metrics.bodyScale;
+      riseFrames = normalizedRise >= config.riseThreshold ? riseFrames + 1 : 0;
+      if (riseFrames >= config.consecutiveRiseFrames) {
+        baselineTorsoY = metrics.torsoY;
+        inactivityElapsedMs = 0;
+        riseFrames = 0;
+        return snapshot(phase);
+      }
+      inactivityElapsedMs += elapsedMs;
       if (inactivityElapsedMs >= config.inactivityDurationMs) phase = 'awaiting-rise';
       return snapshot(phase);
     }

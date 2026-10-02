@@ -5,7 +5,7 @@ status: approved
 
 # MoveBreak — Product Requirements
 
-A friendly, local-first sedentary-break companion for desk workers that prompts and verifies a short movement break after prolonged low movement. Source: `scope.md > The Unique Kernel`, `The Core Loop`, and `The POC Boundary`.
+A friendly, local-first sedentary-break companion for desk workers that prompts and verifies a short movement break after a prolonged seated or stationary state. Small hand and head movement does not cancel the reminder. Source: `scope.md > The Unique Kernel`, `The Core Loop`, and `The POC Boundary`.
 
 ## The Core Journey
 
@@ -66,7 +66,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 
 - [ ] A user can explicitly enable the local camera from the home screen and see a preview.
 - [ ] A usable baseline leads to a visible low-movement monitoring state.
-- [ ] Sustained reliable low movement for the configured threshold triggers a clear movement-break prompt.
+- [ ] A sustained seated or stationary state for the configured threshold triggers a clear movement-break prompt; small hand and head movements do not reset it.
 - [ ] If camera permission is denied, the UI explains that the break cannot be completed without it and offers retry; no camera-free completion path exists.
 - [ ] With camera access, the UI visibly progresses through baseline, rise, and sustained-movement feedback.
 - [ ] A baseline followed by a clear rise and general movement for the configured threshold produces the completion state.

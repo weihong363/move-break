@@ -9,7 +9,6 @@ const config: MovementConfig = {
   smoothingWindow: 2,
   minimumUsableLandmarks: 4,
   riseThreshold: 0.15,
-  inactivityMovementThreshold: 0.01,
   movementThreshold: 0.001,
   consecutiveRiseFrames: 3,
 };
@@ -29,11 +28,28 @@ const reachPrompt = () => {
   return verifier;
 };
 
+const frameWithHandMotion = (timestamp: number, handOffsetX: number): PoseFrame => {
+  const frame = frameAt(timestamp);
+  frame.landmarks[15].x += handOffsetX;
+  return frame;
+};
+
 describe('movement verifier', () => {
-  it('prompts a break only after reliable low movement reaches the inactivity threshold', () => {
+  it('keeps seated inactivity time through hand movement', () => {
     const verifier = createMovementVerifier(config);
-    [0, 100, 200, 300, 400, 500].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    [0, 100, 200, 300, 400].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    verifier.processFrame(frameWithHandMotion(500, 0.2));
     expect(verifier.processFrame(frameAt(600)).phase).toBe('awaiting-rise');
+  });
+
+  it('resets inactivity only after a stable upward transition', () => {
+    const verifier = createMovementVerifier(config);
+    [0, 100, 200, 300].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    verifier.processFrame(frameAt(400, -0.2));
+    verifier.processFrame(frameAt(500, -0.2));
+    const reset = verifier.processFrame(frameAt(600, -0.2));
+    expect(reset.phase).toBe('monitoring');
+    expect(reset.inactivityProgress).toBe(0);
   });
 
   it('requires several stable rise frames before entering movement', () => {

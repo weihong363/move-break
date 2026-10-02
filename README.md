@@ -1,6 +1,6 @@
 # MoveBreak
 
-MoveBreak is a small browser companion that watches for prolonged low movement, then requires a camera-verified movement break. Video frames and pose detection stay on the device.
+MoveBreak is a small browser companion that watches for a prolonged seated or stationary state, then requires a camera-verified movement break. Small hand and head movements do not interrupt the reminder timer. Video frames and pose detection stay on the device.
 
 ## Run locally
 

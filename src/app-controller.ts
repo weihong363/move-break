@@ -121,7 +121,7 @@ export const createAppController = (root: HTMLElement) => {
         <div class="companion" aria-hidden="true">◔</div>
         <p class="state-label">${isError ? 'Camera access needed' : 'A gentle nudge when you stay still'}</p>
         <h1>${isError ? 'Monitoring paused' : 'Move a little, when you need it'}</h1>
-        <p class="description">${isError ? cameraErrorMessage : 'MoveBreak watches for a stretch of low movement, then asks you to stand up and move.'}</p>
+        <p class="description">${isError ? cameraErrorMessage : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>
         ${!isError ? `<label class="duration-control">Inactivity reminder after<select data-action="duration">${demoConfig.inactivityDurationOptions.map((seconds) => `<option value="${seconds}" ${state.inactivityDurationMs === seconds * 1_000 ? 'selected' : ''}>${inactivityLabel(seconds)}</option>`).join('')}</select></label>` : ''}
         <button class="primary-button" type="button" data-action="enable-camera">${isError ? 'Try camera again' : 'Enable camera'}</button>
         <p class="privacy-note">Camera processing stays on your device. Nothing is recorded or uploaded.</p>

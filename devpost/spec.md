@@ -60,11 +60,11 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates reliable low movement, then detects a sustained rise and general movement. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates seated/stationary time through small upper-body movement, and resets that time only after a sustained rise. It then detects a sustained rise and general movement for the break. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
-Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, required landmark coverage, low-movement threshold, rise displacement, movement score, and required consecutive rise frames. It keeps tuning explicit and avoids a complex scoring system.
+Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, required landmark coverage, rise displacement, movement score, and required consecutive rise frames. It keeps tuning explicit and avoids a complex scoring system.
 
 ## Data Model
 
@@ -104,7 +104,7 @@ type DemoConfig = {
 
 Torso center is the midpoint or average of usable shoulder and hip landmarks. Body scale is the shoulder-to-hip distance when available; if hips are unavailable, a stable upper-body fallback scale is used. Rise is a decrease in image-space torso-center `y` from the baseline, divided by current body scale, sustained over the configured frame count. General movement is the mean smoothed frame-to-frame displacement of visible shoulders, hips, elbows, and wrists, normalized by body scale.
 
-The verifier requires a configurable minimum number of visible landmarks. During monitoring, only frames whose normalized movement is below the low-movement threshold accumulate inactivity time; meaningful motion resets it. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. Missing coverage, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time. Completion resets inactivity monitoring in the same camera session.
+The verifier requires a configurable minimum number of visible landmarks. During monitoring, visible hand, head, and other small upper-body movement keeps accumulating inactivity time. Only a stable, body-scale-normalized upward torso transition resets it. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. Missing coverage, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time. Completion resets inactivity monitoring in the same camera session.
 
 ## File Structure
 

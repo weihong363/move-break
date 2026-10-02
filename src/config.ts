@@ -6,7 +6,6 @@ export const demoConfig = {
   smoothingWindow: 4,
   minimumUsableLandmarks: 4,
   riseThreshold: 0.16,
-  inactivityMovementThreshold: 0.012,
   movementThreshold: 0.025,
   consecutiveRiseFrames: 3,
 } as const;
