@@ -41,26 +41,35 @@ button, select { font: inherit; }
   letter-spacing: 0.14em;
 }
 
-.avatar { position: relative; width: min(100%, 230px); height: 220px; margin: 2px auto; filter: drop-shadow(0 14px 18px rgb(25 118 210 / 18%)); }
-.art-shadow { position: absolute; right: 15%; bottom: 7px; left: 15%; height: 20px; border-radius: 50%; background: #d7e5df; }
-.art-root { position: absolute; top: 137px; left: 50%; width: 0; height: 0; transition: transform 180ms ease-out; }
-.art-part { position: absolute; display: block; width: 74px; height: 85px; background-image: var(--avatar-parts); background-repeat: no-repeat; background-size: 400% 200%; transition: transform 110ms ease-out, opacity 180ms ease; }
-.art-head { width: 82px; height: 94px; top: -104px; left: -41px; background-position: 0 0; }
-.art-torso { width: 132px; height: 151px; top: -96px; left: -66px; transform: translateX(-50%) scale(1); transform-origin: center bottom; background-position: 33.333% 0; }
-.art-arm { top: -28px; left: -37px; transform-origin: 50% 50%; }
-.art-left-upper { background-position: 66.667% 0; }
-.art-left-lower { background-position: 100% 0; }
-.art-right-upper { background-position: 0 100%; }
-.art-right-lower { background-position: 33.333% 100%; }
-.art-desk { width: 172px; height: 196px; top: -26px; left: -86px; background-position: 66.667% 100%; }
-.art-seat { display: none; }
-[data-rig-posture="standing"] .art-torso { background-position: 100% 100%; }
-[data-rig-posture="standing"] .art-desk { opacity: 0.16; }
-[data-avatar="seated"] .art-root { animation: avatar-breathe 2.8s ease-in-out infinite; }
-[data-avatar="alert"] .art-root { animation: avatar-alert 700ms ease-in-out infinite alternate; }
-[data-avatar="celebrate"] .art-root { animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
-[data-avatar="inspect"] .art-root { animation: avatar-inspect 1s ease-in-out infinite; }
-[data-avatar="moving"][data-avatar-motion="arms"] .art-root { animation: avatar-wave 520ms ease-in-out infinite alternate; }
+.avatar { position: relative; width: min(100%, 230px); height: 230px; margin: 2px auto; filter: drop-shadow(0 14px 18px rgb(25 118 210 / 18%)); }
+.seated-rig, .standing-rig, .rig-layer, .rig-arm-parent { position: absolute; inset: 0; display: block; }
+.rig-layer, .rig-arm-parent::before { background-image: var(--seated-art); background-position: 100% 100%; background-repeat: no-repeat; background-size: 400% 200%; }
+.rig-aura { clip-path: inset(4% 3% 2%); opacity: 0.16; }
+.rig-desk { clip-path: inset(81% 0 0); }
+.rig-torso { clip-path: polygon(27% 34%, 73% 34%, 76% 83%, 24% 83%); }
+.rig-head { clip-path: ellipse(21% 18% at 50% 25%); }
+.rig-arm-parent::before { position: absolute; inset: 0; display: block; content: ""; }
+.rig-left-upper { transform-origin: 37% 40%; }
+.rig-left-upper::before { clip-path: polygon(0 36%, 38% 33%, 43% 57%, 28% 70%, 0 64%); }
+.rig-left-forearm { clip-path: polygon(0 55%, 32% 57%, 39% 91%, 0 100%); transform-origin: 31% 62%; }
+.rig-right-upper { transform-origin: 63% 40%; }
+.rig-right-upper::before { clip-path: polygon(62% 33%, 100% 36%, 100% 64%, 72% 70%, 57% 57%); }
+.rig-right-forearm { clip-path: polygon(68% 57%, 100% 55%, 100% 100%, 61% 91%); transform-origin: 69% 62%; }
+
+[data-rig-test="arms"] .rig-left-upper { transform: rotate(-20deg); }
+[data-rig-test="arms"] .rig-left-forearm { transform: rotate(34deg); }
+[data-rig-test="arms"] .rig-right-upper { transform: rotate(20deg); }
+[data-rig-test="arms"] .rig-right-forearm { transform: rotate(-34deg); }
+.standing-rig { display: none; }
+.standing-layer { position: absolute; inset: 0; display: block; background-image: var(--standing-art); background-position: 0 0; background-repeat: no-repeat; background-size: 500% 200%; clip-path: inset(0 0 23%); }
+[data-avatar="standing"] .seated-rig, [data-avatar="moving"] .seated-rig, [data-avatar="celebrate"] .seated-rig { display: none; }
+[data-avatar="standing"] .standing-rig, [data-avatar="moving"] .standing-rig, [data-avatar="celebrate"] .standing-rig { display: block; }
+[data-avatar="seated"] .seated-rig { animation: avatar-breathe 2.8s ease-in-out infinite; }
+[data-avatar="alert"] .seated-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }
+[data-avatar="celebrate"] .standing-rig { animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
+[data-avatar="inspect"] .seated-rig { animation: avatar-inspect 1s ease-in-out infinite; }
+
+.rig-preview-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: 2px 0 0; }
 
 @keyframes avatar-breathe { 50% { filter: brightness(1.08); } }
 @keyframes avatar-alert { to { filter: brightness(1.25) drop-shadow(0 0 9px #30dfff); } }

@@ -3,20 +3,19 @@ import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import type { AppState } from './types';
-import { createAvatarRigDriver, type AvatarRigPose } from './avatar-rig';
-import avatarPartsUrl from './assets/translucent-figure-parts.png';
+import seatedRigAtlasUrl from './assets/translucent-seated-rig-atlas.png';
+import standingRigAtlasUrl from './assets/translucent-figure-reference.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
-  <div class="avatar art-avatar" data-avatar="seated" data-avatar-motion="still" aria-hidden="true" style="--avatar-parts:url('${avatarPartsUrl}')">
-    <span class="art-shadow"></span>
-    <span class="art-root" data-rig-root>
-      <span class="art-part art-desk"></span><span class="art-part art-seat"></span>
-      <span class="art-part art-torso" data-rig-torso></span><span class="art-part art-head" data-rig-head></span>
-      <span class="art-part art-arm art-left-upper" data-rig-left-upper></span><span class="art-part art-arm art-left-lower" data-rig-left-lower></span>
-      <span class="art-part art-arm art-right-upper" data-rig-right-upper></span><span class="art-part art-arm art-right-lower" data-rig-right-lower></span>
+  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" aria-hidden="true" style="--seated-art:url('${seatedRigAtlasUrl}');--standing-art:url('${standingRigAtlasUrl}')">
+    <span class="seated-rig" data-rig-root>
+      <span class="rig-layer rig-aura"></span><span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
+      <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
+      <span class="rig-arm-parent rig-right-upper"><span class="rig-layer rig-right-forearm"></span></span>
     </span>
+    <span class="standing-rig"><span class="standing-layer"></span></span>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {
@@ -26,13 +25,14 @@ export const createAppController = (root: HTMLElement) => {
   };
   let stream: MediaStream | undefined;
   let debugPreview = false;
+  let rigPreview: 'seated' | 'standing' = 'seated';
+  let pivotPreview = false;
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   let promptStartedAt: number | undefined;
   let notificationAudio: AudioContext | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
-  const avatarRig = createAvatarRigDriver(demoConfig.smoothingWindow);
 
   function createVerifier() {
     return createMovementVerifier({ ...demoConfig, inactivityDurationMs: state.inactivityDurationMs });
@@ -40,7 +40,6 @@ export const createAppController = (root: HTMLElement) => {
 
   const resetMonitoring = () => {
     verifier = createVerifier();
-    avatarRig.reset();
   };
 
   const primeNotificationAudio = async () => {
@@ -80,11 +79,7 @@ export const createAppController = (root: HTMLElement) => {
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
       await activeVideo.play();
-      await detector.start(activeVideo, (frame) => {
-        const rigPose = avatarRig.update(frame);
-        if (rigPose) updateAvatarRig(rigPose);
-        updateVerification(verifier.processFrame(frame));
-      }, handleDetectorError);
+      await detector.start(activeVideo, (frame) => updateVerification(verifier.processFrame(frame)), handleDetectorError);
     } catch (error) {
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -109,23 +104,14 @@ export const createAppController = (root: HTMLElement) => {
     avatar?.setAttribute('data-avatar-motion', motion);
   };
 
-  const updateAvatarRig = (pose: AvatarRigPose) => {
+  const updateRigPreview = () => {
     const avatar = root.querySelector<HTMLElement>('[data-avatar]');
-    avatar?.setAttribute('data-rig-posture', pose.posture);
-    const rootNode = root.querySelector<HTMLElement>('[data-rig-root]');
-    if (rootNode) rootNode.style.transform = `translate(${pose.root.x - 120}px, ${pose.root.y - 137}px)`;
-    const torso = root.querySelector<HTMLElement>('[data-rig-torso]');
-    if (torso) torso.style.transform = `scale(${pose.torsoScale.toFixed(2)})`;
-    const head = root.querySelector<HTMLElement>('[data-rig-head]');
-    if (head) head.style.transform = `translate(${pose.head.x.toFixed(1)}px, ${(pose.head.y + 54).toFixed(1)}px)`;
-    const applyArm = (selector: string, arm: AvatarRigPose['leftUpperArm']) => {
-      const element = root.querySelector<HTMLElement>(selector);
-      if (element) element.style.transform = `translate(${arm.x.toFixed(1)}px, ${arm.y.toFixed(1)}px) rotate(${arm.angle.toFixed(1)}deg) scaleY(${arm.length.toFixed(2)})`;
-    };
-    applyArm('[data-rig-left-upper]', pose.leftUpperArm);
-    applyArm('[data-rig-left-lower]', pose.leftLowerArm);
-    applyArm('[data-rig-right-upper]', pose.rightUpperArm);
-    applyArm('[data-rig-right-lower]', pose.rightLowerArm);
+    avatar?.setAttribute('data-avatar', rigPreview);
+    avatar?.setAttribute('data-rig-test', pivotPreview ? 'arms' : '');
+    const poseButton = root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pose"]');
+    const pivotButton = root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pivots"]');
+    if (poseButton) poseButton.textContent = rigPreview === 'seated' ? 'Preview standing rig' : 'Preview seated rig';
+    if (pivotButton) pivotButton.textContent = pivotPreview ? 'Reset arm pivots' : 'Preview arm pivots';
   };
 
   const setPreviewVisible = (visible: boolean) => {
@@ -224,11 +210,20 @@ export const createAppController = (root: HTMLElement) => {
         <p class="description">${isError ? cameraErrorMessage : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>
         ${!isError ? `<label class="duration-control">Inactivity reminder after<select data-action="duration">${demoConfig.inactivityDurationOptions.map((seconds) => `<option value="${seconds}" ${state.inactivityDurationMs === seconds * 1_000 ? 'selected' : ''}>${inactivityLabel(seconds)}</option>`).join('')}</select></label>` : ''}
         <button class="primary-button" type="button" data-action="enable-camera">${isError ? 'Try camera again' : 'Enable camera'}</button>
+        ${!isError ? '<div class="rig-preview-controls"><button class="text-button" type="button" data-action="toggle-rig-pose">Preview standing rig</button><button class="text-button" type="button" data-action="toggle-rig-pivots">Preview arm pivots</button></div>' : ''}
         <p class="privacy-note">Camera processing stays on your device. Nothing is recorded or uploaded.</p>
       </section>`;
     root.querySelector<HTMLButtonElement>('[data-action="enable-camera"]')?.addEventListener('click', enableCamera);
     root.querySelector<HTMLSelectElement>('[data-action="duration"]')?.addEventListener('change', (event) => {
       setInactivityDuration(Number((event.target as HTMLSelectElement).value));
+    });
+    root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pose"]')?.addEventListener('click', () => {
+      rigPreview = rigPreview === 'seated' ? 'standing' : 'seated';
+      updateRigPreview();
+    });
+    root.querySelector<HTMLButtonElement>('[data-action="toggle-rig-pivots"]')?.addEventListener('click', () => {
+      pivotPreview = !pivotPreview;
+      updateRigPreview();
     });
   };
 

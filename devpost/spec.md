@@ -121,7 +121,7 @@ move-break/
 │   ├── main.ts                  # Bootstrap and DOM event wiring
 │   ├── styles.css               # Global visual system and layouts
 │   ├── app-controller.ts        # App phase transitions and rendering
-│   ├── avatar-rig.ts            # Smoothed upper-body landmark to layered-art transforms
+│   ├── avatar-rig.ts            # Future smoothed upper-body landmark adapter for the art rig
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup
@@ -154,6 +154,7 @@ move-break/
 - **One in-memory state controller** instead of a UI framework or global store — one page and one loop do not need more infrastructure.
 - **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
 - **Local recording first** instead of a required deployed environment — deployment does not improve the core proof and comes after it works locally.
+- **Static canonical art rigs before landmark driving** — the seated and standing translucent rigs must reconstruct from a shared canvas and pass manual pivot checks before MediaPipe transforms are re-enabled.
 
 ## Decisions and Open Issues
 
@@ -163,3 +164,4 @@ move-break/
 - **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
 - **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → sustained general movement, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
+- **Avatar implementation checkpoint:** the current build deliberately keeps the landmark-to-avatar adapter disconnected while the shared-canvas seated and standing art rigs are checked. MediaPipe continues to power the verifier; it will drive the rig only after the static reconstruction and manual pivot previews are approved.

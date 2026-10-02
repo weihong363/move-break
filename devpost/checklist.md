@@ -69,15 +69,23 @@ Build mode: fast
   Learner check: Enable camera and compare arm and upper-body motion against the avatar in the hidden-preview experience.
   Commit: `Drive avatar from upper-body landmarks`
 
-- [x] **7. Rig the established translucent figure art**
-  Becomes usable: The seated front-facing avatar is composed from head, torso, arm, and desk layers that preserve the established translucent cyan figure style while responding to upper-body tracking.
+- [x] **7. Build static canonical translucent rigs**
+  Becomes usable: The seated front-facing and standing upper-body avatars reconstruct from layers aligned on a shared canvas and preserve the established translucent cyan figure style.
   Why now: The learner rejected the invented SVG style and specified the earlier translucent figure artwork as the canonical source.
   PRD ref: `prd.md > Look and Feel`, `prd.md > Movement verification`
   Spec ref: `spec.md > Components > Companion Avatar`
-  Build: Prepare a transparent parts sheet from the canonical artwork, compose it into a layered seated rig, and retain a matching standing torso for the rise state.
-  Verify (mechanical): Run tests and `pnpm build`; confirm the art layers are bundled locally and landmark-driven arm transforms remain tested.
-  Learner check: Compare seated, standing, and arm-motion states with the original translucent figure style.
-  Commit: `Rig established translucent figure art`
+  Build: Prepare full-canvas art layers from the canonical source; compose neutral seated and standing rigs; use nested arm layers with shoulder and elbow pivots; keep landmark driving disconnected.
+  Verify (mechanical): Run tests and `pnpm build`; confirm all art layers are bundled locally, the neutral rigs reconstruct cleanly, and the manual pivot preview rotates nested arm layers around their joints.
+  Learner check: Compare the seated rig, standing rig, and manual arm-pivot preview with the original translucent figure style.
+  Commit: `Build static translucent avatar rigs`
+
+- [ ] **8. Drive the approved art rig from upper-body landmarks**
+  Becomes usable: The approved seated and standing translucent art rigs respond smoothly to local head, torso, and arm landmarks.
+  Why now: Static reconstruction and pivots must be accepted before pose transforms can be trusted.
+  Build: Reconnect the existing pose adapter; map smoothed shoulder, elbow, wrist, head, and hip landmarks to bounded hierarchical transforms.
+  Verify (mechanical): Run tests and `pnpm build`; confirm transform values respond to supplied pose frames while the neutral pose remains visually aligned.
+  Learner check: Compare arm and upper-body response with the hidden-preview camera input.
+  Commit: `Drive approved art rig from landmarks`
 
 ## Hands-on Checkpoints
 
@@ -108,4 +116,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
 - The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
-- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The live rig now uses split layers prepared from that artwork.
+- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The rig now uses shared-canvas layers from that artwork; pose driving remains paused until static reconstruction and joint pivots are accepted.
