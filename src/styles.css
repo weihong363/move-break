@@ -1,0 +1,100 @@
+:root {
+  color: #24483d;
+  background: #f8f3e8;
+  font-family: Inter, ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #fffdf7 0%, #f8f3e8 55%, #e9f0e5 100%);
+}
+
+button, select { font: inherit; }
+
+#app {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.timer-card {
+  width: min(100%, 430px);
+  padding: 42px 36px 32px;
+  border: 1px solid rgb(41 85 71 / 9%);
+  border-radius: 32px;
+  background: rgb(255 253 247 / 82%);
+  box-shadow: 0 20px 70px rgb(62 88 72 / 12%);
+  text-align: center;
+}
+
+.eyebrow, .state-label {
+  margin: 0;
+  color: #5f8672;
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.companion {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 26px auto 18px;
+  place-items: center;
+  border-radius: 20px;
+  background: #dcebdc;
+  color: #427b65;
+  font-size: 2rem;
+}
+
+h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
+
+.timer {
+  display: block;
+  margin: 10px 0 28px;
+  color: #24483d;
+  font-size: clamp(4.5rem, 20vw, 7rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.09em;
+  line-height: 0.9;
+}
+
+.primary-button, .secondary-button, .text-button, select {
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.primary-button {
+  width: 100%;
+  padding: 15px 18px;
+  background: #477d68;
+  color: #fffdf7;
+  font-weight: 750;
+}
+
+.button-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.secondary-button { padding: 13px 18px; background: #dcebdc; color: #315d4d; font-weight: 750; }
+.text-button { padding: 13px 18px; background: transparent; color: #668172; }
+
+.duration-control {
+  display: flex;
+  margin: 0 0 14px;
+  align-items: center;
+  justify-content: space-between;
+  color: #668172;
+  font-size: 0.88rem;
+}
+
+select { padding: 8px 10px; background: #edf3e8; color: #315d4d; }
+.privacy-note, .description { margin: 28px 0 0; color: #74887c; font-size: 0.86rem; line-height: 1.55; }
+
+button:hover { filter: brightness(0.96); }
+button:focus-visible, select:focus-visible { outline: 3px solid #e9a869; outline-offset: 3px; }

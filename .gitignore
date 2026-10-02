@@ -1,0 +1,7 @@
+/devpost/learner-profile.md
+.env
+.env.*
+!.env.example
+.idea/
+node_modules/
+dist/
