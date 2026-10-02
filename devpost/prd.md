@@ -40,7 +40,7 @@ A friendly, local-first sedentary-break companion for desk workers that prompts 
 
 ## Look and Feel
 
-Warm, calm, playful desktop-companion feel: a warm off-white or cream background, muted green as the primary accent, and limited warm orange for active or success moments. Use rounded cards and controls, generous whitespace, minimal borders, and a clean, soft sans-serif with large readable status text. Any movement guide is a small, friendly stick figure or flat illustration, never a realistic athletic body. Avoid harsh black, neon colors, high-contrast gym styling, technical dashboards, and corporate typography.
+Warm, calm, playful desktop-companion feel: a warm off-white or cream background, muted green as the primary accent, and limited warm orange for active or success moments. Use rounded cards and controls, generous whitespace, minimal borders, and a clean, soft sans-serif with large readable status text. The companion uses a rounded luminous blue mascot style across all states. Avoid harsh black, neon colors, high-contrast gym styling, technical dashboards, and corporate typography.
 
 ## Features and Behavior
 

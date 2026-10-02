@@ -52,7 +52,7 @@ Owns monitoring, prompt, and verification UI state. It translates camera, detect
 
 ### Companion Avatar
 
-Uses one inline SVG with a small state set: seated idle, alert, standing, moving, celebration, and tracking recovery. It is driven by verifier phases. During movement, a coarse arm-displacement signal triggers a wave/stretch; a large shoulder-width change flips the avatar direction. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library, downloaded media, or new service is required.
+Uses one bundled blue companion sprite sheet with a small state set: seated idle, alert, standing, moving, celebration, and tracking recovery. CSS selects the required frame and adds subtle motion. During movement, a coarse arm-displacement signal triggers a wave/stretch; a large shoulder-width change flips the avatar direction. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
 
 ### Camera
 

@@ -49,6 +49,16 @@ Build mode: fast
   Learner check: Run one short demo loop and confirm the seated, alert, standing, moving, celebration, and seated-return presentations read clearly.
   Commit: `Upgrade companion avatar`
 
+- [x] **5. Apply the blue companion visual**
+  Becomes usable: Every avatar state uses the requested rounded luminous blue visual while preserving existing state mapping.
+  Why now: The learner supplied the visual direction after validating the behavior, so this is a contained asset swap.
+  PRD ref: `prd.md > Look and Feel`
+  Spec ref: `spec.md > Components > Companion Avatar`
+  Build: Bundle a six-pose blue sprite sheet and map existing avatar states to its frames with CSS.
+  Verify (mechanical): Run tests and `pnpm build`; confirm the asset is bundled locally and no camera or detector code changes.
+  Learner check: Confirm the blue companion reads clearly across the normal demo flow.
+  Commit: `Apply blue companion visual`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
@@ -75,4 +85,5 @@ Activity mode: focused alternative for an experienced plan-first developer
 - Automatic sedentary detection replaced the Pomodoro-style work timer — the learner changed the kernel to prolonged low movement → prompt → verified movement → monitoring reset.
 - Low-movement accumulation and the automatic prompt were merged into the first revised slice because they are consecutive states in one verifier; this keeps the technical proof end-to-end.
 - The learner requested a character-led demo surface. The local camera and pose pipeline remain unchanged; the preview is now a debug and recovery surface.
-- The learner requested a more product-like avatar. The implementation uses a discrete inline SVG companion and existing local pose signals rather than an animation system or new product feature.
+- The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
+- The learner selected a blue luminous companion style from the provided reference; a locally bundled sprite sheet now supplies the state visuals.

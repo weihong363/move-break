@@ -3,25 +3,13 @@ import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import type { AppState } from './types';
+import avatarSpriteUrl from './assets/movebreak-blue-avatar-sheet.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
   <div class="avatar" data-avatar="seated" data-avatar-motion="still" aria-hidden="true">
-    <svg viewBox="0 0 180 170" role="presentation">
-      <ellipse class="avatar-shadow" cx="91" cy="150" rx="56" ry="10" />
-      <path class="avatar-chair" d="M113 91h25v54h-8v-45h-17z" />
-      <g class="avatar-person">
-        <path class="avatar-leg avatar-leg-left" d="M83 114v21h27" />
-        <path class="avatar-leg avatar-leg-right" d="M101 114v21h28" />
-        <path class="avatar-body" d="M76 62q15-12 30 0v55H76z" />
-        <path class="avatar-arm avatar-arm-left" d="M80 72 56 103" />
-        <path class="avatar-arm avatar-arm-right" d="m102 72 25 29" />
-        <circle class="avatar-head" cx="91" cy="45" r="20" />
-        <circle class="avatar-eye" cx="84" cy="43" r="2.4" /><circle class="avatar-eye" cx="98" cy="43" r="2.4" />
-        <path class="avatar-smile" d="M83 51q8 8 16 0" />
-      </g>
-    </svg>
+    <span class="avatar-sprite" style="background-image:url('${avatarSpriteUrl}')"></span>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {
