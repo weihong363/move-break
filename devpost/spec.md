@@ -155,6 +155,7 @@ move-break/
 - **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
 - **Local recording first** instead of a required deployed environment — deployment does not improve the core proof and comes after it works locally.
 - **Static canonical art rigs before landmark driving** — the seated and standing translucent rigs must reconstruct from a shared canvas and pass manual pivot checks before MediaPipe transforms are re-enabled.
+- **Clean compositing before glow** — the rig uses no per-part halo. Source layers preserve internal glass transparency only, use feathered masks with joint overlap, and receive one final drop shadow at the assembled avatar container.
 
 ## Decisions and Open Issues
 

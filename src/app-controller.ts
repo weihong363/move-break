@@ -3,15 +3,15 @@ import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import type { AppState } from './types';
-import seatedRigAtlasUrl from './assets/translucent-seated-rig-atlas.png';
-import standingRigAtlasUrl from './assets/translucent-figure-reference.png';
+import seatedRigUrl from './assets/translucent-seated-clean.png';
+import standingRigUrl from './assets/translucent-standing-clean.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 
 const characterMarkup = () => `
-  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" aria-hidden="true" style="--seated-art:url('${seatedRigAtlasUrl}');--standing-art:url('${standingRigAtlasUrl}')">
+  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-art:url('${standingRigUrl}')">
     <span class="seated-rig" data-rig-root>
-      <span class="rig-layer rig-aura"></span><span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
+      <span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
       <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
       <span class="rig-arm-parent rig-right-upper"><span class="rig-layer rig-right-forearm"></span></span>
     </span>
