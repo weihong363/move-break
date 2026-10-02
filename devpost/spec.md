@@ -48,11 +48,7 @@ Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream b
 
 ### App Controller
 
-Owns monitoring, prompt, and verification UI state. It translates camera, detector, inactivity monitor, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
-
-### Inactivity Monitor
-
-Accumulates reliable low-movement time after the baseline. Meaningful movement clears the accumulated inactivity time; invalid tracking pauses it. Crossing the configurable threshold prompts the break. Implements `prd.md > Features and Behavior > Inactivity monitoring`.
+Owns monitoring, prompt, and verification UI state. It translates camera, detector, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
 
 ### Camera
 
@@ -64,7 +60,7 @@ Loads MediaPipe Pose Landmarker and the static model asset, processes throttled 
 
 ### Movement Verifier
 
-Owns the finite states `baseline`, `monitoring`, `prompted`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, detects low movement over time, then detects a sustained rise and general movement. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `moving`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, accumulates reliable low movement, then detects a sustained rise and general movement. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
 
 ### Configuration
 
@@ -123,10 +119,9 @@ move-break/
 │   ├── app-controller.ts        # App phase transitions and rendering
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
-│   ├── inactivity-monitor.ts    # Low-movement accumulation and break trigger
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup
 │   ├── pose-detector.ts         # MediaPipe initialization and frame detection
-│   ├── movement-verifier.ts     # Baseline, rise, and movement state machine
+│   ├── movement-verifier.ts     # Baseline, low-movement, rise, and movement state machine
 │   └── movement-verifier.test.ts # Deterministic verifier tests using sample landmarks
 ├── index.html                   # Vite entry page
 ├── package.json                 # Scripts and dependencies

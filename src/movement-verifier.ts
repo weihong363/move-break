@@ -1,13 +1,15 @@
 import type { PoseFrame, PoseLandmark } from './types';
 
-export type VerifierPhase = 'baseline' | 'awaiting-rise' | 'moving' | 'paused-tracking' | 'completed';
+export type VerifierPhase = 'baseline' | 'monitoring' | 'awaiting-rise' | 'moving' | 'paused-tracking' | 'completed';
 
 export type MovementConfig = {
   baselineDurationMs: number;
+  inactivityDurationMs: number;
   movementDurationMs: number;
   smoothingWindow: number;
   minimumUsableLandmarks: number;
   riseThreshold: number;
+  inactivityMovementThreshold: number;
   movementThreshold: number;
   consecutiveRiseFrames: number;
 };
@@ -15,6 +17,7 @@ export type MovementConfig = {
 export type VerifierSnapshot = {
   phase: VerifierPhase;
   baselineProgress: number;
+  inactivityProgress: number;
   movementProgress: number;
 };
 
@@ -43,6 +46,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   let samples: PoseFrame[] = [];
   let lastTimestamp: number | undefined;
   let baselineElapsedMs = 0;
+  let inactivityElapsedMs = 0;
   let movementElapsedMs = 0;
   let baselineTorsoY: number | undefined;
   let riseFrames = 0;
@@ -50,6 +54,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   const snapshot = (nextPhase: VerifierPhase): VerifierSnapshot => ({
     phase: nextPhase,
     baselineProgress: Math.min(1, baselineElapsedMs / config.baselineDurationMs),
+    inactivityProgress: Math.min(1, inactivityElapsedMs / config.inactivityDurationMs),
     movementProgress: Math.min(1, movementElapsedMs / config.movementDurationMs),
   });
 
@@ -86,8 +91,15 @@ export const createMovementVerifier = (config: MovementConfig) => {
       baselineElapsedMs += elapsedMs;
       if (baselineElapsedMs >= config.baselineDurationMs) {
         baselineTorsoY = metrics.torsoY;
-        phase = 'awaiting-rise';
+        phase = 'monitoring';
       }
+      return snapshot(phase);
+    }
+
+    if (phase === 'monitoring') {
+      if (metrics.movement < config.inactivityMovementThreshold) inactivityElapsedMs += elapsedMs;
+      else inactivityElapsedMs = 0;
+      if (inactivityElapsedMs >= config.inactivityDurationMs) phase = 'awaiting-rise';
       return snapshot(phase);
     }
 

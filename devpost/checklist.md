@@ -9,27 +9,17 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Start local low-movement monitoring**
-  Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, and see a clear local monitoring state with a configurable 5-second demo inactivity threshold.
-  Why now: Replaces the timer immediately with the new kernel while preserving the proven camera and pose pipeline.
+- [ ] **1. Prove the automatic movement-break loop**
+  Becomes usable: The user can explicitly enable the camera, see a preview, complete a short baseline, remain inactive through the configurable 5-second demo threshold, then stand and move to complete the break and restart monitoring.
+  Why now: Low-movement accumulation and the prompt share one small verifier state machine, so proving the whole transition avoids a second integration pass.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Features and Behavior > Inactivity monitoring`
-  Spec ref: `spec.md > Components > Inactivity Monitor`, `spec.md > Components > Camera`, `spec.md > Data Model`
-  Build: Remove timer states and controls; add inactivity configuration, a low-movement monitor, active monitoring UI, and reliable-frame pause behavior.
-  Verify (mechanical): Run tests and `pnpm build`; confirm a valid low-movement sequence accumulates to the threshold, meaningful movement resets it, and invalid frames pause it.
-  Learner check: Enable the camera, complete the baseline, remain still, and confirm monitoring progress appears without a work timer.
+  Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Components > Camera`, `spec.md > Data Model`
+  Build: Remove timer states and controls; add inactivity configuration, active monitoring UI, reliable-frame pause behavior, an automatic prompt, and same-session reset after completion.
+  Verify (mechanical): Run tests and `pnpm build`; confirm a valid low-movement sequence prompts a break, meaningful movement resets the inactivity window, invalid frames pause it, and a stable rise plus accumulated movement completes it.
+  Learner check: Enable the camera, complete the baseline, remain still for the selected threshold, then stand and move to confirm completion and monitoring reset.
   Commit: `Add sedentary monitoring`
 
-- [ ] **2. Prompt and verify the automatic movement break**
-  Becomes usable: Reaching the inactivity threshold clearly prompts the user to stand and move; the existing rise and accumulated movement verifier completes the break and resets monitoring in the same camera session.
-  Why now: Connects the new automatic trigger to the already-proven local movement verification.
-  PRD ref: `prd.md > Features and Behavior > Movement verification`, `prd.md > Acceptance Criteria`
-  Spec ref: `spec.md > Components > Movement Verifier`, `spec.md > Core Journey Through the System`
-  Build: Add prompted state, route frames from monitoring into the rise and movement states, reset inactivity data after completion, and update completion copy.
-  Verify (mechanical): Run tests and `pnpm build`; confirm a low-movement threshold prompts a break, a stable rise plus accumulated movement completes it, and completion restarts monitoring without a new permission request.
-  Learner check: Run the short live flow: baseline, 5 seconds still, prompt, stand, move, complete, then observe monitoring restart.
-  Commit: `Add automatic break prompt`
-
-- [ ] **3. Finish the revised demo flow**
+- [ ] **2. Finish the revised demo flow**
   Becomes usable: The automatic sedentary-detection loop has clear recovery states, no timer language, accurate privacy copy, and documented rapid demo instructions.
   Why now: Finishes the new end-to-end experience after its core trigger and verification are working.
   PRD ref: `prd.md > States and Boundaries`, `prd.md > What We're Building`
@@ -41,7 +31,7 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 1, test baseline and low-movement monitoring before the automatic prompt is connected.
+- [ ] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -63,3 +53,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 ## Revisions
 
 - Automatic sedentary detection replaced the Pomodoro-style work timer — the learner changed the kernel to prolonged low movement → prompt → verified movement → monitoring reset.
+- Low-movement accumulation and the automatic prompt were merged into the first revised slice because they are consecutive states in one verifier; this keeps the technical proof end-to-end.

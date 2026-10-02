@@ -4,10 +4,12 @@ import type { PoseFrame, PoseLandmark } from './types';
 
 const config: MovementConfig = {
   baselineDurationMs: 300,
+  inactivityDurationMs: 300,
   movementDurationMs: 400,
   smoothingWindow: 2,
   minimumUsableLandmarks: 4,
   riseThreshold: 0.15,
+  inactivityMovementThreshold: 0.01,
   movementThreshold: 0.001,
   consecutiveRiseFrames: 3,
 };
@@ -21,37 +23,43 @@ const frameAt = (timestamp: number, offsetY = 0, offsetX = 0, visible = true): P
   return { timestamp, landmarks };
 };
 
-const reachAwaitingRise = () => {
+const reachPrompt = () => {
   const verifier = createMovementVerifier(config);
-  [0, 100, 200, 300].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+  [0, 100, 200, 300, 400, 500, 600].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
   return verifier;
 };
 
 describe('movement verifier', () => {
+  it('prompts a break only after reliable low movement reaches the inactivity threshold', () => {
+    const verifier = createMovementVerifier(config);
+    [0, 100, 200, 300, 400, 500].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    expect(verifier.processFrame(frameAt(600)).phase).toBe('awaiting-rise');
+  });
+
   it('requires several stable rise frames before entering movement', () => {
-    const verifier = reachAwaitingRise();
-    expect(verifier.processFrame(frameAt(400, -0.2)).phase).toBe('awaiting-rise');
-    expect(verifier.processFrame(frameAt(500, -0.2)).phase).toBe('awaiting-rise');
-    expect(verifier.processFrame(frameAt(600, -0.2)).phase).toBe('moving');
+    const verifier = reachPrompt();
+    expect(verifier.processFrame(frameAt(700, -0.2)).phase).toBe('awaiting-rise');
+    expect(verifier.processFrame(frameAt(800, -0.2)).phase).toBe('awaiting-rise');
+    expect(verifier.processFrame(frameAt(900, -0.2)).phase).toBe('moving');
   });
 
   it('pauses on invalid tracking and preserves accumulated movement time', () => {
-    const verifier = reachAwaitingRise();
-    [400, 500, 600].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
-    const active = verifier.processFrame(frameAt(700, -0.2, 0.04));
-    const paused = verifier.processFrame(frameAt(800, -0.2, 0.04, false));
-    const resumed = verifier.processFrame(frameAt(900, -0.2, 0.08));
+    const verifier = reachPrompt();
+    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
+    const active = verifier.processFrame(frameAt(1_000, -0.2, 0.04));
+    const paused = verifier.processFrame(frameAt(1_100, -0.2, 0.04, false));
+    const resumed = verifier.processFrame(frameAt(1_200, -0.2, 0.08));
     expect(active.movementProgress).toBeGreaterThan(0);
     expect(paused.phase).toBe('paused-tracking');
     expect(resumed.movementProgress).toBeGreaterThanOrEqual(active.movementProgress);
   });
 
   it('keeps prior progress through low-motion frames and completes after valid movement time', () => {
-    const verifier = reachAwaitingRise();
-    [400, 500, 600].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
-    verifier.processFrame(frameAt(700, -0.2, 0.04));
-    const pausedMotion = verifier.processFrame(frameAt(800, -0.2, 0.04));
-    const completed = [900, 1_000, 1_100, 1_200, 1_300]
+    const verifier = reachPrompt();
+    [700, 800, 900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp, -0.2)));
+    verifier.processFrame(frameAt(1_000, -0.2, 0.04));
+    const pausedMotion = verifier.processFrame(frameAt(1_100, -0.2, 0.04));
+    const completed = [1_200, 1_300, 1_400, 1_500, 1_600]
       .map((timestamp, index) => verifier.processFrame(frameAt(timestamp, -0.2, 0.08 + index * 0.04)))
       .at(-1);
     expect(pausedMotion.movementProgress).toBeGreaterThan(0);
