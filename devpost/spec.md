@@ -98,7 +98,7 @@ type DemoConfig = {
 - **Inactivity state**: phase, accumulated valid low-movement milliseconds, and selected configuration. Updated by user actions and reliable landmark frames; not persisted.
 - **Camera state**: active `MediaStream` and error category. Created when monitoring starts and remains active across the completed break reset.
 - **Landmark samples**: a bounded rolling window of timestamped, visible torso/upper-body landmark coordinates. Discarded as it slides.
-- **Verifier state**: original seated torso-center statistic, stable multi-frame rise and return confirmation counts, accumulated valid movement time, and tracking pause status. It is derived from current samples and resets only when a new camera session starts.
+- **Verifier state**: original seated torso-center statistic, stable multi-frame rise and return confirmation counts, accumulated valid movement time, and tracking pause status. The seated reference persists for the camera session; rise confirmation and movement time reset whenever the user returns to it, so every break uses the same mechanism.
 
 ### Signal Rules
 

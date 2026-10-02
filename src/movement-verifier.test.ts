@@ -99,6 +99,13 @@ describe('movement verifier', () => {
     [1_000, 1_100, 1_200, 1_300, 1_400].forEach((timestamp, index) => verifier.processFrame(frameAt(timestamp, -0.2, 0.04 + index * 0.04)));
     expect(verifier.processFrame(frameAt(1_500, -0.2, 0.28)).phase).toBe('awaiting-return');
     [1_600, 1_700, 1_800, 1_900].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
-    expect(verifier.processFrame(frameAt(2_000)).phase).toBe('monitoring');
+    const resumed = verifier.processFrame(frameAt(2_000));
+    expect(resumed.phase).toBe('monitoring');
+    expect(resumed.movementProgress).toBe(0);
+    [2_100, 2_200].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    expect(verifier.processFrame(frameAt(2_300)).phase).toBe('awaiting-rise');
+    expect(verifier.processFrame(frameAt(2_400, -0.2)).phase).toBe('awaiting-rise');
+    expect(verifier.processFrame(frameAt(2_500, -0.2)).phase).toBe('awaiting-rise');
+    expect(verifier.processFrame(frameAt(2_600, -0.2)).phase).toBe('moving');
   });
 });

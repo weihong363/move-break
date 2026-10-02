@@ -98,7 +98,10 @@ export const createMovementVerifier = (config: MovementConfig) => {
 
     if (phase === 'monitoring') {
       inactivityElapsedMs += elapsedMs;
-      if (inactivityElapsedMs >= config.inactivityDurationMs) phase = 'awaiting-rise';
+      if (inactivityElapsedMs >= config.inactivityDurationMs) {
+        riseFrames = 0;
+        phase = 'awaiting-rise';
+      }
       return snapshot(phase);
     }
 
@@ -121,6 +124,8 @@ export const createMovementVerifier = (config: MovementConfig) => {
       returnFrames = normalizedReturn <= config.returnThreshold ? returnFrames + 1 : 0;
       if (returnFrames >= config.consecutiveRiseFrames) {
         inactivityElapsedMs = 0;
+        movementElapsedMs = 0;
+        riseFrames = 0;
         returnFrames = 0;
         phase = 'monitoring';
       }
