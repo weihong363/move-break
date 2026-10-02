@@ -22,7 +22,7 @@ describe('avatar rig', () => {
     const rig = createAvatarRigDriver(1);
     const initial = rig.update(frameAt(0));
     const moved = rig.update(frameAt(100, 0, -0.16));
-    expect(moved?.leftUpperArm).not.toBe(initial?.leftUpperArm);
-    expect(moved?.leftLowerArm).not.toBe(initial?.leftLowerArm);
+    expect(moved?.leftUpperArm).not.toEqual(initial?.leftUpperArm);
+    expect(moved?.leftLowerArm).not.toEqual(initial?.leftLowerArm);
   });
 });

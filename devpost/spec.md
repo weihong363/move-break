@@ -52,7 +52,7 @@ Owns monitoring, prompt, and verification UI state. It translates camera, detect
 
 ### Companion Avatar
 
-Uses one blue SVG upper-body rig with a small state set: seated idle, alert, standing, moving, celebration, and tracking recovery. The rig maps smoothed shoulder, elbow, wrist, head, and hip landmarks into torso, head, and four arm-part transforms. During movement, a coarse arm-displacement signal adds a wave/stretch; a large shoulder-width change flips the avatar direction. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
+Uses one layered rig built from the translucent cyan human artwork supplied by the learner. The seated front-facing head, torso, four arm layers, desk/base, and standing torso share that art source. The rig maps smoothed shoulder, elbow, wrist, head, and hip landmarks into torso, head, and arm-part transforms. During movement, a coarse arm-displacement signal adds responsive glow. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
 
 ### Camera
 
@@ -121,7 +121,7 @@ move-break/
 │   ├── main.ts                  # Bootstrap and DOM event wiring
 │   ├── styles.css               # Global visual system and layouts
 │   ├── app-controller.ts        # App phase transitions and rendering
-│   ├── avatar-rig.ts            # Smoothed upper-body landmark to SVG transforms
+│   ├── avatar-rig.ts            # Smoothed upper-body landmark to layered-art transforms
 │   ├── config.ts                # Typed demo and verifier thresholds
 │   ├── types.ts                 # Shared app, landmark, and verifier types
 │   ├── camera.ts                # MediaDevices lifecycle and preview setup

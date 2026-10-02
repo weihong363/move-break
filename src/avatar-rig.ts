@@ -1,16 +1,17 @@
 import type { PoseFrame, PoseLandmark } from './types';
 
 type Point = { x: number; y: number };
+export type ArmTransform = { x: number; y: number; angle: number; length: number };
 
 export type AvatarRigPose = {
   posture: 'seated' | 'standing';
   root: Point;
   torsoScale: number;
   head: Point;
-  leftUpperArm: string;
-  leftLowerArm: string;
-  rightUpperArm: string;
-  rightLowerArm: string;
+  leftUpperArm: ArmTransform;
+  leftLowerArm: ArmTransform;
+  rightUpperArm: ArmTransform;
+  rightLowerArm: ArmTransform;
 };
 
 const leftShoulder = 11;
@@ -41,7 +42,7 @@ const averageLandmark = (frames: PoseFrame[], index: number): Point | undefined 
 const segmentTransform = (start: Point, end: Point) => {
   const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI - 90;
   const length = clamp(distance(start, end), 20, 72) / 50;
-  return `translate(${start.x.toFixed(1)} ${start.y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(1 ${length.toFixed(2)})`;
+  return { x: start.x, y: start.y, angle, length };
 };
 
 const toRigPoint = (point: Point, center: Point, bodyScale: number): Point => ({

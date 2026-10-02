@@ -41,29 +41,32 @@ button, select { font: inherit; }
   letter-spacing: 0.14em;
 }
 
-.avatar { width: min(100%, 230px); margin: 2px auto; filter: drop-shadow(0 14px 18px rgb(25 118 210 / 18%)); }
-.avatar-rig { display: block; width: 100%; overflow: visible; }
-.rig-shadow { fill: #d7e5df; }
-.rig-desk { fill: #dbe8ef; stroke: #8aaabd; stroke-width: 3; transition: opacity 180ms ease; }
-.rig-seat { fill: #a6cadc; }
-.rig-torso, .rig-arm { fill: url(#avatar-blue); }
-.rig-head { fill: url(#avatar-face); stroke: #bdf7ff; stroke-width: 2; }
-.rig-eye { fill: #0b3f7c; }
-.rig-smile { fill: none; stroke: #0b3f7c; stroke-width: 2.5; stroke-linecap: round; }
-[data-rig-root] g { transition: transform 110ms ease-out; }
-[data-avatar="seated"] .avatar-rig { animation: avatar-breathe 2.8s ease-in-out infinite; }
-[data-avatar="alert"] .avatar-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }
-[data-avatar="celebrate"] .avatar-rig { animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
-[data-avatar="inspect"] .avatar-rig { animation: avatar-inspect 1s ease-in-out infinite; }
-[data-rig-posture="standing"] .rig-desk, [data-rig-posture="standing"] .rig-seat { opacity: 0.22; }
-[data-avatar="moving"][data-avatar-motion="arms"] .avatar-rig { animation: avatar-wave 520ms ease-in-out infinite alternate; }
-[data-avatar="moving"][data-avatar-motion="turning"] .avatar-rig { transform: scaleX(-1); }
+.avatar { position: relative; width: min(100%, 230px); height: 220px; margin: 2px auto; filter: drop-shadow(0 14px 18px rgb(25 118 210 / 18%)); }
+.art-shadow { position: absolute; right: 15%; bottom: 7px; left: 15%; height: 20px; border-radius: 50%; background: #d7e5df; }
+.art-root { position: absolute; top: 137px; left: 50%; width: 0; height: 0; transition: transform 180ms ease-out; }
+.art-part { position: absolute; display: block; width: 74px; height: 85px; background-image: var(--avatar-parts); background-repeat: no-repeat; background-size: 400% 200%; transition: transform 110ms ease-out, opacity 180ms ease; }
+.art-head { width: 82px; height: 94px; top: -104px; left: -41px; background-position: 0 0; }
+.art-torso { width: 132px; height: 151px; top: -96px; left: -66px; transform: translateX(-50%) scale(1); transform-origin: center bottom; background-position: 33.333% 0; }
+.art-arm { top: -28px; left: -37px; transform-origin: 50% 50%; }
+.art-left-upper { background-position: 66.667% 0; }
+.art-left-lower { background-position: 100% 0; }
+.art-right-upper { background-position: 0 100%; }
+.art-right-lower { background-position: 33.333% 100%; }
+.art-desk { width: 172px; height: 196px; top: -26px; left: -86px; background-position: 66.667% 100%; }
+.art-seat { display: none; }
+[data-rig-posture="standing"] .art-torso { background-position: 100% 100%; }
+[data-rig-posture="standing"] .art-desk { opacity: 0.16; }
+[data-avatar="seated"] .art-root { animation: avatar-breathe 2.8s ease-in-out infinite; }
+[data-avatar="alert"] .art-root { animation: avatar-alert 700ms ease-in-out infinite alternate; }
+[data-avatar="celebrate"] .art-root { animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
+[data-avatar="inspect"] .art-root { animation: avatar-inspect 1s ease-in-out infinite; }
+[data-avatar="moving"][data-avatar-motion="arms"] .art-root { animation: avatar-wave 520ms ease-in-out infinite alternate; }
 
-@keyframes avatar-breathe { 50% { transform: translateY(-3px) scale(1.01); } }
-@keyframes avatar-alert { to { transform: translateY(-7px) scale(1.04); filter: brightness(1.15); } }
-@keyframes avatar-wave { to { transform: translateX(4px) rotate(-2deg) scale(1.02); } }
-@keyframes avatar-celebrate { to { transform: translateY(-10px) scale(1.05); } }
-@keyframes avatar-inspect { 50% { transform: translateX(5px) rotate(2deg); } }
+@keyframes avatar-breathe { 50% { filter: brightness(1.08); } }
+@keyframes avatar-alert { to { filter: brightness(1.25) drop-shadow(0 0 9px #30dfff); } }
+@keyframes avatar-wave { to { filter: brightness(1.12) drop-shadow(0 0 7px #3ce8ff); } }
+@keyframes avatar-celebrate { to { filter: brightness(1.28) drop-shadow(0 0 11px #46eaff); } }
+@keyframes avatar-inspect { 50% { filter: brightness(0.88); } }
 
 h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
 

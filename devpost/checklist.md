@@ -69,6 +69,16 @@ Build mode: fast
   Learner check: Enable camera and compare arm and upper-body motion against the avatar in the hidden-preview experience.
   Commit: `Drive avatar from upper-body landmarks`
 
+- [x] **7. Rig the established translucent figure art**
+  Becomes usable: The seated front-facing avatar is composed from head, torso, arm, and desk layers that preserve the established translucent cyan figure style while responding to upper-body tracking.
+  Why now: The learner rejected the invented SVG style and specified the earlier translucent figure artwork as the canonical source.
+  PRD ref: `prd.md > Look and Feel`, `prd.md > Movement verification`
+  Spec ref: `spec.md > Components > Companion Avatar`
+  Build: Prepare a transparent parts sheet from the canonical artwork, compose it into a layered seated rig, and retain a matching standing torso for the rise state.
+  Verify (mechanical): Run tests and `pnpm build`; confirm the art layers are bundled locally and landmark-driven arm transforms remain tested.
+  Learner check: Compare seated, standing, and arm-motion states with the original translucent figure style.
+  Commit: `Rig established translucent figure art`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.
@@ -98,3 +108,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner requested a more product-like avatar. The implementation uses a discrete companion state set and existing local pose signals rather than an animation system or new product feature.
 - The learner selected a blue luminous companion style from the provided reference; its blue palette and rounded visual language carry into the live rig.
 - The learner requested a live body-part-driven avatar. The static sprite was replaced with a small normalized SVG upper-body rig driven by existing local pose landmarks.
+- The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The live rig now uses split layers prepared from that artwork.
