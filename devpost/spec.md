@@ -142,7 +142,7 @@ move-break/
 
 ## Important Failure Modes
 
-- **Permission denied, no camera, or insecure deployment** → show that camera verification is required, keep the break incomplete, and provide retry guidance.
+- **Permission denied, no camera, or insecure deployment** → show that camera verification is required, keep the break incomplete, and provide retry guidance. When the browser retains a denied permission, explain that the user must re-allow the camera in browser settings before retrying.
 - **No usable pose or inadequate framing** → pause verification and show “Step back so your upper body is visible”; do not progress or expose debug data.
 - **Temporary landmark-quality drop** → retain the current verifier stage but stop its progress timer until usable landmarks return.
 - **Detector blocks the interface on a slow machine** → lower the inference cadence first; move to a worker only if the technical spike shows that throttling is insufficient.

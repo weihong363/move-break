@@ -58,7 +58,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 
 ### Feedback and recovery
 
-- Camera permission denial explains that camera verification is required for this MVP and shows a clear retry action; the break remains incomplete.
+- Camera permission denial explains that camera verification is required for this MVP and shows a clear retry action; if the browser retains the denial, it tells the user to re-allow the camera in browser settings before retrying. The break remains incomplete.
 - Insufficient visibility or unreliable tracking gives plain-language guidance, such as asking the user to step back or move more.
 - Normal UI never exposes model details, confidence scores, landmarks, or debugging information.
 

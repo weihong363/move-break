@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Open the local app, start, pause, and reset a short work session. Confirm it feels like a simple timer rather than a dashboard.
   Commit: `Add MoveBreak work timer`
 
-- [ ] **2. Prove local camera and pose-tracking readiness**
+- [x] **2. Prove local camera and pose-tracking readiness**
   Becomes usable: A finished work session enters a deliberately plain movement-break proof screen. The user can enable the camera, see a local preview, and receive clear ready, retry, or framing feedback based on real local pose-tracking input.
   Why now: This is the unique kernel's highest-risk dependency, so it must be proven before investing in the verifier or polished movement-break UI.
   PRD ref: `prd.md > Core Journey`, `prd.md > Features and Behavior > Movement verification`, `prd.md > Feedback and recovery`

@@ -1,4 +1,6 @@
 import { demoConfig } from './config';
+import { requestCamera, stopCamera } from './camera';
+import { createPoseDetector } from './pose-detector';
 import { createTimer } from './timer';
 import type { AppState } from './types';
 
@@ -16,6 +18,10 @@ export const createAppController = (root: HTMLElement) => {
     remainingMs: demoConfig.workDurationSeconds * 1_000,
     isPaused: false,
   };
+  let stream: MediaStream | undefined;
+  let readinessMessage = '';
+  let cameraErrorMessage = 'Camera verification is required to complete this break.';
+  const detector = createPoseDetector();
 
   const timer = createTimer({
     onTick: (remainingMs) => {
@@ -23,7 +29,7 @@ export const createAppController = (root: HTMLElement) => {
       render();
     },
     onComplete: () => {
-      state.phase = 'break-ready';
+      state.phase = 'camera-permission';
       state.isPaused = false;
       render();
     },
@@ -50,23 +56,66 @@ export const createAppController = (root: HTMLElement) => {
 
   const reset = () => {
     timer.stop();
+    detector.stop();
+    stopCamera(stream);
+    stream = undefined;
     state.phase = 'ready';
     state.isPaused = false;
     state.remainingMs = state.durationMs;
     render();
   };
 
+  const enableCamera = async () => {
+    state.phase = 'camera-loading';
+    render();
+    const video = root.querySelector<HTMLVideoElement>('video');
+    if (!video) return;
+
+    try {
+      stream = await requestCamera(video);
+      state.phase = 'camera-active';
+      readinessMessage = 'Checking whether MoveBreak can see enough of your upper body…';
+      render();
+      const activeVideo = root.querySelector<HTMLVideoElement>('video');
+      if (!activeVideo || !stream) return;
+      activeVideo.srcObject = stream;
+      await activeVideo.play();
+      await detector.start(activeVideo, (readiness) => {
+        const status = root.querySelector<HTMLElement>('[data-readiness]');
+        if (!status) return;
+        if (readiness.kind === 'ready') {
+          status.textContent = `Ready — MoveBreak can see ${readiness.usableLandmarks} useful upper-body landmarks.`;
+        } else if (readiness.kind === 'framing') {
+          status.textContent = 'Step back so your upper body is visible.';
+        } else {
+          status.textContent = readiness.message;
+        }
+      });
+    } catch (error) {
+      state.phase = 'camera-required';
+      cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
+        ? 'Allow camera access in your browser settings, then try again. Camera verification is required to complete this break.'
+        : 'MoveBreak could not access a camera. Check that one is available, then try again.';
+      render();
+    }
+  };
+
   const render = () => {
-    if (state.phase === 'break-ready') {
+    if (state.phase.startsWith('camera-')) {
+      const isLoading = state.phase === 'camera-loading';
+      const isError = state.phase === 'camera-required';
       root.innerHTML = `
-        <section class="timer-card" aria-live="polite">
+        <section class="proof-card" aria-live="polite">
           <p class="eyebrow">MOVE BREAK</p>
-          <div class="companion" aria-hidden="true">✦</div>
-          <h1>Work session complete</h1>
-          <p class="description">Your movement break is ready. Camera verification arrives in the next build step.</p>
-          <button class="primary-button" type="button" data-action="reset">Back to timer</button>
+          <h1>Movement break</h1>
+          <p class="description">${isError ? cameraErrorMessage : 'Time to move. Stand up and move for a few seconds.'}</p>
+          ${state.phase === 'camera-active' || isLoading ? '<video class="camera-preview" autoplay muted playsinline></video>' : ''}
+          ${state.phase === 'camera-active' ? `<p class="readiness" data-readiness>${readinessMessage}</p>` : ''}
+          ${isLoading ? '<p class="readiness">Opening your camera…</p>' : ''}
+          ${state.phase !== 'camera-active' ? `<button class="primary-button" type="button" data-action="enable-camera" ${isLoading ? 'disabled' : ''}>${isError ? 'Try camera again' : 'Enable camera'}</button>` : ''}
+          <p class="privacy-note">Camera processing stays on your device.</p>
         </section>`;
-      root.querySelector<HTMLButtonElement>('[data-action="reset"]')?.addEventListener('click', reset);
+      root.querySelector<HTMLButtonElement>('[data-action="enable-camera"]')?.addEventListener('click', enableCamera);
       return;
     }
 
