@@ -94,6 +94,11 @@ Build mode: fast
   Learner check: Run the complete camera routine and tune the hold thresholds if needed.
   Commit: `Add guided movement routine`
 
+- [x] **10. Remove legacy standing presentation**
+  Build: Remove standing/rig rendering and CSS. Keep the movement cue visible through tracking loss and completion; show the webcam only through its debug toggle.
+  Verify: Tests and build pass. Browser state previews checked for stand prompt, all four movements, tracking guidance, step success, and completion. Live-camera matching remains covered by the existing routine checks.
+  Commit: `Remove legacy avatar rendering paths`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.

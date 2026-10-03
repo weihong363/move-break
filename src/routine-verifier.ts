@@ -65,8 +65,8 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
   let phase: RoutinePhase = 'demo';
 
   const reset = () => { samples = []; index = 0; holdMs = 0; lastTimestamp = undefined; baselineWidth = undefined; rotationDirection = undefined; rotationStep = 'first-side'; phase = 'demo'; };
-  const current = () => movements[index];
-  const snapshot = (nextPhase: RoutinePhase): RoutineSnapshot => ({ phase: nextPhase, movement: current(), movementIndex: index, instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
+  const current = () => movements[Math.min(index, movements.length - 1)];
+  const snapshot = (nextPhase: RoutinePhase): RoutineSnapshot => ({ phase: nextPhase, movement: current(), movementIndex: Math.min(index, movements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
 
   const matches = (metrics: Metrics) => {
     const movement = current();
@@ -83,6 +83,7 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
   };
 
   const processFrame = (frame: PoseFrame): RoutineSnapshot => {
+    if (phase === 'complete' || phase === 'movement-complete') return snapshot(phase);
     const elapsed = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
     lastTimestamp = frame.timestamp;
     samples = [...samples, frame].slice(-config.smoothingWindow);

@@ -3,8 +3,8 @@ import { demoConfig } from './config';
 import { createMovementVerifier, type VerifierSnapshot } from './movement-verifier';
 import { createPoseDetector } from './pose-detector';
 import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
-import type { AppState, PoseFrame } from './types';
-import seatedRigUrl from './assets/translucent-seated-clean.png';
+import type { AppState } from './types';
+import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/translucent-figure-reference.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
@@ -16,12 +16,8 @@ const routineLabel = (movement: RoutineSnapshot['movement']) => ({
 }[movement]);
 
 const characterMarkup = () => `
-  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--routine-art:url('${routineArtUrl}')">
-    <span class="seated-rig" data-rig-root>
-      <span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
-      <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
-      <span class="rig-arm-parent rig-right-upper"><span class="rig-layer rig-right-forearm"></span></span>
-    </span>
+  <div class="companion" data-visual="monitoring" aria-hidden="true" style="--seated-art:url('${seatedArtUrl}');--routine-art:url('${routineArtUrl}')">
+    <span class="monitoring-art"></span>
     <span class="routine-cue"></span>
   </div>`;
 
@@ -33,7 +29,7 @@ export const createAppController = (root: HTMLElement) => {
   let stream: MediaStream | undefined;
   let debugPreview = false;
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
-  let promptStartedAt: number | undefined;
+  const previewMode = import.meta.env.DEV && new URLSearchParams(location.search).has('preview');
   let notificationAudio: AudioContext | undefined;
   let routineAdvanceTimer: number | undefined;
   let routineCompleteTimer: number | undefined;
@@ -119,7 +115,7 @@ export const createAppController = (root: HTMLElement) => {
         const snapshot = verifier.processFrame(frame);
         const startsRoutine = snapshot.phase === 'routine' && lastVerifierPhase !== 'routine';
         if (startsRoutine) { routine.reset(); lastRoutineSecond = undefined; }
-        if (snapshot.phase === 'routine' || (snapshot.phase === 'paused-tracking' && lastVerifierPhase === 'routine')) { updateRoutine(routine.processFrame(frame), frame); return; }
+        if (snapshot.phase === 'routine' || (snapshot.phase === 'paused-tracking' && lastVerifierPhase === 'routine')) { updateRoutine(routine.processFrame(frame)); return; }
         updateVerification(snapshot);
       }, handleDetectorError);
     } catch (error) {
@@ -140,10 +136,15 @@ export const createAppController = (root: HTMLElement) => {
     render();
   };
 
-  const setAvatar = (nextState: string, motion: VerifierSnapshot['avatarMotion'] = 'still') => {
-    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
-    avatar?.setAttribute('data-avatar', nextState);
-    avatar?.setAttribute('data-avatar-motion', motion);
+  const showMonitoringArt = () => {
+    const companion = root.querySelector<HTMLElement>('[data-visual]');
+    companion?.setAttribute('data-visual', 'monitoring');
+    companion?.removeAttribute('data-routine-pose');
+  };
+
+  const setGuidance = (message = '') => {
+    const hint = root.querySelector<HTMLElement>('[data-guidance]');
+    if (hint) { hint.textContent = message; hint.hidden = !message; }
   };
 
   const setPreviewVisible = (visible: boolean) => {
@@ -152,74 +153,87 @@ export const createAppController = (root: HTMLElement) => {
     if (toggle) toggle.textContent = debugPreview ? 'Hide camera debug' : 'Show camera debug';
   };
 
-  const setRoutineAvatar = (movement: RoutineSnapshot['movement']) => {
-    const avatar = root.querySelector<HTMLElement>('[data-avatar]');
-    if (!avatar) return;
-    avatar.setAttribute('data-avatar', 'moving');
-    avatar.setAttribute('data-routine-pose', movement);
+  const showMovementCue = (movement: RoutineSnapshot['movement']) => {
+    const companion = root.querySelector<HTMLElement>('[data-visual]');
+    companion?.setAttribute('data-visual', 'routine');
+    companion?.setAttribute('data-routine-pose', movement);
   };
 
-  const updateRoutine = (snapshot: RoutineSnapshot, frame: PoseFrame) => {
+  const updateRoutine = (snapshot: RoutineSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
+    const step = root.querySelector<HTMLElement>('[data-step]');
     if (!status || !progress) return;
     lastVerifierPhase = 'routine';
-    setRoutineAvatar(snapshot.movement);
-    setPreviewVisible(debugPreview || snapshot.phase === 'paused-tracking');
-    if (snapshot.phase === 'paused-tracking') { status.textContent = 'Keep both shoulders and hands in view.'; progress.textContent = 'Routine progress is paused.'; return; }
-    if (snapshot.phase === 'complete') { status.textContent = 'Movement break completed'; progress.textContent = 'Nice. Sit back down when you are ready.'; if (!routineCompleteTimer) routineCompleteTimer = window.setTimeout(() => { verifier.completeRoutine(); routineCompleteTimer = undefined; }, demoConfig.routineAdvanceDelayMs); return; }
-    if (snapshot.phase === 'movement-complete') { status.textContent = 'Nice!'; progress.textContent = 'Moving to the next stretch…'; if (!routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routine.advance(); routineAdvanceTimer = undefined; lastRoutineSecond = undefined; }, demoConfig.routineAdvanceDelayMs); return; }
-    status.textContent = `${routineLabel(snapshot.movement)} · ${snapshot.instruction}`;
+    showMovementCue(snapshot.movement);
+    setPreviewVisible(debugPreview);
+    setGuidance(snapshot.phase === 'paused-tracking' ? 'Step back so your upper body and hands are visible.' : '');
+    if (step) step.textContent = `Step ${snapshot.movementIndex + 1} of 4 · ${routineLabel(snapshot.movement)}`;
+    status.textContent = snapshot.instruction;
     const seconds = Math.max(0, Math.ceil((1 - snapshot.progress) * demoConfig.routineHoldDurationMs / 1_000));
-    progress.textContent = snapshot.phase === 'holding' ? `Hold it · ${seconds} seconds` : 'Match the avatar to begin.';
-    if (snapshot.phase === 'holding' && seconds !== lastRoutineSecond) { lastRoutineSecond = seconds; playRoutineTick(seconds <= 1); }
+    progress.textContent = `Hold it · ${seconds} seconds remaining`;
+    if (snapshot.phase === 'complete') {
+      status.textContent = 'Movement break completed';
+      progress.textContent = 'Nice. Sit back down when you are ready.';
+      if (!previewMode && !routineCompleteTimer) routineCompleteTimer = window.setTimeout(() => { verifier.completeRoutine(); routineCompleteTimer = undefined; }, demoConfig.routineAdvanceDelayMs);
+    } else if (snapshot.phase === 'movement-complete') {
+      status.textContent = 'Nice!';
+      progress.textContent = 'Moving to the next stretch…';
+      if (!previewMode && !routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routine.advance(); routineAdvanceTimer = undefined; lastRoutineSecond = undefined; }, demoConfig.routineAdvanceDelayMs);
+    } else if (snapshot.phase === 'demo') {
+      progress.textContent = 'Follow the movement cue to begin.';
+    } else if (snapshot.phase === 'holding' && seconds !== lastRoutineSecond) {
+      lastRoutineSecond = seconds;
+      playRoutineTick(seconds <= 1);
+    }
   };
 
   const updateVerification = (snapshot: VerifierSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
-    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') {
-      promptStartedAt = performance.now();
-      playNotification();
+    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') playNotification();
+    const previousPhase = lastVerifierPhase;
+    if (snapshot.phase !== 'paused-tracking') lastVerifierPhase = snapshot.phase;
+    setPreviewVisible(debugPreview);
+    setGuidance();
+    const step = root.querySelector<HTMLElement>('[data-step]');
+    if (snapshot.phase === 'paused-tracking' && previousPhase === 'awaiting-rise') {
+      setGuidance('Step back so your upper body and hands are visible.');
+      return;
     }
-    if (snapshot.phase !== 'awaiting-rise') promptStartedAt = undefined;
-    lastVerifierPhase = snapshot.phase;
-
-    root.querySelector<HTMLElement>('[data-avatar]')?.removeAttribute('data-routine-pose');
+    if (step) step.textContent = 'LOCAL MOVEMENT CHECK';
     if (snapshot.phase === 'paused-tracking') {
-      setAvatar('inspect');
-      setPreviewVisible(true);
+      showMonitoringArt();
+      setGuidance('Keep both shoulders in view.');
       status.textContent = 'Keep both shoulders in view.';
       progress.textContent = 'Monitoring will continue when your stable baseline is visible.';
     } else if (snapshot.phase === 'baseline') {
-      setAvatar('seated');
+      showMonitoringArt();
       setPreviewVisible(debugPreview);
       status.textContent = 'Hold still for a moment. MoveBreak is getting a baseline.';
       progress.textContent = `Getting ready… ${Math.round(snapshot.baselineProgress * 100)}%`;
     } else if (snapshot.phase === 'monitoring') {
-      setAvatar('seated');
+      showMonitoringArt();
       setPreviewVisible(debugPreview);
       status.textContent = 'Monitoring';
       progress.textContent = `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
     } else if (snapshot.phase === 'awaiting-rise') {
-      const justPrompted = promptStartedAt !== undefined && performance.now() - promptStartedAt < 700;
-      setAvatar(justPrompted ? 'alert' : 'standing');
-      setPreviewVisible(debugPreview);
-      status.textContent = justPrompted ? 'Time to move' : 'Stand up';
-      progress.textContent = justPrompted ? 'Stand up and move for a few seconds.' : 'Waiting for a clear rise.';
+      showMovementCue('overhead-reach');
+      status.textContent = 'Stand up';
+      progress.textContent = 'Then follow the first movement cue.';
     } else if (snapshot.phase === 'routine') {
-      setAvatar('standing');
+      showMovementCue('overhead-reach');
       setPreviewVisible(debugPreview);
       status.textContent = 'Get ready to move';
-      progress.textContent = 'Follow the avatar.';
+      progress.textContent = 'Follow the movement cue.';
     } else if (snapshot.phase === 'completed') {
-      setAvatar('celebrate');
+      showMovementCue('torso-rotation');
       setPreviewVisible(debugPreview);
       status.textContent = 'Break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
     } else {
-      setAvatar('seated');
+      showMovementCue('torso-rotation');
       setPreviewVisible(debugPreview);
       status.textContent = 'Sit down when you are ready';
       progress.textContent = 'Monitoring resumes from your usual seated position.';
@@ -238,9 +252,10 @@ export const createAppController = (root: HTMLElement) => {
         <section class="proof-card" aria-live="polite">
           <p class="eyebrow">MOVE BREAK</p>
           ${characterMarkup()}
-          <p class="state-label">LOCAL MOVEMENT CHECK</p>
+          <p class="state-label" data-step>LOCAL MOVEMENT CHECK</p>
           <h1 class="readiness" data-status>${isLoading ? 'Opening your camera…' : 'Getting ready'}</h1>
           <p class="progress" data-progress>${isLoading ? '' : 'Getting ready… 0%'}</p>
+          <p class="tracking-guidance" data-guidance hidden></p>
           <div class="camera-shell" data-camera-shell>
             <video class="camera-preview" autoplay muted playsinline></video>
             <p>Local camera debug view</p>
@@ -273,5 +288,23 @@ export const createAppController = (root: HTMLElement) => {
     });
   };
 
+  if (previewMode) state.phase = 'camera-active';
   render();
+  if (previewMode) {
+    const controls = document.createElement('div');
+    const names = ['stand', 'overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation', 'tracking-paused', 'step-success', 'completed'];
+    controls.innerHTML = `<label>Developer state preview <select>${names.map((name) => `<option>${name}</option>`).join('')}</select></label>`;
+    root.append(controls);
+    const preview = (name: string) => {
+      if (name === 'stand') {
+        updateVerification({ phase: 'awaiting-rise', baselineProgress: 1, inactivityProgress: 1, movementProgress: 0 });
+        return;
+      }
+      const movements: RoutineSnapshot['movement'][] = ['overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation'];
+      const index = Math.max(0, movements.indexOf(name as RoutineSnapshot['movement']));
+      updateRoutine({ movement: name === 'completed' ? 'torso-rotation' : movements[index], movementIndex: name === 'completed' ? 3 : index, instruction: ['Reach up', 'Bend left', 'Bend right', 'Turn your upper body'][index], progress: 0.5, phase: name === 'completed' ? 'complete' : name === 'tracking-paused' ? 'paused-tracking' : name === 'step-success' ? 'movement-complete' : 'holding' });
+    };
+    controls.querySelector('select')?.addEventListener('change', (event) => preview((event.target as HTMLSelectElement).value));
+    preview('stand');
+  }
 };

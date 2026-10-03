@@ -36,6 +36,9 @@ describe('routine verifier', () => {
     held(routine, reach); routine.advance(); held(routine, leftBend, 400); routine.advance(); held(routine, rightBend, 800); routine.advance();
     expect(held(routine, (time) => rotate(time, -1), 1_200).rotationStep).toBe('other-side');
     expect(held(routine, (time) => rotate(time, 1), 1_600).phase).toBe('movement-complete');
+    expect(routine.processFrame(frameAt(2_000)).phase).toBe('movement-complete');
+    expect(routine.advance()).toMatchObject({ phase: 'complete', movement: 'torso-rotation', movementIndex: 3 });
+    expect(routine.processFrame(frameAt(2_100))).toMatchObject({ phase: 'complete', movement: 'torso-rotation', movementIndex: 3 });
   });
 
   it('pauses rather than clears progress when tracking disappears', () => {

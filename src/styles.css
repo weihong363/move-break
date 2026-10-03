@@ -41,42 +41,20 @@ button, select { font: inherit; }
   letter-spacing: 0.14em;
 }
 
-.avatar { position: relative; width: min(100%, 230px); height: 230px; margin: 2px auto; filter: drop-shadow(0 14px 18px rgb(25 118 210 / 18%)); }
-.seated-rig, .standing-rig, .rig-layer, .rig-arm-parent { position: absolute; inset: 0; display: block; }
-.rig-layer, .rig-arm-parent::before { background-image: var(--seated-art); background-position: center; background-repeat: no-repeat; background-size: 100% 100%; }
-.rig-desk { mask-image: linear-gradient(to bottom, transparent 77%, #000 82%, #000); }
-.rig-torso { mask-image: radial-gradient(ellipse 39% 48% at 50% 61%, #000 84%, transparent 100%); }
-.rig-head { mask-image: radial-gradient(ellipse 24% 22% at 50% 28%, #000 86%, transparent 100%); }
-.rig-arm-parent::before { position: absolute; inset: 0; display: block; content: ""; }
-.rig-left-upper { transform-origin: 36% 47%; z-index: 2; }
-.rig-left-upper::before { mask-image: radial-gradient(ellipse 29% 33% at 29% 51%, #000 80%, transparent 100%); }
-.rig-left-forearm { mask-image: radial-gradient(ellipse 27% 28% at 27% 68%, #000 79%, transparent 100%); transform-origin: 29% 61%; }
-.rig-right-upper { transform-origin: 64% 47%; z-index: 2; }
-.rig-right-upper::before { mask-image: radial-gradient(ellipse 29% 33% at 71% 51%, #000 80%, transparent 100%); }
-.rig-right-forearm { mask-image: radial-gradient(ellipse 27% 28% at 73% 68%, #000 79%, transparent 100%); transform-origin: 71% 61%; }
-
-.routine-cue { display: none; position: absolute; inset: 0; background-image: var(--routine-art); background-repeat: no-repeat; background-size: 500% 200%; filter: drop-shadow(0 10px 12px rgb(25 118 210 / 16%)); }
-[data-routine-pose] .standing-rig { display: none; }
-[data-routine-pose] .routine-cue { display: block; }
+.companion { position: relative; width: min(100%, 230px); height: 230px; margin: 2px auto; }
+.monitoring-art { position: absolute; inset: 0; background: var(--seated-art) center / contain no-repeat; }
+.routine-cue { display: none; position: absolute; inset: 0; background-image: var(--routine-art); background-repeat: no-repeat; background-size: 500% 200%; }
+[data-visual="routine"] .monitoring-art { display: none; }
+[data-visual="routine"] .routine-cue { display: block; }
 [data-routine-pose="overhead-reach"] .routine-cue { background-position: 100% 0; animation: cue-reach 1.2s ease-in-out infinite; }
 [data-routine-pose="side-bend-left"] .routine-cue { background-position: 0 0; animation: cue-bend-left 1.3s ease-in-out infinite alternate; }
 [data-routine-pose="side-bend-right"] .routine-cue { background-position: 0 0; animation: cue-bend-right 1.3s ease-in-out infinite alternate; }
 [data-routine-pose="torso-rotation"] .routine-cue { background-position: 50% 0; animation: cue-rotate 1.2s ease-in-out infinite alternate; }
-[data-avatar="standing"] .seated-rig, [data-avatar="moving"] .seated-rig, [data-avatar="celebrate"] .seated-rig { display: none; }
-[data-avatar="standing"] .routine-cue { display: block; background-position: 0 0; animation: cue-stand 1.5s ease-in-out infinite alternate; }
-[data-avatar="celebrate"] .routine-cue { display: block; background-position: 100% 0; animation: cue-reach 1.2s ease-in-out infinite; }
-[data-avatar="alert"] .seated-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }
-[data-avatar="inspect"] .seated-rig { animation: avatar-inspect 1s ease-in-out infinite; }
-
-@keyframes avatar-alert { to { filter: brightness(1.25) drop-shadow(0 0 9px #30dfff); } }
-@keyframes avatar-wave { to { filter: brightness(1.12) drop-shadow(0 0 7px #3ce8ff); } }
-@keyframes avatar-celebrate { to { filter: brightness(1.28) drop-shadow(0 0 11px #46eaff); } }
-@keyframes avatar-inspect { 50% { filter: brightness(0.88); } }
+.tracking-guidance { color: #668172; font-size: 0.8rem; line-height: 1.4; }
 @keyframes cue-reach { 50% { transform: translateY(-7px) scale(1.04); } }
 @keyframes cue-bend-left { to { transform: translateX(-7px) rotate(-8deg); } }
 @keyframes cue-bend-right { to { transform: translateX(7px) rotate(8deg); } }
 @keyframes cue-rotate { to { transform: rotate(5deg) scaleX(0.9); } }
-@keyframes cue-stand { to { transform: translateY(-4px); } }
 
 h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
 

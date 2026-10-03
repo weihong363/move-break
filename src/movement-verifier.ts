@@ -16,7 +16,6 @@ export type VerifierSnapshot = {
   baselineProgress: number;
   inactivityProgress: number;
   movementProgress: number;
-  avatarMotion: 'still' | 'arms' | 'turning';
 };
 
 type Metrics = { torsoY: number; bodyScale: number; movement: number; armMovement: number; shoulderWidth: number };
@@ -51,14 +50,12 @@ export const createMovementVerifier = (config: MovementConfig) => {
   let baselineShoulderWidth: number | undefined;
   let riseFrames = 0;
   let returnFrames = 0;
-  let avatarMotion: VerifierSnapshot['avatarMotion'] = 'still';
 
   const snapshot = (nextPhase: VerifierPhase): VerifierSnapshot => ({
     phase: nextPhase,
     baselineProgress: Math.min(1, baselineElapsedMs / config.baselineDurationMs),
     inactivityProgress: Math.min(1, inactivityElapsedMs / config.inactivityDurationMs),
     movementProgress: 0,
-    avatarMotion,
   });
 
   const calculateMetrics = (): Metrics | undefined => {
@@ -95,7 +92,6 @@ export const createMovementVerifier = (config: MovementConfig) => {
     samples = [...samples, frame].slice(-config.smoothingWindow);
     const metrics = calculateMetrics();
     if (!metrics) return snapshot('paused-tracking');
-    avatarMotion = 'still';
 
     if (phase === 'baseline') {
       baselineElapsedMs += elapsedMs;

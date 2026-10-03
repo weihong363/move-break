@@ -157,8 +157,8 @@ move-break/
 - **One in-memory state controller** instead of a UI framework or global store — one page and one loop do not need more infrastructure.
 - **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
 - **Local recording first** instead of a required deployed environment — deployment does not improve the core proof and comes after it works locally.
-- **Static canonical art rigs before landmark driving** — the seated and standing translucent rigs must reconstruct from a shared canvas and pass manual pivot checks before MediaPipe transforms are re-enabled.
-- **Clean compositing before glow** — the rig uses no per-part halo. Source layers preserve internal glass transparency only, use feathered masks with joint overlap, and receive one final drop shadow at the assembled avatar container.
+- **Predefined movement cues** — whole figures from the approved translucent artwork use lightweight CSS loops. Pose landmarks verify the routine; they do not drive a character rig.
+- **Stable presentation during tracking loss** — retain the current cue and hold progress, adding a small visibility hint. The webcam is visible only through the debug toggle.
 
 ## Decisions and Open Issues
 
@@ -168,4 +168,4 @@ move-break/
 - **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
 - **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → four coarse upper-body pose holds, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
-- **Avatar implementation checkpoint:** static seated and standing reconstruction plus manual pivot previews were accepted. MediaPipe now drives only the standing rig during rise and movement verification; seated monitoring remains static.
+- **Presentation checkpoint:** seated monitoring uses one static illustration. The stand prompt, four routine steps, success, and completion use movement cues only. Legacy standing/rig rendering has been removed. Development-only `?preview` controls allow each UI state to be checked without starting the camera.
