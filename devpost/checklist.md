@@ -99,6 +99,11 @@ Build mode: fast
   Verify: Tests and build pass. Browser state previews checked for stand prompt, all four movements, tracking guidance, step success, and completion. Live-camera matching remains covered by the existing routine checks.
   Commit: `Remove legacy avatar rendering paths`
 
+- [x] **11. Animate instructional movement frames**
+  Build: Use the selected colorful translucent 24-pose atlas, discrete transitions and short target holds. Align frame anchors so figures stay centered.
+  Verify: Four movement rows checked in the browser; tests and build pass.
+  Commit: `Animate movement cues with anchored pose frames`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 1, test the full automatic low-movement loop.

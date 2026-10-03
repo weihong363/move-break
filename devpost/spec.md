@@ -157,7 +157,7 @@ move-break/
 - **One in-memory state controller** instead of a UI framework or global store — one page and one loop do not need more infrastructure.
 - **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
 - **Local recording first** instead of a required deployed environment — deployment does not improve the core proof and comes after it works locally.
-- **Predefined movement cues** — whole figures from the approved translucent artwork use lightweight CSS loops. Pose landmarks verify the routine; they do not drive a character rig.
+- **Predefined movement cues** — the approved 6 × 4 translucent sprite atlas uses discrete frame loops (1.8–2 seconds), including transitions and target holds. Per-frame anchor offsets keep the planted-foot center fixed; no pulsing or arbitrary lateral motion. Pose landmarks verify the routine; they do not drive a character rig.
 - **Stable presentation during tracking loss** — retain the current cue and hold progress, adding a small visibility hint. The webcam is visible only through the debug toggle.
 
 ## Decisions and Open Issues

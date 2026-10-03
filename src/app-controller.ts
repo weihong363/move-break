@@ -5,7 +5,7 @@ import { createPoseDetector } from './pose-detector';
 import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
 import type { AppState } from './types';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
-import routineArtUrl from './assets/translucent-figure-reference.png';
+import routineArtUrl from './assets/movement-cue-atlas.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 const routineLabel = (movement: RoutineSnapshot['movement']) => ({

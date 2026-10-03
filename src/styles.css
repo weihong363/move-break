@@ -41,20 +41,42 @@ button, select { font: inherit; }
   letter-spacing: 0.14em;
 }
 
-.companion { position: relative; width: min(100%, 230px); height: 230px; margin: 2px auto; }
+.companion { position: relative; width: min(100%, 230px); height: 230px; margin: 2px auto; overflow: hidden; }
 .monitoring-art { position: absolute; inset: 0; background: var(--seated-art) center / contain no-repeat; }
-.routine-cue { display: none; position: absolute; inset: 0; background-image: var(--routine-art); background-repeat: no-repeat; background-size: 500% 200%; }
+/* Frame offsets align the planted-foot center; they compensate source placement, not motion. */
+/* Each atlas cell contains a distinct pose; hold keyframes repeat target cells. */
+.routine-cue { display: none; position: absolute; inset: 0; background-image: var(--routine-art); background-repeat: no-repeat; background-size: 600% 400%; }
 [data-visual="routine"] .monitoring-art { display: none; }
 [data-visual="routine"] .routine-cue { display: block; }
-[data-routine-pose="overhead-reach"] .routine-cue { background-position: 100% 0; animation: cue-reach 1.2s ease-in-out infinite; }
-[data-routine-pose="side-bend-left"] .routine-cue { background-position: 0 0; animation: cue-bend-left 1.3s ease-in-out infinite alternate; }
-[data-routine-pose="side-bend-right"] .routine-cue { background-position: 0 0; animation: cue-bend-right 1.3s ease-in-out infinite alternate; }
-[data-routine-pose="torso-rotation"] .routine-cue { background-position: 50% 0; animation: cue-rotate 1.2s ease-in-out infinite alternate; }
+[data-routine-pose="overhead-reach"] .routine-cue { --anchor-0: -5.78%; --anchor-1: -8.59%; --anchor-2: -2.77%; --anchor-3: 1.56%; --anchor-4: 6.05%; --anchor-5: 17.19%; background-position-y: 0%; animation: cue-reach-frames 1.8s steps(1, end) infinite; }
+[data-routine-pose="side-bend-left"] .routine-cue { --anchor-0: -5.86%; --anchor-1: -13.4%; --anchor-2: -10.04%; --anchor-3: -9.57%; --anchor-4: -6.41%; --anchor-5: 15.12%; background-position-y: 33.333333%; animation: cue-bend-frames 1.8s steps(1, end) infinite; }
+[data-routine-pose="side-bend-right"] .routine-cue { --anchor-0: -5.82%; --anchor-1: -4.92%; --anchor-2: 2.42%; --anchor-3: 8.79%; --anchor-4: 11.91%; --anchor-5: 15.16%; background-position-y: 66.666667%; animation: cue-bend-frames 1.8s steps(1, end) infinite; }
+[data-routine-pose="torso-rotation"] .routine-cue { --anchor-0: -10.9%; --anchor-1: -7.7%; --anchor-2: 1.56%; --anchor-3: 7.85%; --anchor-4: 16.02%; --anchor-5: 16.88%; background-position-y: 100%; animation: cue-turn-frames 2s steps(1, end) infinite; }
 .tracking-guidance { color: #668172; font-size: 0.8rem; line-height: 1.4; }
-@keyframes cue-reach { 50% { transform: translateY(-7px) scale(1.04); } }
-@keyframes cue-bend-left { to { transform: translateX(-7px) rotate(-8deg); } }
-@keyframes cue-bend-right { to { transform: translateX(7px) rotate(8deg); } }
-@keyframes cue-rotate { to { transform: rotate(5deg) scaleX(0.9); } }
+@keyframes cue-reach-frames {
+  0%, 100% { background-position-x: 0%; transform: translateX(var(--anchor-0)); }
+  10%, 90% { background-position-x: 20%; transform: translateX(var(--anchor-1)); }
+  20%, 80% { background-position-x: 40%; transform: translateX(var(--anchor-2)); }
+  30%, 70% { background-position-x: 60%; transform: translateX(var(--anchor-3)); }
+  40% { background-position-x: 80%; transform: translateX(var(--anchor-4)); }
+  50% { background-position-x: 100%; transform: translateX(var(--anchor-5)); }
+}
+@keyframes cue-bend-frames {
+  0%, 100% { background-position-x: 0%; transform: translateX(var(--anchor-0)); }
+  12% { background-position-x: 20%; transform: translateX(var(--anchor-1)); }
+  24%, 88% { background-position-x: 40%; transform: translateX(var(--anchor-2)); }
+  36% { background-position-x: 60%; transform: translateX(var(--anchor-3)); }
+  50% { background-position-x: 80%; transform: translateX(var(--anchor-4)); }
+  76% { background-position-x: 100%; transform: translateX(var(--anchor-5)); }
+}
+@keyframes cue-turn-frames {
+  0%, 100% { background-position-x: 0%; transform: translateX(var(--anchor-0)); }
+  12% { background-position-x: 20%; transform: translateX(var(--anchor-1)); }
+  24% { background-position-x: 40%; transform: translateX(var(--anchor-2)); }
+  46% { background-position-x: 60%; transform: translateX(var(--anchor-3)); }
+  60% { background-position-x: 80%; transform: translateX(var(--anchor-4)); }
+  86% { background-position-x: 100%; transform: translateX(var(--anchor-5)); }
+}
 
 h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
 
