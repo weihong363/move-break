@@ -126,3 +126,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The learner rejected the invented SVG appearance and made the prior translucent figure artwork canonical. The first standing pose-driven version exposed that fixed-bend artwork was unsuitable for joint animation, so camera-driven transforms are paused.
 - The standing rig now uses a purpose-built neutral asset sheet with straight capsules, a singular torso, nested local arm segments, fixed z-order, and an opt-in joint geometry overlay for static validation.
 - Free-form motion mirroring was replaced with one short camera-verified routine. The avatar now demonstrates the expected pose instead of tracking every limb continuously.
+- The routine cue now uses whole figures from the approved colorful translucent reference sheet with small looped CSS motion, rather than the standing rig segments.

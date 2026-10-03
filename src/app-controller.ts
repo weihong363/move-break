@@ -6,6 +6,7 @@ import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier'
 import type { AppState, PoseFrame } from './types';
 import seatedRigUrl from './assets/translucent-seated-clean.png';
 import standingRigSheetUrl from './assets/translucent-standing-rig-sheet.png';
+import routineArtUrl from './assets/translucent-figure-reference.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 const routineLabel = (movement: RoutineSnapshot['movement']) => ({
@@ -16,7 +17,7 @@ const routineLabel = (movement: RoutineSnapshot['movement']) => ({
 }[movement]);
 
 const characterMarkup = () => `
-  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-rig-art:url('${standingRigSheetUrl}')">
+  <div class="avatar layered-avatar" data-avatar="seated" data-avatar-motion="still" data-rig-test="" data-rig-debug="false" aria-hidden="true" style="--seated-art:url('${seatedRigUrl}');--standing-rig-art:url('${standingRigSheetUrl}');--routine-art:url('${routineArtUrl}')">
     <span class="seated-rig" data-rig-root>
       <span class="rig-layer rig-desk"></span><span class="rig-layer rig-torso"></span><span class="rig-layer rig-head"></span>
       <span class="rig-arm-parent rig-left-upper"><span class="rig-layer rig-left-forearm"></span></span>
@@ -31,6 +32,7 @@ const characterMarkup = () => `
         <i class="rig-joint rig-left-shoulder"></i><i class="rig-joint rig-right-shoulder"></i>
       </span>
     </span>
+    <span class="routine-cue"></span>
   </div>`;
 
 export const createAppController = (root: HTMLElement) => {

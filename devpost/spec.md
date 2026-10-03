@@ -52,7 +52,7 @@ Owns monitoring, prompt, and verification UI state. It translates camera, detect
 
 ### Companion Avatar
 
-Uses the translucent cyan human artwork supplied by the learner. The seated front-facing rig remains static. The standing rig has been rebuilt from a neutral head, singular torso, and four straight capsule arm segments; it has a fixed hierarchy: torso → head, left upper arm → left forearm, and right upper arm → right forearm. Upper arms rotate only around shoulder pivots; forearms inherit their upper-arm transform and rotate locally around elbow pivots. The static rig and its geometry overlay are the current implementation checkpoint. The MediaPipe transform adapter remains disconnected until the learner accepts this neutral reconstruction. During movement, a coarse arm-displacement signal adds responsive glow. The browser Web Audio API synthesizes a brief two-note prompt sound after the user has enabled monitoring. No animation library or new service is required.
+Uses the translucent colorful human artwork supplied by the learner. The seated front-facing and standing figures remain static for monitoring and the rise prompt. During the four-pose routine, the app displays a whole-figure cue cropped from the approved art sheet and animates it with small CSS loop transforms. It never attempts to mirror pose landmarks into the artwork. The browser Web Audio API synthesizes a brief prompt sound plus per-second hold ticks. No animation library or new service is required.
 
 ### Camera
 

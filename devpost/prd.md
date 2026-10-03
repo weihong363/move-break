@@ -59,7 +59,7 @@ Warm, calm, playful desktop-companion feel: a warm off-white or cream background
 - Precise seated-pose classification is optional. The same flow must remain valid when camera placement, desk occlusion, or partial visibility makes it unreliable.
 - The routine uses coarse local landmark rules only: both wrists above shoulders for Overhead Reach; normalized shoulder-to-hip center displacement for side bends; and clear shoulder depth or width change in both directions for Torso Rotation. These rules are tolerant cues, not form scoring.
 - A small debug toggle can reveal the local camera preview during a demo. The preview also appears when tracking quality is insufficient to help the user reframe.
-- During the routine, the avatar demonstrates the requested movement; it does not mirror every user motion.
+- During the routine, a looped cue derived from the approved colorful translucent figure sheet demonstrates the requested movement; it does not mirror every user motion.
 
 ### Feedback and recovery
 
