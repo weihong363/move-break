@@ -55,37 +55,7 @@ button, select { font: inherit; }
 .rig-right-upper::before { mask-image: radial-gradient(ellipse 29% 33% at 71% 51%, #000 80%, transparent 100%); }
 .rig-right-forearm { mask-image: radial-gradient(ellipse 27% 28% at 73% 68%, #000 79%, transparent 100%); transform-origin: 71% 61%; }
 
-[data-rig-test="arms"] .rig-left-upper { transform: rotate(-6deg); }
-[data-rig-test="arms"] .rig-left-forearm { transform: rotate(9deg); }
-[data-rig-test="arms"] .rig-right-upper { transform: rotate(6deg); }
-[data-rig-test="arms"] .rig-right-forearm { transform: rotate(-9deg); }
-[data-rig-test="arms"] .standing-left-upper { transform: rotate(-6deg); }
-[data-rig-test="arms"] .standing-left-forearm { transform: rotate(9deg); }
-[data-rig-test="arms"] .standing-right-upper { transform: rotate(6deg); }
-[data-rig-test="arms"] .standing-right-forearm { transform: rotate(-9deg); }
-.standing-rig, .standing-transform { position: absolute; inset: 0; display: block; }
-.standing-rig { display: none; }
 .routine-cue { display: none; position: absolute; inset: 0; background-image: var(--routine-art); background-repeat: no-repeat; background-size: 500% 200%; filter: drop-shadow(0 10px 12px rgb(25 118 210 / 16%)); }
-.standing-transform { transform: translate(var(--torso-x, 0), var(--torso-y, 0)) rotate(var(--torso-rotate, 0deg)); transform-origin: 50% 58%; }
-.standing-piece, .standing-segment { position: absolute; display: block; background-image: var(--standing-rig-art); background-repeat: no-repeat; background-size: 300% 200%; }
-.standing-torso { z-index: 2; width: 104px; height: 122px; left: 63px; top: 66px; background-position: 50% 0; }
-.standing-head { z-index: 4; width: 82px; height: 82px; left: 74px; top: 26px; background-position: 0 0; transform: translate(var(--head-x, 0), var(--head-y, 0)) rotate(var(--head-rotate, 0deg)); transform-origin: 50% 88%; }
-.standing-segment { width: 48px; height: 82px; transform-origin: 50% 17px; }
-.standing-left-upper { z-index: 1; left: 76px; top: 82px; background-position: 100% 0; transform: rotate(calc(18deg + var(--left-upper-rotate, 0deg))); }
-.standing-left-forearm { left: 0; top: 55px; background-position: 0 100%; transform: rotate(calc(7deg + var(--left-forearm-rotate, 0deg))); }
-.standing-right-upper { z-index: 3; left: 106px; top: 82px; background-position: 50% 100%; transform: rotate(calc(-18deg + var(--right-upper-rotate, 0deg))); }
-.standing-right-forearm { left: 0; top: 55px; background-position: 100% 100%; transform: rotate(calc(-7deg + var(--right-forearm-rotate, 0deg))); }
-.rig-joint { display: none; position: absolute; z-index: 9; width: 8px; height: 8px; border: 1px solid #fff; border-radius: 50%; background: #ef7f3a; box-shadow: 0 0 0 1px #9b3e14; }
-[data-rig-debug="true"] .standing-rig .rig-joint { display: block; }
-.rig-left-shoulder { left: 96px; top: 99px; }
-.rig-right-shoulder { left: 130px; top: 99px; }
-.rig-left-elbow, .rig-right-elbow { left: 20px; top: 65px; }
-.rig-left-wrist, .rig-right-wrist { left: 20px; top: 65px; }
-[data-rig-debug="true"] .standing-segment::after { position: absolute; left: 50%; top: 17px; width: 1px; height: 48px; transform: translateX(-50%); background: rgb(239 127 58 / 75%); content: ""; }
-[data-rig-test="arms"] .standing-left-upper { transform: rotate(24deg); }
-[data-rig-test="arms"] .standing-left-forearm { transform: rotate(20deg); }
-[data-rig-test="arms"] .standing-right-upper { transform: rotate(-24deg); }
-[data-rig-test="arms"] .standing-right-forearm { transform: rotate(-20deg); }
 [data-routine-pose] .standing-rig { display: none; }
 [data-routine-pose] .routine-cue { display: block; }
 [data-routine-pose="overhead-reach"] .routine-cue { background-position: 100% 0; animation: cue-reach 1.2s ease-in-out infinite; }
@@ -93,12 +63,10 @@ button, select { font: inherit; }
 [data-routine-pose="side-bend-right"] .routine-cue { background-position: 0 0; animation: cue-bend-right 1.3s ease-in-out infinite alternate; }
 [data-routine-pose="torso-rotation"] .routine-cue { background-position: 50% 0; animation: cue-rotate 1.2s ease-in-out infinite alternate; }
 [data-avatar="standing"] .seated-rig, [data-avatar="moving"] .seated-rig, [data-avatar="celebrate"] .seated-rig { display: none; }
-[data-avatar="standing"] .standing-rig, [data-avatar="moving"] .standing-rig, [data-avatar="celebrate"] .standing-rig { display: block; }
+[data-avatar="standing"] .routine-cue { display: block; background-position: 0 0; animation: cue-stand 1.5s ease-in-out infinite alternate; }
+[data-avatar="celebrate"] .routine-cue { display: block; background-position: 100% 0; animation: cue-reach 1.2s ease-in-out infinite; }
 [data-avatar="alert"] .seated-rig { animation: avatar-alert 700ms ease-in-out infinite alternate; }
-[data-avatar="celebrate"] .standing-rig { animation: avatar-celebrate 650ms ease-in-out infinite alternate; }
 [data-avatar="inspect"] .seated-rig { animation: avatar-inspect 1s ease-in-out infinite; }
-
-.rig-preview-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: 2px 0 0; }
 
 @keyframes avatar-alert { to { filter: brightness(1.25) drop-shadow(0 0 9px #30dfff); } }
 @keyframes avatar-wave { to { filter: brightness(1.12) drop-shadow(0 0 7px #3ce8ff); } }
@@ -108,6 +76,7 @@ button, select { font: inherit; }
 @keyframes cue-bend-left { to { transform: translateX(-7px) rotate(-8deg); } }
 @keyframes cue-bend-right { to { transform: translateX(7px) rotate(8deg); } }
 @keyframes cue-rotate { to { transform: rotate(5deg) scaleX(0.9); } }
+@keyframes cue-stand { to { transform: translateY(-4px); } }
 
 h1 { margin: 0 0 12px; font-size: 2rem; letter-spacing: -0.05em; }
 

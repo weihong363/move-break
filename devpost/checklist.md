@@ -127,3 +127,4 @@ Activity mode: focused alternative for an experienced plan-first developer
 - The standing rig now uses a purpose-built neutral asset sheet with straight capsules, a singular torso, nested local arm segments, fixed z-order, and an opt-in joint geometry overlay for static validation.
 - Free-form motion mirroring was replaced with one short camera-verified routine. The avatar now demonstrates the expected pose instead of tracking every limb continuously.
 - The routine cue now uses whole figures from the approved colorful translucent reference sheet with small looped CSS motion, rather than the standing rig segments.
+- The obsolete segmented standing figure, its geometry controls, and its asset sheet were removed after it remained visibly distracting in the rise prompt.

@@ -52,7 +52,7 @@ Owns monitoring, prompt, and verification UI state. It translates camera, detect
 
 ### Companion Avatar
 
-Uses the translucent colorful human artwork supplied by the learner. The seated front-facing and standing figures remain static for monitoring and the rise prompt. During the four-pose routine, the app displays a whole-figure cue cropped from the approved art sheet and animates it with small CSS loop transforms. It never attempts to mirror pose landmarks into the artwork. The browser Web Audio API synthesizes a brief prompt sound plus per-second hold ticks. No animation library or new service is required.
+Uses the translucent colorful human artwork supplied by the learner. The seated figure remains static for monitoring. The rise prompt and each routine step use whole-figure cues cropped from the approved art sheet and animate them with small CSS loop transforms. It never attempts to mirror pose landmarks into the artwork or render a segmented standing figure. The browser Web Audio API synthesizes a brief prompt sound plus per-second hold ticks. No animation library or new service is required.
 
 ### Camera
 
