@@ -9,4 +9,7 @@ export const demoConfig = {
   riseThreshold: 0.16,
   returnThreshold: 0.16,
   consecutiveRiseFrames: 3,
+  seatedReturnDurationMs: 750,
+  seatedReturnMotionThreshold: 0.025,
+  maxFrameGapMs: 500,
 } as const;

@@ -7,6 +7,7 @@ import type { AppState } from './types';
 import { createRoutineSoundTracker, createSoundPlayer } from './sound';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/movement-cue-atlas.png';
+import standPromptUrl from './assets/stand-prompt.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 const routineLabel = (movement: RoutineSnapshot['movement']) => ({
@@ -17,8 +18,9 @@ const routineLabel = (movement: RoutineSnapshot['movement']) => ({
 }[movement]);
 
 const characterMarkup = () => `
-  <div class="companion" data-visual="monitoring" aria-hidden="true" style="--seated-art:url('${seatedArtUrl}');--routine-art:url('${routineArtUrl}')">
+  <div class="companion" data-visual="monitoring" aria-hidden="true" style="--seated-art:url('${seatedArtUrl}');--routine-art:url('${routineArtUrl}');--stand-art:url('${standPromptUrl}')">
     <span class="monitoring-art"></span>
+    <span class="stand-prompt-art"></span>
     <span class="routine-cue"></span>
   </div>`;
 
@@ -34,7 +36,6 @@ export const createAppController = (root: HTMLElement) => {
   const sound = createSoundPlayer();
   const routineSounds = createRoutineSoundTracker(demoConfig.routineHoldDurationMs, demoConfig.routinePulseIntervalMs);
   let routineAdvanceTimer: number | undefined;
-  let routineCompleteTimer: number | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
@@ -56,9 +57,7 @@ export const createAppController = (root: HTMLElement) => {
     routine.reset();
     routineSounds.reset();
     if (routineAdvanceTimer) window.clearTimeout(routineAdvanceTimer);
-    if (routineCompleteTimer) window.clearTimeout(routineCompleteTimer);
     routineAdvanceTimer = undefined;
-    routineCompleteTimer = undefined;
   };
 
   const enableCamera = async () => {
@@ -125,6 +124,12 @@ export const createAppController = (root: HTMLElement) => {
     companion?.setAttribute('data-routine-pose', movement);
   };
 
+  const showStandPrompt = () => {
+    const companion = root.querySelector<HTMLElement>('[data-visual]');
+    companion?.setAttribute('data-visual', 'stand-prompt');
+    companion?.removeAttribute('data-routine-pose');
+  };
+
   const updateRoutine = (snapshot: RoutineSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
@@ -144,7 +149,7 @@ export const createAppController = (root: HTMLElement) => {
     if (snapshot.phase === 'complete') {
       status.textContent = 'Movement break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
-      if (!previewMode && !routineCompleteTimer) routineCompleteTimer = window.setTimeout(() => { verifier.completeRoutine(); routineCompleteTimer = undefined; }, demoConfig.routineAdvanceDelayMs);
+      if (!previewMode) verifier.completeRoutine();
     } else if (snapshot.phase === 'movement-complete') {
       status.textContent = 'Nice!';
       progress.textContent = 'Moving to the next stretch…';
@@ -160,6 +165,7 @@ export const createAppController = (root: HTMLElement) => {
     if (!status || !progress) return;
     if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') sound.play('reminder');
     const previousPhase = lastVerifierPhase;
+    if (snapshot.phase === 'monitoring' && previousPhase === 'awaiting-return') sound.play('new-cycle');
     if (snapshot.phase !== 'paused-tracking') lastVerifierPhase = snapshot.phase;
     setPreviewVisible(debugPreview);
     setGuidance();
@@ -185,9 +191,9 @@ export const createAppController = (root: HTMLElement) => {
       status.textContent = 'Monitoring';
       progress.textContent = `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
     } else if (snapshot.phase === 'awaiting-rise') {
-      showMovementCue('overhead-reach');
+      showStandPrompt();
       status.textContent = 'Stand up';
-      progress.textContent = 'Then follow the first movement cue.';
+      progress.textContent = 'The routine begins once you are standing.';
     } else if (snapshot.phase === 'routine') {
       showMovementCue('overhead-reach');
       setPreviewVisible(debugPreview);

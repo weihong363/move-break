@@ -1,9 +1,15 @@
 import type { RoutineSnapshot } from './routine-verifier';
 
-export type SoundCue = 'reminder' | 'start' | 'matched' | 'pulse' | 'tick' | 'final-tick' | 'step-complete';
+export type SoundCue = 'reminder' | 'new-cycle' | 'start' | 'matched' | 'pulse' | 'tick' | 'final-tick' | 'step-complete';
 type Note = { frequency: number; offset: number; duration: number; volume: number };
 
 const melodies: Record<SoundCue, Note[]> = {
+  'new-cycle': [
+    { frequency: 523, offset: 0, duration: 0.18, volume: 0.1 },
+    { frequency: 659, offset: 0.22, duration: 0.18, volume: 0.1 },
+    { frequency: 784, offset: 0.44, duration: 0.18, volume: 0.1 },
+    { frequency: 1047, offset: 0.66, duration: 0.4, volume: 0.09 },
+  ],
   reminder: [
     { frequency: 523, offset: 0, duration: 0.2, volume: 0.08 },
     { frequency: 659, offset: 0.22, duration: 0.3, volume: 0.08 },

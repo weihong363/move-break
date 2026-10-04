@@ -9,6 +9,9 @@ export type MovementConfig = {
   riseThreshold: number;
   returnThreshold: number;
   consecutiveRiseFrames: number;
+  seatedReturnDurationMs: number;
+  seatedReturnMotionThreshold: number;
+  maxFrameGapMs: number;
 };
 
 export type VerifierSnapshot = {
@@ -18,7 +21,7 @@ export type VerifierSnapshot = {
   movementProgress: number;
 };
 
-type Metrics = { torsoY: number; bodyScale: number; movement: number; armMovement: number; shoulderWidth: number };
+type Metrics = { torsoY: number; bodyScale: number; movement: number; armMovement: number; shoulderWidth: number; shoulderMovement: number };
 
 const upperBodyIndexes = [11, 12, 13, 14, 15, 16, 23, 24];
 const torsoIndexes = [11, 12, 23, 24];
@@ -50,6 +53,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   let baselineShoulderWidth: number | undefined;
   let riseFrames = 0;
   let returnFrames = 0;
+  let returnElapsedMs = 0;
 
   const snapshot = (nextPhase: VerifierPhase): VerifierSnapshot => ({
     phase: nextPhase,
@@ -81,17 +85,28 @@ export const createMovementVerifier = (config: MovementConfig) => {
     });
     const movement = displacements.length === 0 ? 0 : average(displacements) / bodyScale;
     const armMovement = armDisplacements.length === 0 ? 0 : average(armDisplacements) / bodyScale;
-    return { torsoY, bodyScale, movement, armMovement, shoulderWidth: distance(shoulders[0], shoulders[1]) };
+    const shoulderDisplacements = shoulderIndexes.flatMap((index) => {
+      const current = byIndex.get(index);
+      const previous = smooth(previousFrames, index);
+      return current && previous ? [distance(current, previous)] : [];
+    });
+    const shoulderMovement = shoulderDisplacements.length ? average(shoulderDisplacements) / bodyScale : 0;
+    return { torsoY, bodyScale, movement, armMovement, shoulderWidth: distance(shoulders[0], shoulders[1]), shoulderMovement };
   };
 
   const processFrame = (frame: PoseFrame): VerifierSnapshot => {
-    const elapsedMs = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
+    const gapMs = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
+    const elapsedMs = gapMs <= config.maxFrameGapMs ? gapMs : 0;
+    if (gapMs > config.maxFrameGapMs) { samples = []; riseFrames = 0; returnFrames = 0; returnElapsedMs = 0; }
     lastTimestamp = frame.timestamp;
-    if (!shouldersVisible(frame.landmarks)) return snapshot('paused-tracking');
+    if (!shouldersVisible(frame.landmarks)) {
+      lastTimestamp = undefined; samples = []; riseFrames = 0; returnFrames = 0; returnElapsedMs = 0;
+      return snapshot('paused-tracking');
+    }
 
     samples = [...samples, frame].slice(-config.smoothingWindow);
     const metrics = calculateMetrics();
-    if (!metrics) return snapshot('paused-tracking');
+    if (!metrics) { lastTimestamp = undefined; riseFrames = 0; returnFrames = 0; returnElapsedMs = 0; return snapshot('paused-tracking'); }
 
     if (phase === 'baseline') {
       baselineElapsedMs += elapsedMs;
@@ -123,12 +138,16 @@ export const createMovementVerifier = (config: MovementConfig) => {
 
     if (phase === 'awaiting-return' && baselineTorsoY !== undefined) {
       const normalizedReturn = Math.abs(metrics.torsoY - baselineTorsoY) / metrics.bodyScale;
-      returnFrames = normalizedReturn <= config.returnThreshold ? returnFrames + 1 : 0;
-      if (returnFrames >= config.consecutiveRiseFrames) {
+      const settled = normalizedReturn <= config.returnThreshold && metrics.shoulderMovement <= config.seatedReturnMotionThreshold;
+      returnFrames = settled ? returnFrames + 1 : 0;
+      returnElapsedMs = returnFrames > 1 ? returnElapsedMs + elapsedMs : 0;
+      if (returnFrames >= config.consecutiveRiseFrames && returnElapsedMs >= config.seatedReturnDurationMs) {
         inactivityElapsedMs = 0;
         movementElapsedMs = 0;
         riseFrames = 0;
         returnFrames = 0;
+        returnElapsedMs = 0;
+        lastTimestamp = frame.timestamp;
         phase = 'monitoring';
       }
       return snapshot(phase);
@@ -138,7 +157,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   };
 
   const completeRoutine = () => {
-    if (phase === 'routine') phase = 'awaiting-return';
+    if (phase === 'routine') { phase = 'awaiting-return'; returnFrames = 0; returnElapsedMs = 0; }
   };
 
   return { processFrame, completeRoutine };

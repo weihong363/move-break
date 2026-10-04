@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createMovementVerifier, type MovementConfig } from './movement-verifier';
 import type { PoseFrame, PoseLandmark } from './types';
 
-const config: MovementConfig = { baselineDurationMs: 300, inactivityDurationMs: 300, smoothingWindow: 2, riseThreshold: 0.15, returnThreshold: 0.15, consecutiveRiseFrames: 3 };
+const config: MovementConfig = { baselineDurationMs: 300, inactivityDurationMs: 300, smoothingWindow: 2, riseThreshold: 0.15, returnThreshold: 0.15, consecutiveRiseFrames: 3, seatedReturnDurationMs: 300, seatedReturnMotionThreshold: 0.025, maxFrameGapMs: 500 };
 
 const frameAt = (timestamp: number, offsetY = 0, visible = true): PoseFrame => {
   const landmarks: PoseLandmark[] = Array.from({ length: 25 }, () => ({ x: 0.5, y: 0.5, visibility: 0 }));
@@ -42,7 +42,35 @@ describe('movement verifier', () => {
     const verifier = reachRoutine();
     verifier.completeRoutine();
     expect(verifier.processFrame(frameAt(1_000, -0.2)).phase).toBe('awaiting-return');
-    [1_100, 1_200, 1_300].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
-    expect(verifier.processFrame(frameAt(1_400)).phase).toBe('monitoring');
+    [1_100, 1_200, 1_300, 1_400].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
+    expect(verifier.processFrame(frameAt(1_500))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0 });
+  });
+
+  it('requires the full five seconds after each seated return across three cycles', () => {
+    const verifier = createMovementVerifier({ ...config, smoothingWindow: 1, inactivityDurationMs: 5000 });
+    [0, 100, 200, 300].forEach((time) => verifier.processFrame(frameAt(time)));
+    let start = 300;
+    for (let cycle = 0; cycle < 3; cycle += 1) {
+      for (let elapsed = 100; elapsed < 5000; elapsed += 100) {
+        expect(verifier.processFrame(frameAt(start + elapsed)).phase).toBe('monitoring');
+      }
+      expect(verifier.processFrame(frameAt(start + 5000)).phase).toBe('awaiting-rise');
+      [5100, 5200, 5300].forEach((offset) => verifier.processFrame(frameAt(start + offset, -0.2)));
+      verifier.completeRoutine();
+      [5400, 5500, 5600].forEach((offset) => {
+        expect(verifier.processFrame(frameAt(start + offset)).phase).toBe('awaiting-return');
+      });
+      expect(verifier.processFrame(frameAt(start + 5700))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0 });
+      start += 5700;
+    }
+  });
+
+  it('does not count missing tracking or a long frame gap as seated time', () => {
+    const verifier = createMovementVerifier({ ...config, inactivityDurationMs: 5000 });
+    [0, 100, 200, 300].forEach((time) => verifier.processFrame(frameAt(time)));
+    expect(verifier.processFrame(frameAt(400)).inactivityProgress).toBe(0.02);
+    expect(verifier.processFrame(frameAt(10_000))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0.02 });
+    verifier.processFrame(frameAt(10_100, 0, false));
+    expect(verifier.processFrame(frameAt(20_000))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0.02 });
   });
 });

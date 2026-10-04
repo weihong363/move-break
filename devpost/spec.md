@@ -173,3 +173,7 @@ move-break/
 ## Audio cues
 
 Web Audio generates short sine-tone cues locally after the Enable camera gesture unlocks audio. The rising reminder melody is reused when the whole routine completes. Each step (and the second rotation direction) has a start cue; entering a matched pose plays a short confirmation and shows “Matched — hold it”. A quiet beat repeats every configurable 750 ms while the pose remains matched, even between countdown changes; valid hold seconds have short ticks, with a higher final-second tone; individual step completion has a distinct success cue. Events are deduplicated across pose frames. Pose mismatch or tracking loss pauses the ongoing beat and ticks, and unavailable audio cannot block the movement flow. The supplied Bilibili reference could not be played in the preview browser, so these tones are an original implementation pending listening feedback.
+
+## Cycle boundaries
+
+The stand prompt uses the supplied cyan neutral-standing illustration, with no routine animation until a stable multi-frame rise is confirmed. Tracking loss preserves the prompt and clears rise confirmation. After the routine finishes, seated-return detection starts immediately. Returning near the original baseline must remain stable for a configurable 750 ms before monitoring restarts at zero. A distinct four-note chime announces the new cycle. Inactivity timing excludes unreliable tracking and detection gaps longer than 500 ms; each cycle requires the full configured duration (5 seconds in the demo).
