@@ -78,6 +78,24 @@ describe('routine verifier', () => {
     expect(routine.processFrame(hidden)).toMatchObject({ phase: 'paused-tracking', progress: 0 });
   });
 
+  it('accepts a side bend with one arm overhead and the other lowered', () => {
+    const routine = createRoutineVerifier(config);
+    held(routine, reach); routine.advance();
+    const oneArmBend = (time: number, direction: number) => {
+      const frame = frameAt(time);
+      frame.landmarks[11].y += direction * 0.06;
+      frame.landmarks[12].y -= direction * 0.06;
+      frame.landmarks[15] = { x: 0.65, y: 0.18, visibility: 1 };
+      frame.landmarks[16] = { x: 0.72, y: 0.8, visibility: 1 };
+      frame.landmarks[23].visibility = 0;
+      frame.landmarks[24].visibility = 0;
+      return frame;
+    };
+    expect(held(routine, (time) => oneArmBend(time, 1), 400).phase).toBe('movement-complete');
+    routine.advance();
+    expect(held(routine, (time) => oneArmBend(time, -1), 800).phase).toBe('movement-complete');
+  });
+
   it('pauses rather than clears progress when tracking disappears', () => {
     const routine = createRoutineVerifier(config);
     routine.processFrame(reach(0));
