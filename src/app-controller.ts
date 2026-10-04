@@ -8,6 +8,7 @@ import { createRoutineSoundTracker, createSoundPlayer } from './sound';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/movement-cue-atlas.png';
 import standPromptUrl from './assets/stand-prompt.png';
+import returnPromptUrl from './assets/seated-return-prompt.png';
 
 const inactivityLabel = (seconds: number) => `${seconds} second demo`;
 const routineLabel = (movement: RoutineSnapshot['movement']) => ({
@@ -18,9 +19,10 @@ const routineLabel = (movement: RoutineSnapshot['movement']) => ({
 }[movement]);
 
 const characterMarkup = () => `
-  <div class="companion" data-visual="monitoring" aria-hidden="true" style="--seated-art:url('${seatedArtUrl}');--routine-art:url('${routineArtUrl}');--stand-art:url('${standPromptUrl}')">
+  <div class="companion" data-visual="monitoring" aria-hidden="true" style="--seated-art:url('${seatedArtUrl}');--routine-art:url('${routineArtUrl}');--stand-art:url('${standPromptUrl}');--return-art:url('${returnPromptUrl}')">
     <span class="monitoring-art"></span>
     <span class="stand-prompt-art"></span>
+    <span class="return-prompt-art"></span>
     <span class="routine-cue"></span>
   </div>`;
 
@@ -130,6 +132,12 @@ export const createAppController = (root: HTMLElement) => {
     companion?.removeAttribute('data-routine-pose');
   };
 
+  const showReturnPrompt = () => {
+    const companion = root.querySelector<HTMLElement>('[data-visual]');
+    companion?.setAttribute('data-visual', 'return-prompt');
+    companion?.removeAttribute('data-routine-pose');
+  };
+
   const updateRoutine = (snapshot: RoutineSnapshot) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
@@ -147,6 +155,8 @@ export const createAppController = (root: HTMLElement) => {
       ? `Matched — hold it · ${seconds} seconds remaining`
       : `Match the movement to continue · ${seconds} seconds remaining`;
     if (snapshot.phase === 'complete') {
+      showReturnPrompt();
+      if (step) step.textContent = 'BREAK COMPLETE';
       status.textContent = 'Movement break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
       if (!previewMode) verifier.completeRoutine();
@@ -170,8 +180,8 @@ export const createAppController = (root: HTMLElement) => {
     setPreviewVisible(debugPreview);
     setGuidance();
     const step = root.querySelector<HTMLElement>('[data-step]');
-    if (snapshot.phase === 'paused-tracking' && previousPhase === 'awaiting-rise') {
-      setGuidance('Step back so your upper body and hands are visible.');
+    if (snapshot.phase === 'paused-tracking' && (previousPhase === 'awaiting-rise' || previousPhase === 'awaiting-return')) {
+      setGuidance(previousPhase === 'awaiting-return' ? 'Keep both shoulders visible so MoveBreak can detect when you sit down.' : 'Step back so your upper body and hands are visible.');
       return;
     }
     if (step) step.textContent = 'LOCAL MOVEMENT CHECK';
@@ -200,12 +210,12 @@ export const createAppController = (root: HTMLElement) => {
       status.textContent = 'Get ready to move';
       progress.textContent = 'Follow the movement cue.';
     } else if (snapshot.phase === 'completed') {
-      showMovementCue('torso-rotation');
+      showReturnPrompt();
       setPreviewVisible(debugPreview);
       status.textContent = 'Break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
     } else {
-      showMovementCue('torso-rotation');
+      showReturnPrompt();
       setPreviewVisible(debugPreview);
       status.textContent = 'Sit down when you are ready';
       progress.textContent = 'Monitoring resumes from your usual seated position.';
@@ -264,10 +274,16 @@ export const createAppController = (root: HTMLElement) => {
   render();
   if (previewMode) {
     const controls = document.createElement('div');
-    const names = ['stand', 'overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation', 'tracking-paused', 'step-success', 'completed'];
+    const names = ['stand', 'overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation', 'tracking-paused', 'step-success', 'completed', 'awaiting-return', 'return-tracking-paused'];
     controls.innerHTML = `<label>Developer state preview <select>${names.map((name) => `<option>${name}</option>`).join('')}</select></label>`;
     root.append(controls);
     const preview = (name: string) => {
+      if (name === 'awaiting-return' || name === 'return-tracking-paused') {
+        const snapshot: VerifierSnapshot = { phase: 'awaiting-return', baselineProgress: 1, inactivityProgress: 0, movementProgress: 0 };
+        updateVerification(snapshot);
+        if (name === 'return-tracking-paused') updateVerification({ ...snapshot, phase: 'paused-tracking' });
+        return;
+      }
       if (name === 'stand') {
         updateVerification({ phase: 'awaiting-rise', baselineProgress: 1, inactivityProgress: 1, movementProgress: 0 });
         return;
