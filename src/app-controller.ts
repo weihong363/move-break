@@ -271,7 +271,8 @@ export const createAppController = (root: HTMLElement) => {
 
   const windowControls = () => desktop ? `<div class="companion-titlebar" aria-label="Window controls">
     <button class="window-control window-hide" type="button" aria-label="Hide companion" data-window="hide"></button>
-    <button class="window-control window-minimize" type="button" aria-label="Minimize companion" data-window="minimize"></button>
+    <button class="window-control window-minimize" type="button" aria-label="Send companion to menu bar" data-window="minimize"></button>
+    <span class="window-drag-area" aria-hidden="true"></span>
   </div>` : '';
   const bindWindowControls = () => {
     root.querySelector('[data-window="hide"]')?.addEventListener('click', () => desktop?.controlWindow('hide'));
