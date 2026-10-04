@@ -147,4 +147,5 @@ Activity mode: focused alternative for an experienced plan-first developer
 - [x] Separate Settings with validated local preferences and collapsed Developer controls.
 - [x] Apply sound/window changes immediately; capture routine timing/count for consistent progress.
 - [x] Unit tests, renderer/native TypeScript builds and local `.app` packaging.
-- [ ] Experience checkpoint: native camera loop, hidden monitoring, Tray controls, and login launch after installing app at its final location.
+- [x] Native smoke check: explicit camera activation, local pose loading, Monitoring state, separate titled Settings, visibility save and packaged startup option.
+- [ ] Experience checkpoint: four-step native routine, hidden monitoring, Tray controls, and login launch after installing app at its final location.

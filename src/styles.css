@@ -164,7 +164,7 @@ body.desktop-surface { min-width: 0; }
 .desktop-surface button, .desktop-surface video { -webkit-app-region: no-drag; }
 .desktop-surface .companion { width: 210px; height: 210px; }
 .desktop-surface .eyebrow, .desktop-surface .privacy-note, .desktop-surface .duration-control, .desktop-surface .debug-toggle { display: none; }
-.desktop-surface .state-label { font-size: 10px; margin: 3px 0; }
+.desktop-surface .state-label { display: none; }
 .desktop-surface h1 { font-size: 20px; margin: 8px 0; letter-spacing: -0.03em; }
 .desktop-surface .progress { font-size: 13px; margin: 8px 0; min-height: 20px; }
 .desktop-surface .description { margin: 8px 0; font-size: 12px; }

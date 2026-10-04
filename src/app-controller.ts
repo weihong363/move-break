@@ -106,7 +106,7 @@ export const createAppController = (root: HTMLElement) => {
       const activeVideo = root.querySelector<HTMLVideoElement>('video');
       if (!activeVideo || !stream) return;
       activeVideo.srcObject = stream;
-      await activeVideo.play();
+      await withCameraTimeout(activeVideo.play());
       if (attempt !== cameraAttempt) return;
       await detector.start(activeVideo, (frame) => {
         const snapshot = verifier.processFrame(frame);
@@ -120,7 +120,7 @@ export const createAppController = (root: HTMLElement) => {
       stopCamera(stream); stream = undefined;
       state.phase = 'camera-required';
       cameraErrorMessage = error instanceof DOMException && error.name === 'NotAllowedError'
-        ? 'Allow camera access in your browser settings, then try again. Monitoring cannot start without it.'
+        ? desktop ? 'Allow MoveBreak in macOS Privacy & Security → Camera, then try again.' : 'Allow camera access in your browser settings, then try again. Monitoring cannot start without it.'
         : desktop ? 'Check macOS Privacy & Security → Camera, then try again.' : 'MoveBreak could not access a camera. Check that one is available, then try again.';
       render();
       report('Camera unavailable');
