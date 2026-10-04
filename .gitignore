@@ -5,3 +5,5 @@
 .idea/
 node_modules/
 dist/
+dist-electron/
+release/

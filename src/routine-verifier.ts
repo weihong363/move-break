@@ -5,6 +5,7 @@ export type RoutinePhase = 'demo' | 'holding' | 'movement-complete' | 'complete'
 
 export type RoutineConfig = {
   holdDurationMs: number;
+  movementCount?: number;
   smoothingWindow: number;
   overheadReachThreshold: number;
   sideBendThreshold: number;
@@ -66,6 +67,7 @@ const instructionFor = (movement: RoutineMovement, rotationStep?: 'first-side' |
 };
 
 export const createRoutineVerifier = (config: RoutineConfig) => {
+  const selectedMovements = movements.slice(0, config.movementCount ?? 4);
   let samples: PoseFrame[] = [];
   let index = 0;
   let holdMs = 0;
@@ -77,8 +79,8 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
   let phase: RoutinePhase = 'demo';
 
   const reset = () => { samples = []; index = 0; holdMs = 0; lastTimestamp = undefined; baselineWidth = undefined; baselineBend = undefined; rotationDirection = undefined; rotationStep = 'first-side'; phase = 'demo'; };
-  const current = () => movements[Math.min(index, movements.length - 1)];
-  const snapshot = (nextPhase: RoutinePhase, poseMatched = false): RoutineSnapshot => ({ phase: nextPhase, poseMatched, movement: current(), movementIndex: Math.min(index, movements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
+  const current = () => selectedMovements[Math.min(index, selectedMovements.length - 1)];
+  const snapshot = (nextPhase: RoutinePhase, poseMatched = false): RoutineSnapshot => ({ phase: nextPhase, poseMatched, movement: current(), movementIndex: Math.min(index, selectedMovements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
 
   const matches = (metrics: Metrics) => {
     const movement = current();
@@ -122,7 +124,7 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
     holdMs = 0;
     rotationDirection = undefined;
     rotationStep = 'first-side';
-    phase = index >= movements.length ? 'complete' : 'demo';
+    phase = index >= selectedMovements.length ? 'complete' : 'demo';
     return snapshot(phase);
   };
 

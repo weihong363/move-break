@@ -138,3 +138,13 @@ Activity mode: focused alternative for an experienced plan-first developer
 - Free-form motion mirroring was replaced with one short camera-verified routine. The avatar now demonstrates the expected pose instead of tracking every limb continuously.
 - The routine cue now uses whole figures from the approved colorful translucent reference sheet with small looped CSS motion, rather than the standing rig segments.
 - The obsolete segmented standing figure, its geometry controls, and its asset sheet were removed after it remained visibly distracting in the rise prompt.
+
+## Desktop companion refinement
+
+- [x] Native Electron shell with bundled local assets, isolated preload and explicit camera permission request.
+- [x] Small draggable companion with approved movement cues and concise copy.
+- [x] Persistent Tray with status, show, Settings, pause/resume, Quit and demo action.
+- [x] Separate Settings with validated local preferences and collapsed Developer controls.
+- [x] Apply sound/window changes immediately; capture routine timing/count for consistent progress.
+- [x] Unit tests, renderer/native TypeScript builds and local `.app` packaging.
+- [ ] Experience checkpoint: native camera loop, hidden monitoring, Tray controls, and login launch after installing app at its final location.

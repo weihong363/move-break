@@ -18,6 +18,11 @@ const rightBend = (time: number) => { const frame = frameAt(time); frame.landmar
 const rotate = (time: number, direction: -1 | 1) => { const frame = frameAt(time); frame.landmarks[11].z = direction * 0.08; frame.landmarks[12].z = -direction * 0.08; return frame; };
 
 describe('routine verifier', () => {
+  it('completes after the configured number of movements', () => {
+    const routine = createRoutineVerifier({ ...config, movementCount: 1 });
+    held(routine, reach);
+    expect(routine.advance()).toMatchObject({ phase: 'complete', movementIndex: 0 });
+  });
   it('requires a held overhead reach', () => {
     const routine = createRoutineVerifier(config);
     expect(held(routine, reach).phase).toBe('movement-complete');

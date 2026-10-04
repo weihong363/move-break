@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "target": "ES2022", "module": "Node16", "moduleResolution": "Node16", "outDir": "dist-electron", "strict": true, "skipLibCheck": true, "esModuleInterop": true },
+  "include": ["electron/**/*.cts", "electron/**/*.mts", "src/desktop-settings.ts"]
+}

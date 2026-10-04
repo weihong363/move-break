@@ -10,8 +10,10 @@ export const createPoseDetector = (): Detector => {
   let landmarker: PoseLandmarker | undefined;
   let frameId: number | undefined;
   let lastDetectionAt = 0;
+  let generation = 0;
 
   const stop = () => {
+    generation++;
     if (frameId !== undefined) window.cancelAnimationFrame(frameId);
     frameId = undefined;
     landmarker?.close();
@@ -19,9 +21,10 @@ export const createPoseDetector = (): Detector => {
   };
 
   const start = async (video: HTMLVideoElement, onFrame: (frame: PoseFrame) => void, onError: (message: string) => void) => {
+    const currentGeneration = ++generation;
     try {
       const vision = await FilesetResolver.forVisionTasks('/wasm');
-      landmarker = await PoseLandmarker.createFromOptions(vision, {
+      const loaded = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: '/models/pose_landmarker_lite.task' },
         runningMode: 'VIDEO',
         numPoses: 1,
@@ -29,7 +32,10 @@ export const createPoseDetector = (): Detector => {
         minPosePresenceConfidence: 0.5,
         minTrackingConfidence: 0.5,
       });
+      if (currentGeneration !== generation) { loaded.close(); return; }
+      landmarker = loaded;
     } catch {
+      if (currentGeneration !== generation) return;
       onError('MoveBreak could not start local pose tracking. Please try again.');
       return;
     }

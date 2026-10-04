@@ -177,3 +177,11 @@ Web Audio generates short sine-tone cues locally after the Enable camera gesture
 ## Cycle boundaries
 
 The stand prompt uses the supplied cyan neutral-standing illustration, with no routine animation until a stable multi-frame rise is confirmed. Tracking loss preserves the prompt and clears rise confirmation. After the routine finishes, seated-return detection starts immediately. Returning near the original baseline must remain stable for a configurable 750 ms before monitoring restarts at zero. A distinct four-note chime announces the new cycle. Inactivity timing excludes unreliable tracking and detection gaps longer than 500 ms; each cycle requires the full configured duration (5 seconds in the demo).
+
+## Desktop companion cutover
+
+Electron main owns Tray, a 300 × 390 frameless transparent CompanionWindow, and singleton 450 × 710 SettingsWindow. Vite renderer selects the settings surface by query. A sandboxed preload exposes only typed settings, status, command and explicit macOS camera-permission IPC. Node integration stays off; external renderer navigation is blocked. Secure `movebreak://app` serves bundled UI, WASM and pose model locally.
+
+Validated preferences are stored in Electron userData/settings.json; no camera or pose data persists. Native always-on-top and show/hide changes apply immediately. Routine timing/count are captured at routine start; next seated cycle takes new reminder settings. Pause stops detector/camera, resume starts a new baseline. Background throttling is disabled so hiding does not intentionally suspend monitoring. Packaged startup integration opens the app without automatically enabling camera.
+
+`pnpm desktop:build` compiles renderer/main/preload; `pnpm desktop:package` creates a local architecture-specific macOS app with camera usage description. Signing/notarization remain outside this local demo. The browser prototype remains a development surface.

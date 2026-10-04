@@ -39,6 +39,7 @@ const scheduleNote = (context: AudioContext, note: Note) => {
 
 export const createSoundPlayer = () => {
   let context: AudioContext | undefined;
+  let enabled = true;
   const prime = async () => {
     try {
       context ??= new AudioContext();
@@ -46,10 +47,10 @@ export const createSoundPlayer = () => {
     } catch { /* Audio availability must not interrupt camera verification. */ }
   };
   const play = (cue: SoundCue) => {
-    if (!context || context.state !== 'running') return;
+    if (!enabled || !context || context.state !== 'running') return;
     melodies[cue].forEach((note) => scheduleNote(context!, note));
   };
-  return { prime, play };
+  return { prime, play, setEnabled: (value: boolean) => { enabled = value; } };
 };
 
 export const createRoutineSoundTracker = (holdDurationMs: number, pulseIntervalMs = 750) => {

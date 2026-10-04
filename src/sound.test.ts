@@ -22,6 +22,9 @@ it('schedules notes only after audio is unlocked and tolerates unavailable audio
   await sound.prime();
   sound.play('reminder');
   expect(start).toHaveBeenCalledTimes(3);
+  sound.setEnabled(false);
+  sound.play('start');
+  expect(start).toHaveBeenCalledTimes(3);
   vi.stubGlobal('AudioContext', undefined);
   await expect(createSoundPlayer().prime()).resolves.toBeUndefined();
 });

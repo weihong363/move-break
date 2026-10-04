@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "desktop:build": "pnpm build && rm -rf dist-electron && tsc -p tsconfig.electron.json",
+    "desktop": "pnpm desktop:build && electron .",
+    "desktop:package": "pnpm desktop:build && node scripts/package-desktop.mjs"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@types/node": "^26.6.4",
+    "electron": "^44.5.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.7",
     "vitest": "^5.0.3"
@@ -16,5 +22,11 @@
   "packageManager": "pnpm@10.33.4+sha512.1c67b3b359b2d408119ba1ed289f34b8fc3c6873412bec6fd264fbdc82489e510fcbecb9ce9d22dae7f3b76269d8441046014bdca53b9979cd7a561ad631b800",
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1"
+  },
+  "main": "dist-electron/electron/main.mjs",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   }
 }

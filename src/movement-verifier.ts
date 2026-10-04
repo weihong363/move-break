@@ -160,5 +160,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
     if (phase === 'routine') { phase = 'awaiting-return'; returnFrames = 0; returnElapsedMs = 0; }
   };
 
-  return { processFrame, completeRoutine };
+  const setInactivityDuration = (durationMs: number) => { config.inactivityDurationMs = durationMs; inactivityElapsedMs = 0; };
+  const requestBreak = () => { if (phase === 'monitoring') { phase = 'awaiting-rise'; riseFrames = 0; } };
+  return { processFrame, completeRoutine, setInactivityDuration, requestBreak };
 };

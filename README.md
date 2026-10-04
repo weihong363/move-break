@@ -1,28 +1,35 @@
 # MoveBreak
 
-MoveBreak is a small browser companion that watches for a prolonged seated or stationary state, then requires a camera-verified movement break. Small hand and head movements do not interrupt the reminder timer. Video frames and pose detection stay on the device.
+A macOS desktop companion for camera-verified micro-breaks. Small seated hand/head movements do not interrupt the reminder timer. Camera frames and MediaPipe pose processing stay on the device.
 
-## Run locally
+## Run
 
 ```sh
 pnpm install
-pnpm dev
+pnpm desktop
 ```
 
-Open the Vite URL in a modern desktop browser. Camera access works on `localhost`; a deployed build must use HTTPS.
+Build a local macOS app with `pnpm desktop:package`. Open `release/MoveBreak-darwin-arm64/MoveBreak.app` on Apple Silicon (the output architecture follows the build machine). This is a local unsigned build, not a notarized distribution.
 
-## Demo flow
+## Three surfaces
 
-1. Choose the 5-second inactivity demo threshold and press **Enable camera**.
-2. Hold still for about 1.5 seconds to establish a baseline, then stay inactive until the movement prompt appears.
-3. Stand up, then move for 4 accumulated seconds. Brief natural pauses retain progress; lost tracking pauses it.
-4. Confirm **Movement break completed**, remain standing if you like, then sit back near the original baseline. Local inactivity monitoring restarts in the same camera session only after that return.
+- **Companion:** small, draggable, frameless, lightweight window. Avatar, instruction, and progress only. Explicitly enable the camera to begin.
+- **Menu bar:** monitoring status, next reminder, show companion, Settings, pause/resume, and Quit. Hiding the companion keeps monitoring active; pausing releases the camera.
+- **Settings:** independent native window. Reminder duration, 1–4 movements, hold time, sound, always-on-top, visibility, and launch at login. Local preferences survive restarts; video and pose data are not saved. Developer options are collapsed by default.
 
-If camera permission was denied, allow it in the browser's site settings before pressing **Try camera again**. A browser page cannot reset that permission itself.
+Defaults: 25-minute reminder, four movements, three-second holds. Timing changes apply at the next cycle. Developer demo mode uses a five-second reminder; debug camera is optional. Launch at login is available in the packaged app; it opens MoveBreak, but camera monitoring still requires explicit activation.
 
-## Verify
+## Demo loop
+
+Enable camera → establish seated baseline → inactivity reminder → confirmed stand → reach up → bend left → bend right → turn both ways → break complete → confirmed seated return → fresh reminder cycle. Valid pose holds accumulate; tracking loss pauses progress. The approved colorful sprite animations remain the main visual.
+
+For native camera denial, allow MoveBreak in macOS **Privacy & Security → Camera** before retrying. Retrying cannot reset an OS permission.
+
+The browser prototype remains available with `pnpm dev` on localhost. It has no native tray/window features.
+
+## Checks
 
 ```sh
 pnpm test
-pnpm build
+pnpm desktop:build
 ```

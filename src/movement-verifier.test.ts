@@ -19,6 +19,14 @@ const reachRoutine = () => {
 };
 
 describe('movement verifier', () => {
+  it('updates the next cycle duration from zero without losing seated calibration', () => {
+    const verifier = createMovementVerifier({ ...config });
+    [0, 100, 200, 300].forEach((time) => verifier.processFrame(frameAt(time)));
+    verifier.setInactivityDuration(5000);
+    expect(verifier.processFrame(frameAt(400))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0.02 });
+    verifier.requestBreak();
+    expect(verifier.processFrame(frameAt(500)).phase).toBe('awaiting-rise');
+  });
   it('keeps seated inactivity time through small upper-body movement', () => {
     const verifier = createMovementVerifier(config);
     [0, 100, 200, 300, 400, 500].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));
