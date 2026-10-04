@@ -26,7 +26,7 @@ describe('routine verifier', () => {
   it('accepts left and right bends with normalized torso shift', () => {
     const routine = createRoutineVerifier(config);
     held(routine, reach); routine.advance();
-    expect(held(routine, leftBend, 400).movement).toBe('side-bend-left');
+    expect(held(routine, leftBend, 400)).toMatchObject({ movement: 'side-bend-left', phase: 'movement-complete' });
     routine.advance();
     expect(held(routine, rightBend, 800).phase).toBe('movement-complete');
   });
@@ -39,6 +39,43 @@ describe('routine verifier', () => {
     expect(routine.processFrame(frameAt(2_000)).phase).toBe('movement-complete');
     expect(routine.advance()).toMatchObject({ phase: 'complete', movement: 'torso-rotation', movementIndex: 3 });
     expect(routine.processFrame(frameAt(2_100))).toMatchObject({ phase: 'complete', movement: 'torso-rotation', movementIndex: 3 });
+  });
+
+  it('accepts anatomical bends with either camera orientation', () => {
+    for (const mirrored of [false, true]) {
+      const orient = (frame: PoseFrame) => {
+        if (mirrored) frame.landmarks.forEach((point) => { point.x = 1 - point.x; });
+        return frame;
+      };
+      const routine = createRoutineVerifier(config);
+      held(routine, (time) => orient(reach(time))); routine.advance();
+      expect(held(routine, (time) => orient(rightBend(time)), 400).phase).toBe('demo');
+      expect(held(routine, (time) => orient(leftBend(time)), 800).phase).toBe('movement-complete');
+      routine.advance();
+      expect(held(routine, (time) => orient(rightBend(time)), 1200).phase).toBe('movement-complete');
+    }
+  });
+
+  it('accepts shoulder tilt without visible hips or wrists', () => {
+    const routine = createRoutineVerifier(config);
+    held(routine, reach); routine.advance();
+    const tilt = (time: number, direction: number) => {
+      const frame = frameAt(time);
+      [15, 16, 23, 24].forEach((index) => { frame.landmarks[index].visibility = 0; });
+      frame.landmarks[11].y += direction * 0.025;
+      frame.landmarks[12].y -= direction * 0.025;
+      return frame;
+    };
+    expect(held(routine, (time) => tilt(time, 1), 400).phase).toBe('movement-complete');
+    routine.advance();
+    expect(held(routine, (time) => tilt(time, -1), 800).phase).toBe('movement-complete');
+  });
+
+  it('pauses immediately on shoulder loss despite smoothed history', () => {
+    const routine = createRoutineVerifier({ ...config, smoothingWindow: 4 });
+    held(routine, reach); routine.advance();
+    const hidden = leftBend(400); hidden.landmarks[11].visibility = 0;
+    expect(routine.processFrame(hidden)).toMatchObject({ phase: 'paused-tracking', progress: 0 });
   });
 
   it('pauses rather than clears progress when tracking disappears', () => {
