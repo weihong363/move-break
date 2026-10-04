@@ -77,15 +77,15 @@ Save settings validates and persists the draft, applies native window/startup op
 - Companion: fixed 320 × 480 footprint in every normal state, no scrollbar; opaque cream content with transparent rounded corners. No dashboard or settings controls.
 - Red and yellow controls both hide to the menu-bar entry; neither quits. No third maximize button. Noninteractive background, artwork and text support explicit pointer dragging.
 - Monitoring uses the static seated artwork. Stand prompt and seated-return wait use the cyan neutral figure. Four movement cues use the approved colorful 6 × 4 atlas with 1.8–2-second frame loops, transitions and target holds. Per-frame anchor offsets maintain figure position; no single-image pulsing or live mirrored rig.
-- Webcam hidden by default. Developer debug enables preview; tracking loss keeps the current cue and adds a short guidance message.
-- Monitoring countdown shows minutes and seconds (`M:SS`); routine shows matched/hold progress and brief success feedback.
+- Webcam hidden by default using a tiny rendered element rather than `display: none`. Each inference consumes a full-resolution canvas snapshot; stale video time pauses verification. Developer debug only changes preview presentation, using the same detector/rules. Tracking loss keeps the current cue and adds a short guidance message.
+- Monitoring countdown shows minutes and seconds (`M:SS`); routine shows matched/hold progress and brief success feedback. A matched pose highlights the character with a green outline and the hold indicator with a green background, alongside its confirmation sound. Audio is resumed before scheduled cues.
 - Application icon retains the supplied green figure inside a white rounded tile with transparent exterior. Tray uses the corresponding black transparent template silhouette, no MB title. Stable Tray identity preserves placement; its initial preferred position is near the right edge to avoid the center notch.
 - Sounds: reminder, movement start, matched pose, ongoing matched beat (750 ms), countdown ticks/final tick, step completion, full completion and distinct new-cycle chime. Full completion reuses the reminder melody. Sound is deduplicated across frames; mismatch/tracking loss pauses ongoing feedback. Current tone gain is twice the initial implementation. No downloaded video audio is used.
 
 ## Build and verification
 
 - `pnpm install` then `pnpm dev`: browser development.
-- `pnpm test`: current suite has 36 tests across six files, covering verifier/routine/sound/settings behavior.
+- `pnpm test`: current suite has 37 tests across six files, covering verifier/routine/sound/settings behavior.
 - `pnpm desktop:build`: renderer and Electron main/preload TypeScript builds.
 - `pnpm desktop:package`: local architecture-specific macOS `.app` in `release/`, with camera usage description and ICNS icon. Signing, notarization and an installer are outside the current local demo.
 - Development-only `?preview` exercises presentation states without camera verification; it is not evidence of live pose matching.

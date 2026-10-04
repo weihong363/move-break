@@ -21,6 +21,10 @@ export const createPoseDetector = (): Detector => {
   };
 
   const start = async (video: HTMLVideoElement, onFrame: (frame: PoseFrame) => void, onError: (message: string) => void) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) { onError('MoveBreak could not read camera frames. Please try again.'); return; }
+    let lastVideoTime: number | undefined;
     const currentGeneration = ++generation;
     try {
       const vision = await FilesetResolver.forVisionTasks('/wasm');
@@ -45,7 +49,18 @@ export const createPoseDetector = (): Detector => {
       const timestamp = performance.now();
       if (timestamp - lastDetectionAt >= 150 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         lastDetectionAt = timestamp;
-        const result = landmarker.detectForVideo(video, timestamp);
+        if (!video.videoWidth || !video.videoHeight || video.currentTime === lastVideoTime) {
+          onFrame({ timestamp, landmarks: [] });
+          frameId = window.setTimeout(detect, 150);
+          return;
+        }
+        lastVideoTime = video.currentTime;
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        }
+        // Explicitly consume camera pixels, independent of preview layout.
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const result = landmarker.detectForVideo(canvas, timestamp);
         onFrame({ timestamp, landmarks: (result.landmarks[0] ?? []) as PoseLandmark[] });
       }
       frameId = window.setTimeout(detect, 150);

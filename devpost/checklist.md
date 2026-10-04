@@ -159,3 +159,10 @@ Activity mode: focused alternative for an experienced plan-first developer
 - [x] Native smoke check: hidden inference 62 → 90 frames over five seconds; automatic startup AudioContext running; login registration enabled successfully and restored to previous off setting.
 - [x] Read actual macOS login registration when loading Settings. 36 tests across six files and renderer/native builds passed.
 - [ ] Final human experience check: two complete camera routines, audibility, Tray menu interactions and actual login-session startup. This requires physical movement/login and is not replaced by synthetic landmark tests.
+
+## Normal-mode pose feedback
+
+- [x] Keep hidden video rendered and explicitly read full-resolution canvas frames; repeated/stale video frames pause pose progress. Debug mode changes only the preview, not matching rules.
+- [x] Add immediate matched outline, green hold indicator, explicit matched copy and resume audio before cues. Clear highlighting on mismatch/tracking loss and on leaving the routine.
+- [x] Regression tests cover canvas input, frozen-frame pause, cancellation and suspended audio recovery. 37 tests pass; visual matched-state preview checked.
+- [ ] User confirms first movement in normal mode with real arm movement (debug mode was reported accurate).

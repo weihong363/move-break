@@ -83,3 +83,19 @@ describe('routine sound transitions', () => {
     expect(sounds.update(other)).toEqual([]);
   });
 });
+
+it('resumes suspended audio before playing a pose-match confirmation', async () => {
+  const start = vi.fn();
+  const context = {
+    state: 'suspended', currentTime: 0, destination: {},
+    resume: vi.fn(async () => { context.state = 'running'; }),
+    createOscillator: () => ({ frequency: { value: 0 }, connect: () => ({ connect: vi.fn() }), start, stop: vi.fn() }),
+    createGain: () => ({ gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() } }),
+  };
+  vi.stubGlobal('AudioContext', function () { return context; });
+  const sound = createSoundPlayer();
+  await sound.prime();
+  sound.play('matched');
+  expect(context.resume).toHaveBeenCalledOnce();
+  expect(start).toHaveBeenCalledTimes(2);
+});

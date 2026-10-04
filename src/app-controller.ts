@@ -152,7 +152,9 @@ export const createAppController = (root: HTMLElement) => {
   };
 
   const setPreviewVisible = (visible: boolean) => {
-    root.querySelector<HTMLElement>('[data-camera-shell]')?.classList.toggle('camera-visible', visible);
+    const shell = root.querySelector<HTMLElement>('[data-camera-shell]');
+    shell?.classList.toggle('camera-visible', visible);
+    shell?.setAttribute('aria-hidden', String(!visible));
     const toggle = root.querySelector<HTMLButtonElement>('[data-action="toggle-debug"]');
     if (toggle) toggle.textContent = debugPreview ? 'Hide camera debug' : 'Show camera debug';
   };
@@ -161,17 +163,20 @@ export const createAppController = (root: HTMLElement) => {
     const companion = root.querySelector<HTMLElement>('[data-visual]');
     companion?.setAttribute('data-visual', 'routine');
     companion?.setAttribute('data-routine-pose', movement);
+    companion?.removeAttribute('data-matched');
   };
 
   const showStandPrompt = () => {
     const companion = root.querySelector<HTMLElement>('[data-visual]');
     companion?.setAttribute('data-visual', 'stand-prompt');
+    companion?.removeAttribute('data-matched');
     companion?.removeAttribute('data-routine-pose');
   };
 
   const showReturnPrompt = () => {
     const companion = root.querySelector<HTMLElement>('[data-visual]');
     companion?.setAttribute('data-visual', 'return-prompt');
+    companion?.removeAttribute('data-matched');
     companion?.removeAttribute('data-routine-pose');
   };
 
@@ -181,16 +186,19 @@ export const createAppController = (root: HTMLElement) => {
     const step = root.querySelector<HTMLElement>('[data-step]');
     if (!status || !progress) return;
     report(snapshot.phase === 'complete' ? 'Break complete' : 'Movement break');
-    routineSounds.update(snapshot).forEach(sound.play);
+    const cues = routineSounds.update(snapshot);
+    if (cues.length) void sound.prime().then(() => cues.forEach(sound.play));
     lastVerifierPhase = 'routine';
     showMovementCue(snapshot.movement);
+    root.querySelector('[data-visual]')?.setAttribute('data-matched', String(snapshot.poseMatched));
+    progress.classList.toggle('pose-matched', snapshot.poseMatched);
     setPreviewVisible(debugPreview);
     setGuidance(snapshot.phase === 'paused-tracking' ? 'Step back so your upper body and hands are visible.' : '');
     if (step) step.textContent = `Step ${snapshot.movementIndex + 1} of ${activeRoutineSettings.movementCount} · ${routineLabel(snapshot.movement)}`;
     status.textContent = desktop && snapshot.movement === 'torso-rotation' ? 'Turn' : snapshot.instruction;
     const seconds = Math.max(0, Math.ceil((1 - snapshot.progress) * activeRoutineSettings.holdSeconds));
     progress.textContent = snapshot.poseMatched
-      ? desktop ? `Keep going · ${seconds}s` : `Matched — hold it · ${seconds} seconds remaining`
+      ? desktop ? `Matched · hold ${seconds}s` : `Matched — hold it · ${seconds} seconds remaining`
       : desktop ? 'Follow along' : `Match the movement to continue · ${seconds} seconds remaining`;
     if (snapshot.phase === 'complete') {
       showReturnPrompt();
@@ -208,6 +216,8 @@ export const createAppController = (root: HTMLElement) => {
   };
 
   const updateVerification = (snapshot: VerifierSnapshot) => {
+    root.querySelector('[data-visual]')?.removeAttribute('data-matched');
+    root.querySelector('[data-progress]')?.classList.remove('pose-matched');
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
@@ -289,7 +299,7 @@ export const createAppController = (root: HTMLElement) => {
           <h1 class="readiness" data-status>${isLoading ? 'Opening your camera…' : 'Getting ready'}</h1>
           <p class="progress" data-progress>${isLoading ? '' : 'Getting ready… 0%'}</p>
           <p class="tracking-guidance" data-guidance hidden></p>
-          <div class="camera-shell" data-camera-shell>
+          <div class="camera-shell" data-camera-shell aria-hidden="true">
             <video class="camera-preview" autoplay muted playsinline></video>
             <p>Local camera debug view</p>
           </div>
