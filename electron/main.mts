@@ -21,6 +21,7 @@ const trusted = (event: Electron.IpcMainEvent | Electron.IpcMainInvokeEvent) => 
 
 const showCompanion = () => {
   settings.showCompanion = true;
+  if (companion.isMinimized()) companion.restore();
   companion.show(); broadcast(); refreshTray();
 };
 const openSettings = () => {
@@ -59,7 +60,7 @@ const applySettings = (next: DesktopSettings) => {
   settings = { ...next, launchAtLogin: app.isPackaged && next.launchAtLogin };
   writeFileSync(settingsPath(), JSON.stringify(settings, null, 2));
   companion.setAlwaysOnTop(settings.alwaysOnTop);
-  if (settings.showCompanion) companion.show(); else companion.hide();
+  if (settings.showCompanion) { if (companion.isMinimized()) companion.restore(); companion.show(); } else companion.hide();
   broadcast(); command('settings-saved'); refreshTray();
   return settings;
 };
@@ -94,9 +95,9 @@ const registerAssets = () => {
 };
 const createCompanion = () => {
   const area = screen.getPrimaryDisplay().workArea;
-  companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: false, transparent: true, resizable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
+  companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: process.platform === 'darwin', titleBarStyle: 'hidden', trafficLightPosition: { x: 16, y: 16 }, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
   secureWindow(companion);
-  companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Hide companion', click: () => { companion.hide(); settings.showCompanion = false; broadcast(); } }]).popup({ window: companion }));
+  companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }]).popup({ window: companion }));
   companion.on('close', (event) => { if (!quitting) { event.preventDefault(); companion.hide(); settings.showCompanion = false; broadcast(); } });
   void companion.loadURL('movebreak://app/index.html');
 };

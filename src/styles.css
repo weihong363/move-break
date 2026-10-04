@@ -189,3 +189,5 @@ body.desktop-surface { min-width: 0; }
 .settings-footer { position: sticky; bottom: 0; padding: 10px 0; background: #f8f3e8; }
 .settings-footer .settings-result { margin: 0 0 8px; }
 .settings-footer button:disabled { opacity: 0.6; cursor: wait; }
+
+.desktop-surface .home-card, .desktop-surface .proof-card { padding-top: 36px; }
