@@ -107,10 +107,16 @@ const createCompanion = () => {
   void companion.loadURL('movebreak://app/index.html');
 };
 const createTray = () => {
+  const trayId = 'c42b9701-2c6e-4bc7-9690-329c7e4626ba';
+  if (process.platform === 'darwin') {
+    // Native status-item positions are measured from the right edge. Seed a
+    // visible position once; macOS retains subsequent user repositioning.
+    systemPreferences.registerDefaults({ [`NSStatusItem Preferred Position ${trayId}`]: 220 });
+  }
   const icon = nativeImage.createFromPath(join(__dirname, '../../electron/assets/movebreakTemplate.png'));
   if (icon.isEmpty()) throw new Error('MoveBreak tray icon could not load');
   icon.setTemplateImage(true);
-  tray = new Tray(icon);
+  tray = new Tray(icon, trayId);
   tray.setToolTip('MoveBreak');
   if (process.platform === 'darwin') tray.setTitle('MB');
   refreshTray();
