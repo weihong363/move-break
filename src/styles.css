@@ -158,8 +158,8 @@ button:focus-visible, select:focus-visible { outline: 3px solid #e9a869; outline
 /* Desktop companion: draggable art and concise state, configuration lives elsewhere. */
 html:has(body.desktop-surface), body.desktop-surface { background: transparent; }
 body.desktop-surface { min-width: 0; }
-.desktop-surface #app { padding: 8px; }
-.desktop-surface .home-card, .desktop-surface .proof-card { width: 100%; padding: 14px 16px; border: 0; background: rgb(255 253 247 / 93%); isolation: isolate; box-shadow: none; border-radius: 26px; }
+.desktop-surface #app { display: block; padding: 0; }
+.desktop-surface .home-card, .desktop-surface .proof-card { width: 100%; min-height: 100vh; padding: 44px 16px 16px; border: 0; background: rgb(255 253 247 / 93%); isolation: isolate; box-shadow: none; border-radius: 26px; }
 .desktop-surface .companion, .desktop-surface .eyebrow, .desktop-surface .readiness { -webkit-app-region: drag; }
 .desktop-surface button, .desktop-surface video { -webkit-app-region: no-drag; }
 .desktop-surface .companion { width: 210px; height: 210px; }
@@ -189,5 +189,3 @@ body.desktop-surface { min-width: 0; }
 .settings-footer { position: sticky; bottom: 0; padding: 10px 0; background: #f8f3e8; }
 .settings-footer .settings-result { margin: 0 0 8px; }
 .settings-footer button:disabled { opacity: 0.6; cursor: wait; }
-
-.desktop-surface .home-card, .desktop-surface .proof-card { padding-top: 36px; }
