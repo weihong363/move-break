@@ -3,185 +3,99 @@ doc: spec
 status: approved
 ---
 
-# MoveBreak — Technical Specification
+# MoveBreak technical specification
 
-## How This Works, In Plain Language
+## Product and runtime
 
-MoveBreak is one static browser app. The user explicitly enables the camera at the start of a monitoring session, and video frames stay on-device for pose analysis. The verifier learns a stable baseline from the user's current desk position using visible shoulders, accumulates seated/stationary time through small movement, then prompts a break. It confirms a sustained upward torso movement and runs a four-pose desk-relief routine before waiting for a return near the original seated baseline. It advances only while the landmarks required by the current pose are usable.
+The primary product is a local macOS Electron companion with three surfaces: companion, menu bar, and dedicated Settings. TypeScript + Vite + native HTML/CSS render the UI. MediaDevices supplies video-only camera frames; bundled MediaPipe Pose Landmarker performs local inference. No backend, cloud inference, account, analytics, or camera/pose history.
 
-This keeps the kernel real—camera-verified movement—without a server, stored data, exercise classifier, or precise seated-pose requirement. A local technical spike is the first build stage: MediaPipe Pose Landmarker remains the implementation unless MoveNet proves materially simpler or more reliable for this exact sequence.
+The browser app remains a development prototype. Static hosting is optional and does not provide the native desktop surfaces. The early MediaPipe spike is complete; no model training or alternate detector is planned.
 
-## The Core Journey Through the System
+## Architecture
 
-Implements `prd.md > The Core Journey`.
+- `electron/main.mts`: singleton companion and Settings windows, retained Tray, secure asset protocol, camera permission, validated settings, launch-at-login and allowlisted IPC.
+- `electron/preload.cts`: sandboxed typed bridge for settings, status, commands, camera access, window controls and dragging. Context isolation on; Node integration off.
+- `src/app-controller.ts`: camera lifecycle, verifier handoff, presentation, audio and desktop status.
+- `src/movement-verifier.ts`: baseline → monitoring → awaiting-rise → routine → awaiting-return. Unusable tracking reports a paused snapshot without advancing the underlying phase.
+- `src/routine-verifier.ts`: demonstration → accumulated valid hold → step success → next movement → routine complete.
+- `src/pose-detector.ts`: one pose, VIDEO mode, synchronous inference throttled to approximately one frame per 150 ms; detection/presence/tracking confidence 0.5.
+- `src/window-drag.ts`: pointer capture sends start/move/end coordinates through validated IPC. Main moves the window by the pointer delta; controls and camera debug view are excluded.
+- `src/settings-window.ts`, `src/desktop-settings.ts`: draft form, explicit save and validated local preferences.
+- `src/sound.ts`: local synthesized feedback; audio failure never blocks verification.
 
-1. **Enable camera** moves the app to `camera-loading`, requests camera access, attaches the stream to a hidden local preview, and starts local pose detection. On rejection or failure, state is `camera-required`.
-2. The detector emits landmarks with a timestamp. The verifier accepts frames with both shoulders visible, smooths them, and collects a 1.5-second baseline at the user's current camera distance and seated position.
-3. After the baseline, it accumulates valid seated/stationary time. The short demo default triggers a movement prompt after 5 seconds.
-4. From the same active camera session, the verifier looks for a sustained upward torso-center displacement normalized by torso scale. It enters `routine` only after the rise condition persists across several frames; a one-frame spike is ignored.
-5. The routine verifier checks four three-second holds: both wrists above shoulders, shoulder center left of hips, shoulder center right of hips, then opposite torso-rotation directions using shoulder depth or visible width change. Brief pose loss or invalid tracking pauses hold progress without clearing it.
-6. The character-led UI shows `completed`, then waits for a stable return near the original seated baseline before resetting the inactivity monitor and resuming monitoring in the active camera session. A debug toggle reveals the preview for demo proof; tracking recovery reveals it automatically. A small Web Audio notification plays when the prompt begins.
+`movebreak://app` serves bundled renderer files, `/wasm`, and `/models/pose_landmarker_lite.task` in a secure context. External window opening/navigation is blocked. Media permission is restricted to the companion's video capture.
 
-## Stack
+## Camera and cycle boundaries
 
-- **TypeScript + Vite** — learner-selected lightweight browser build and static output. [Vite documentation](https://vite.dev/guide/) and [static deployment guide](https://vite.dev/guide/static-deploy).
-- **Native HTML, CSS, and DOM rendering** — no UI framework; one controlled render function is enough for this one-screen stateful flow.
-- **MediaDevices `getUserMedia()`** — requests a video-only `MediaStream` when the user starts monitoring. [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
-- **`@mediapipe/tasks-vision` Pose Landmarker** — preferred local landmark detector, configured for one pose and video frames. The app bundles a compatible pose model as a static asset. [MediaPipe web guide](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js).
-- **No backend or persistence** — all operational data lives only in memory for the current page session.
+1. First use requires Enable camera and macOS permission. Denial/device/model errors show actionable guidance. A retry cannot reset an OS-denied permission.
+2. Later launches automatically start camera monitoring when permission is already granted. Pause releases the detector and camera; resume establishes a new baseline.
+3. Baseline collection uses the user's current desk position and distance, with both shoulders visible. Hips are optional. The user is expected to begin seated; this is not a seated-pose classifier.
+4. Monitoring counts valid time toward the configured reminder; small seated hand/head/body movement does not reset it.
+5. At the reminder, the cyan standing cue remains visible until a stable rise is confirmed. No routine pose may complete before that handoff.
+6. Each selected movement accumulates matched time. Mismatch or invalid landmarks pauses progress rather than clearing the hold. A 650 ms step-success interval precedes automatic advancement.
+7. Completion immediately begins seated-return detection, with the cyan neutral cue and “Sit down when ready”. Preserve the original baseline while the user remains standing.
+8. A stable return near that baseline resets reminder time to zero and plays the new-cycle chime. Every cycle requires a new rise and the full selected routine.
 
-The technical spike must confirm the browser build can load the model asset and that the detector produces usable upper-body landmarks from the development camera. MediaPipe's web video detection is synchronous, so the first implementation throttles inference to a modest frame rate; only measurable UI jank justifies moving detection to a worker.
+Hiding or closing the companion keeps the process/camera active; Quit stops the app. Background throttling is disabled, but hidden-window inference cadence still requires a native experience check.
 
-## Where It Runs and How Someone Tries It
+## Landmark rules and current thresholds
 
-- Runs in a modern desktop browser on `localhost` during development. Camera access requires a secure context; `localhost` is suitable for development and the deployed site must use HTTPS.
-- No API key, account, server, or data store is required.
-- Install dependencies with `pnpm install`, then run `pnpm dev` and open the local Vite URL.
-- For the demo, enable the camera, remain still for roughly 1.5 seconds to establish a baseline, remain inactive for the 5-second demo threshold, then stand and move for 4 seconds. Record this local flow for the submission video.
-- After the local end-to-end flow is stable, deploy the Vite static output to Vercel or GitHub Pages. Deployment is optional and supplements, not replaces, the required video and public repository.
+All thresholds are heuristics for a demo, not exercise scoring. Positions use a four-frame rolling average. Required landmark visibility is 0.55.
 
-## Look and Feel
+| Signal | Implemented rule / default |
+| --- | --- |
+| Baseline | Collect 1,500 ms of usable shoulder frames; capture smoothed torso height and shoulder width. No explicit stillness gate currently. |
+| Scale | Shoulder-to-hip distance if both hips are usable; otherwise shoulder width. |
+| Rise | `(baseline torso Y − current torso Y) / scale ≥ 0.16` for three consecutive usable frames. |
+| Seated return | Torso distance from baseline / scale ≤ 0.16, shoulder motion ≤ 0.025, at least three confirming frames and 750 ms settled time. |
+| Overhead Reach | Both wrists visible and above their shoulders by at least 0.30 shoulder widths. |
+| Side Bend Left/Right | Anatomical direction, independent of mirrored preview. Shoulder-line tilt change ≥ 0.15, or shoulder-center/hip-center lateral shift change ≥ 0.15 shoulder widths. Hip-free tilt fallback permits one arm overhead. Reference captured at routine start. |
+| Torso Rotation | Shoulder depth difference / width ≥ 0.20 gives direction; shoulder width ≤ 0.78 of the routine reference is a coarse turn fallback. Hold either direction first, then its opposite. Each side requires the configured hold duration. |
 
-Implements `prd.md > Look and Feel`. CSS custom properties define a warm cream background, muted green primary color, and limited warm orange active/success color. Use a clean soft sans-serif system font stack, rounded controls, spacious layout, and low-contrast borders. Copy remains supportive and short. A small CSS/SVG stick figure is optional and must not delay the working verification path.
+The monitor/rise/return verifier excludes frame gaps longer than 500 ms and pauses on missing shoulders. The routine verifier clears its timestamp on missing required landmarks; it currently has no equivalent long-gap cutoff. See validation gaps below.
 
-## Components
+## Configuration and persistence
 
-### App Controller
+User settings persist only in Electron `userData/settings.json`. Operational phase, baseline, pose samples and hold time remain in memory and reset on restart.
 
-Owns monitoring, prompt, and verification UI state. It translates camera, detector, and verifier events into user-visible messages. Implements `prd.md > Screens and Layout` and `prd.md > Feedback and recovery`.
+| Setting | Default / allowed values |
+| --- | --- |
+| Reminder | 25 minutes / integer 1–120 |
+| Movements | 4 / first 1–4 movements in fixed routine order |
+| Hold | 3 seconds / integer 1–15; rotation applies this to each side |
+| Sound | On |
+| Always on top / show companion | On / On |
+| Launch at login | Off; packaged macOS app only |
+| Developer demo / camera debug | Off / Off; collapsed section |
 
-### Companion Avatar
+Developer demo overrides the reminder with 5 seconds. Baseline/rise/return/gap parameters live in `src/config.ts`; routine match thresholds currently live in `makeRoutine()` in `src/app-controller.ts`. They are code tuning values, not additional Settings controls.
 
-Uses the translucent colorful human artwork supplied by the learner. The seated figure remains static for monitoring. The rise prompt and each routine step use whole-figure cues cropped from the approved art sheet and animate them with small CSS loop transforms. It never attempts to mirror pose landmarks into the artwork or render a segmented standing figure. The browser Web Audio API synthesizes a brief prompt sound plus per-second hold ticks. No animation library or new service is required.
+Save settings validates and persists the draft, applies native window/startup options, and refreshes the companion. Reminder progress resets while preserving the session's original seated baseline; an active routine restarts using the new count/hold values. Save does not request camera permission again.
 
-### Camera
+## Presentation and audio
 
-Requests video-only access after **Enable camera**, attaches the resulting stream to the preview, exposes frames to the detector, and stops tracks only when monitoring ends, reset, or retry requires it. It maps permission and device errors to the required plain-language UI state. Implements `prd.md > States and Boundaries`.
+- Companion: fixed 320 × 480 footprint in every normal state, no scrollbar; opaque cream content with transparent rounded corners. No dashboard or settings controls.
+- Red and yellow controls both hide to the menu-bar entry; neither quits. No third maximize button. Noninteractive background, artwork and text support explicit pointer dragging.
+- Monitoring uses the static seated artwork. Stand prompt and seated-return wait use the cyan neutral figure. Four movement cues use the approved colorful 6 × 4 atlas with 1.8–2-second frame loops, transitions and target holds. Per-frame anchor offsets maintain figure position; no single-image pulsing or live mirrored rig.
+- Webcam hidden by default. Developer debug enables preview; tracking loss keeps the current cue and adds a short guidance message.
+- Monitoring countdown shows minutes and seconds (`M:SS`); routine shows matched/hold progress and brief success feedback.
+- Application icon retains the supplied green figure inside a white rounded tile with transparent exterior. Tray uses the corresponding black transparent template silhouette, no MB title. Stable Tray identity preserves placement; its initial preferred position is near the right edge to avoid the center notch.
+- Sounds: reminder, movement start, matched pose, ongoing matched beat (750 ms), countdown ticks/final tick, step completion, full completion and distinct new-cycle chime. Full completion reuses the reminder melody. Sound is deduplicated across frames; mismatch/tracking loss pauses ongoing feedback. Current tone gain is twice the initial implementation. No downloaded video audio is used.
 
-### Pose Detector
+## Build and verification
 
-Loads MediaPipe Pose Landmarker and the static model asset, processes throttled video frames, and returns timestamped landmarks. It has no product decision logic and reports no-pose or unusable-frame results to the verifier. Implements `prd.md > Features and Behavior > Movement verification`.
+- `pnpm install` then `pnpm dev`: browser development.
+- `pnpm test`: current suite has 30 tests across five files, covering verifier/routine/sound/settings behavior.
+- `pnpm desktop:build`: renderer and Electron main/preload TypeScript builds.
+- `pnpm desktop:package`: local architecture-specific macOS `.app` in `release/`, with camera usage description and ICNS icon. Signing, notarization and an installer are outside the current local demo.
+- Development-only `?preview` exercises presentation states without camera verification; it is not evidence of live pose matching.
 
-### Movement Verifier
+Native smoke checks have covered local camera/model loading, separate Settings/save refresh, explicit dragging with actual position changes, hide controls and Tray placement metadata. Final acceptance still needs a complete repeated native routine, hidden-window monitoring, the latest visible icons/Tray menu, and launch-at-login at the final installed location. Unit tests do not establish real-camera reliability.
 
-Owns the finite states `baseline`, `monitoring`, `awaiting-rise`, `routine`, `awaiting-return`, `paused-tracking`, and `completed`. It smooths usable landmarks, derives torso center and body scale from shoulders and hips, and accumulates seated/stationary time through small upper-body movement. It hands off to the routine verifier after a stable rise, then waits for the user to return near their original seated baseline before restarting monitoring. It never advances while coverage or tracking quality is too low. Implements `prd.md > Features and Behavior > Inactivity monitoring` and `Movement verification`.
+## Known implementation and validation gaps
 
-### Configuration
-
-Exports one typed configuration object for defaults and tuning: baseline window (1.5 seconds), inactivity threshold (5 seconds), movement duration (4 seconds), rolling-window size, rise and return displacement, movement score, and required consecutive confirmation frames. It keeps tuning explicit and avoids a complex scoring system.
-
-## Data Model
-
-All state is in memory and resets on page refresh.
-
-```ts
-type AppPhase =
-  | 'ready'
-  | 'camera-permission'
-  | 'baseline'
-  | 'monitoring'
-  | 'break-prompted'
-  | 'awaiting-rise'
-  | 'routine'
-  | 'paused-tracking'
-  | 'camera-required'
-  | 'completed';
-
-type DemoConfig = {
-  inactivityDurationMs: number;
-  baselineDurationMs: number;
-  routineHoldDurationMs: number;
-  smoothingWindow: number;
-  riseThreshold: number;
-  returnThreshold: number;
-  overheadReachThreshold: number;
-  sideBendThreshold: number;
-  rotationWidthThreshold: number;
-  rotationDepthThreshold: number;
-  consecutiveRiseFrames: number;
-};
-```
-
-- **Inactivity state**: phase, accumulated valid low-movement milliseconds, and selected configuration. Updated by user actions and reliable landmark frames; not persisted.
-- **Camera state**: active `MediaStream` and error category. Created when monitoring starts and remains active across the completed break reset.
-- **Landmark samples**: a bounded rolling window of timestamped, visible torso/upper-body landmark coordinates. Discarded as it slides.
-- **Verifier state**: original seated torso-center statistic, stable multi-frame rise and return confirmation counts, accumulated valid movement time, and tracking pause status. The seated reference persists for the camera session; rise confirmation and movement time reset whenever the user returns to it, so every break uses the same mechanism.
-
-### Signal Rules
-
-Torso center is the midpoint or average of usable shoulder and hip landmarks. Body scale is the shoulder-to-hip distance when available; if hips are unavailable, a stable upper-body fallback scale is used. Rise is a decrease in image-space torso-center `y` from the baseline, divided by current body scale, sustained over the configured frame count. General movement is the mean smoothed frame-to-frame displacement of visible shoulders, hips, elbows, and wrists, normalized by body scale.
-
-The verifier uses both visible shoulders as the minimum reliable reference, so it does not prescribe a camera distance or require the full upper body. The short baseline learns the user's own stable seated position and shoulder width. During monitoring, visible hand, head, and other small upper-body movement keeps accumulating inactivity time. A rise requires stable confirmation across the configured consecutive frames, not a single threshold crossing. After break completion, the original baseline remains authoritative: the verifier waits for a stable return within the configured normalized distance before resetting the inactivity timer. Missing shoulders, no detected person, or detector confidence below the selected quality threshold pauses all timing. Brief low-motion frames do not clear accumulated valid movement time.
-
-## File Structure
-
-```text
-move-break/
-├── devpost/                     # Approved planning artifacts
-├── public/
-│   └── models/pose_landmarker.task  # Bundled MediaPipe-compatible model asset
-├── src/
-│   ├── main.ts                  # Bootstrap and DOM event wiring
-│   ├── styles.css               # Global visual system and layouts
-│   ├── app-controller.ts        # App phase transitions and rendering
-│   ├── routine-verifier.ts       # Four-pose local routine state machine and landmark rules
-│   ├── config.ts                # Typed demo and verifier thresholds
-│   ├── types.ts                 # Shared app, landmark, and verifier types
-│   ├── camera.ts                # MediaDevices lifecycle and preview setup
-│   ├── pose-detector.ts         # MediaPipe initialization and frame detection
-│   ├── movement-verifier.ts     # Baseline, low-movement, rise, and movement state machine
-│   └── movement-verifier.test.ts # Deterministic verifier tests using sample landmarks
-├── index.html                   # Vite entry page
-├── package.json                 # Scripts and dependencies
-├── tsconfig.json                # TypeScript configuration
-└── vite.config.ts               # Static build configuration
-```
-
-## External Services and Dependencies
-
-- **Browser camera**: `navigator.mediaDevices.getUserMedia({ video: true, audio: false })`; no key, account, or cost. Browser permission and an available camera are required. [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
-- **MediaPipe Pose Landmarker**: `@mediapipe/tasks-vision` plus one static `.task` model file, initialized with `runningMode: 'VIDEO'` and one pose. No API call, cloud inference, key, rate limit, or recurring cost. [Official web setup and configuration](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js).
-- **Static host, later**: Vercel or GitHub Pages serves the built files over HTTPS. No server-side application behavior is needed. [Vite deployment options](https://vite.dev/guide/static-deploy).
-
-## Important Failure Modes
-
-- **Permission denied, no camera, or insecure deployment** → show that local monitoring cannot start, and provide retry guidance. When the browser retains a denied permission, explain that the user must re-allow the camera in browser settings before retrying.
-- **No usable pose or inadequate framing** → pause verification and ask the user to keep both shoulders in view; do not progress or expose debug data.
-- **Temporary landmark-quality drop** → retain the current verifier stage but stop its progress timer until usable landmarks return.
-- **Detector blocks the interface on a slow machine** → lower the inference cadence first; move to a worker only if the technical spike shows that throttling is insufficient.
-
-## What Was Simplified and Why
-
-- **One heuristic monitor and movement verifier** instead of posture classification or form scoring — it directly proves `scope.md > The Unique Kernel`.
-- **Upper-body and torso signals** instead of mandatory full-body or seated-pose detection — desk occlusion and camera framing can hide legs.
-- **One in-memory state controller** instead of a UI framework or global store — one page and one loop do not need more infrastructure.
-- **Configurable constants** instead of adaptive calibration or a learned score — rapid demo tuning is more valuable than biomechanical precision.
-- **Local recording first** instead of a required deployed environment — deployment does not improve the core proof and comes after it works locally.
-- **Predefined movement cues** — the approved 6 × 4 translucent sprite atlas uses discrete frame loops (1.8–2 seconds), including transitions and target holds. Per-frame anchor offsets keep the planted-foot center fixed; no pulsing or arbitrary lateral motion. Pose landmarks verify the routine; they do not drive a character rig.
-- **Stable presentation during tracking loss** — retain the current cue and hold progress, adding a small visibility hint. The webcam is visible only through the debug toggle.
-
-## Decisions and Open Issues
-
-- **Learner decision:** use TypeScript, Vite, native HTML/CSS, MediaDevices, local-only inference, and static hosting after local validation.
-- **Learner decision:** prefer MediaPipe Pose Landmarker; consider MoveNet only if the first technical spike produces evidence that it is materially easier or more reliable for baseline → rise → movement.
-- **Learner decision:** use 1.5-second baseline, 5-second demo inactivity, and 4-second movement defaults, all exposed in `config.ts`.
-- **Learner decision:** normalize torso-rise and multi-landmark motion signals by body scale, smooth with a short rolling window, require usable coverage, and ignore single-frame spikes.
-- **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → four coarse upper-body pose holds, which the first spike will verify against the available camera framing.
-- **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
-- **Presentation checkpoint:** seated monitoring uses one static illustration. The stand prompt, four routine steps, success, and completion use movement cues only. Legacy standing/rig rendering has been removed. Development-only `?preview` controls allow each UI state to be checked without starting the camera.
-
-## Audio cues
-
-Web Audio generates short sine-tone cues locally after the Enable camera gesture unlocks audio. The rising reminder melody is reused when the whole routine completes. Each step (and the second rotation direction) has a start cue; entering a matched pose plays a short confirmation and shows “Matched — hold it”. A quiet beat repeats every configurable 750 ms while the pose remains matched, even between countdown changes; valid hold seconds have short ticks, with a higher final-second tone; individual step completion has a distinct success cue. Events are deduplicated across pose frames. Pose mismatch or tracking loss pauses the ongoing beat and ticks, and unavailable audio cannot block the movement flow. The supplied Bilibili reference could not be played in the preview browser, so these tones are an original implementation pending listening feedback.
-
-## Cycle boundaries
-
-The stand prompt uses the supplied cyan neutral-standing illustration, with no routine animation until a stable multi-frame rise is confirmed. Tracking loss preserves the prompt and clears rise confirmation. After the routine finishes, seated-return detection starts immediately. Returning near the original baseline must remain stable for a configurable 750 ms before monitoring restarts at zero. A distinct four-note chime announces the new cycle. Inactivity timing excludes unreliable tracking and detection gaps longer than 500 ms; each cycle requires the full configured duration (5 seconds in the demo).
-
-## Desktop companion cutover
-
-Electron main owns Tray, a 320 × 480 frameless transparent CompanionWindow, and singleton 450 × 710 SettingsWindow. Vite renderer selects the settings surface by query. A sandboxed preload exposes only typed settings, status, command and explicit macOS camera-permission IPC. Node integration stays off; external renderer navigation is blocked. Secure `movebreak://app` serves bundled UI, WASM and pose model locally.
-
-Validated preferences are stored in Electron userData/settings.json; no camera or pose data persists. Native always-on-top and show/hide changes apply immediately. The explicit Save settings action applies configuration, resets reminder progress with the original seated baseline intact, and restarts an active routine using the new timing/count. Pause stops detector/camera, resume starts a new baseline. Background throttling is disabled so hiding does not intentionally suspend monitoring. Packaged startup integration opens the app and resumes camera monitoring when permission was already granted.
-
-`pnpm desktop:build` compiles renderer/main/preload; `pnpm desktop:package` creates a local architecture-specific macOS app with camera usage description. Signing/notarization remain outside this local demo. The browser prototype remains a development surface.
+1. **Sedentary semantics:** monitoring currently counts all usable shoulder frames without checking baseline-relative standing/movement. The intended behavior counts seated time and ignores small seated movements, but standing before the prompt can still count. Do not describe this as robust continuous seated classification; validate/fix this within the existing heuristic scope before claiming that behavior.
+2. **Rotation fallback:** shoulder-width contraction detects a turn but cannot identify both opposite directions. The second side needs a usable shoulder-depth signal; test this with the demo camera before claiming a hip-free two-sided rotation always works.
+3. **Routine timing gaps:** long inference interruptions may be credited to a matched hold because the routine lacks the monitor's 500 ms gap guard. Validate interruptions before final demo acceptance.
+4. **Camera stability:** initial standing, camera relocation, and changes in hip visibility can distort baseline-relative rise/return. Initial seated setup and a stationary camera remain demo assumptions.
+5. **Native lifecycle:** confirm hidden monitoring, audio after automatic startup, Tray accessibility on the actual menu bar, and login launch. These remain experience checks, not additional product features.

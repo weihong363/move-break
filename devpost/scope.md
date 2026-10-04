@@ -9,11 +9,17 @@ A small macOS companion that prompts a camera-verified micro-break after a prolo
 
 ## Core loop
 
-Explicit camera activation → stable seated baseline → configurable reminder → stable rise → four coarse pose holds → completion → stable return to the original seated baseline → fresh cycle. Small seated hand/head movements keep the timer running. Tracking loss pauses verification.
+First-use camera activation → seated reference at the user's desk position → configurable reminder → stable rise → short predefined movement routine → completion → stable return to the original seated baseline → fresh cycle. Granted camera permission allows automatic startup on later launches. Small seated hand/head movements keep the timer running. Tracking loss pauses verification.
 
 ## MVP boundary
 
 Electron companion and Tray, independent Settings, existing colorful translucent movement cues, local MediaPipe, tolerant upper-body heuristics, sound feedback, configurable demo timing. Defaults: 25 minutes, four movements, three-second holds; developer demo reminder: five seconds. Only local configuration persists.
+
+The routine is Overhead Reach → Side Bend Left → Side Bend Right → Torso Rotation (both sides). Settings may select the first 1–4 movements. Avatar animations guide the user; pose landmarks verify the target rather than mirror the avatar. Hiding the companion keeps monitoring active; pause releases the camera.
+
+## Demo assumptions and remaining proof
+
+Start seated with a stationary camera and usable shoulders; precise seated classification and leg visibility are not required. Final native validation must cover repeated cycles and hidden monitoring. Current monitoring does not yet exclude standing before the prompt; two-sided rotation depends on shoulder-depth quality. These are implementation gaps within the existing scope, not new product features. See `spec.md > Known implementation and validation gaps`.
 
 ## Excluded
 
