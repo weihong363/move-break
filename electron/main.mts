@@ -32,7 +32,7 @@ const openSettings = () => {
   settingsWindow.on('page-title-updated', (event) => event.preventDefault());
 };
 function preferences() {
-  return { preload: join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false };
+  return { preload: join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' as const };
 }
 function secureWindow(window: BrowserWindow) {
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -65,6 +65,7 @@ const applySettings = (next: DesktopSettings) => {
 };
 const registerIpc = () => {
   ipcMain.handle('settings:get', (event) => { if (trusted(event)) return settings; throw new Error('Untrusted window'); });
+  ipcMain.handle('camera:granted', (event) => event.sender === companion.webContents && process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('camera') === 'granted');
   ipcMain.handle('camera:request', async (event) => {
     if (event.sender !== companion.webContents) return false;
     return process.platform !== 'darwin' || await systemPreferences.askForMediaAccess('camera');
@@ -95,6 +96,7 @@ const createCompanion = () => {
   const area = screen.getPrimaryDisplay().workArea;
   companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: false, transparent: true, resizable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
   secureWindow(companion);
+  companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Hide companion', click: () => { companion.hide(); settings.showCompanion = false; broadcast(); } }]).popup({ window: companion }));
   companion.on('close', (event) => { if (!quitting) { event.preventDefault(); companion.hide(); settings.showCompanion = false; broadcast(); } });
   void companion.loadURL('movebreak://app/index.html');
 };
@@ -102,7 +104,10 @@ const createTray = () => {
   const icon = nativeImage.createFromPath(join(__dirname, '../../electron/assets/movebreakTemplate.png'));
   if (icon.isEmpty()) throw new Error('MoveBreak tray icon could not load');
   icon.setTemplateImage(true);
-  tray = new Tray(icon); tray.setToolTip('MoveBreak'); refreshTray();
+  tray = new Tray(icon);
+  tray.setToolTip('MoveBreak');
+  if (process.platform === 'darwin') tray.setTitle('MoveBreak');
+  refreshTray();
 };
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
@@ -110,6 +115,7 @@ else {
   void app.whenReady().then(() => {
     try { settings = validateSettings(JSON.parse(readFileSync(settingsPath(), 'utf8'))); } catch { settings = { ...defaultSettings }; }
     registerAssets(); createCompanion(); createTray(); registerIpc();
+    if (process.platform === 'darwin') app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Open MoveBreak', click: showCompanion }]));
     Menu.setApplicationMenu(Menu.buildFromTemplate([{ label: 'MoveBreak', submenu: [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { role: 'quit' }] }, { role: 'editMenu' }]));
   });
   app.on('before-quit', () => { quitting = true; });

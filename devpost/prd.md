@@ -19,7 +19,7 @@ Each pose has an animated cue, tolerant match, configurable accumulated valid ho
 
 ## Configuration
 
-Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. Collapsed Developer: five-second demo reminder and debug camera. Timing changes take effect next cycle. Camera requires explicit activation each app session.
+Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. Collapsed Developer: five-second demo reminder and debug camera. Timing changes take effect next cycle. Camera permission is requested on first use; granted permission enables automatic monitoring on later launches. Pause/resume stays in the menu bar.
 
 ## Privacy and acceptance
 

@@ -13,11 +13,11 @@ Build a local macOS app with `pnpm desktop:package`. Open `release/MoveBreak-dar
 
 ## Three surfaces
 
-- **Companion:** small, draggable, frameless, lightweight window. Avatar, instruction, and progress only. Explicitly enable the camera to begin.
-- **Menu bar:** monitoring status, next reminder, show companion, Settings, pause/resume, and Quit. Hiding the companion keeps monitoring active; pausing releases the camera.
-- **Settings:** independent native window. Reminder duration, 1–4 movements, hold time, sound, always-on-top, visibility, and launch at login. Local preferences survive restarts; video and pose data are not saved. Developer options are collapsed by default.
+- **Companion:** small, draggable, frameless, lightweight window. Avatar, instruction, and progress only. Camera authorization appears once; later launches start monitoring automatically when macOS permission is already granted.
+- **Menu bar:** labeled MoveBreak entry, monitoring status, next reminder, show companion, Settings, pause/resume, and Quit. Hiding the companion keeps monitoring active; pausing releases the camera.
+- **Settings:** independent native window. Open from the menu bar, app menu (⌘,), Dock context menu, or companion context menu. Reminder duration, 1–4 movements, hold time, sound, always-on-top, visibility, and launch at login. Local preferences survive restarts; video and pose data are not saved. Developer options are collapsed by default.
 
-Defaults: 25-minute reminder, four movements, three-second holds. Timing changes apply at the next cycle. Developer demo mode uses a five-second reminder; debug camera is optional. Launch at login is available in the packaged app; it opens MoveBreak, but camera monitoring still requires explicit activation.
+Defaults: 25-minute reminder, four movements, three-second holds. Timing changes apply at the next cycle. Developer demo mode uses a five-second reminder; debug camera is optional. Launch at login is available in the packaged app; it opens MoveBreak, but monitoring starts automatically if camera permission was previously granted.
 
 ## Demo loop
 

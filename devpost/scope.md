@@ -17,4 +17,4 @@ Electron companion and Tray, independent Settings, existing colorful translucent
 
 ## Excluded
 
-Cloud inference, backend, accounts, analytics, saved camera/pose data, exercise scoring, medical claims, precise seated classification, full-body motion capture, mirrored rigs, large exercise libraries. No monitoring before camera activation. No camera-free completion.
+Cloud inference, backend, accounts, analytics, saved camera/pose data, exercise scoring, medical claims, precise seated classification, full-body motion capture, mirrored rigs, large exercise libraries. No monitoring before camera permission is granted. No camera-free completion.

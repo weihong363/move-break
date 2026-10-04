@@ -32,6 +32,8 @@ export const createAppController = (root: HTMLElement) => {
   const desktop = window.moveBreak;
   let settings: DesktopSettings = { ...defaultSettings, demoMode: !desktop };
   let paused = false;
+  let hasCameraPermission = false;
+  let checkingCameraPermission = Boolean(desktop);
   let cameraAttempt = 0;
   let lastReported = '';
   const inactivityMs = () => settings.demoMode ? 5000 : settings.inactivityMinutes * 60_000;
@@ -98,6 +100,7 @@ export const createAppController = (root: HTMLElement) => {
       void sound.prime();
       if (desktop && !await withCameraTimeout(desktop.requestCameraAccess())) throw new DOMException('Camera permission required', 'NotAllowedError');
       if (attempt !== cameraAttempt) return;
+      hasCameraPermission = true;
       const captured = await requestCamera(video);
       if (attempt !== cameraAttempt) { stopCamera(captured); return; }
       stream = captured;
@@ -296,10 +299,10 @@ export const createAppController = (root: HTMLElement) => {
         <p class="eyebrow">MOVE BREAK</p>
         ${characterMarkup()}
         <p class="state-label">${desktop ? 'MOVEBREAK' : isError ? 'Camera access needed' : 'A gentle nudge when you stay still'}</p>
-        <h1>${paused ? 'Paused' : isError ? 'Camera needed' : desktop ? 'Hello' : 'Move a little, when you need it'}</h1>
-        <p class="description">${paused ? 'Resume from the menu bar.' : isError ? cameraErrorMessage : desktop ? 'Enable your camera to begin. Video stays on your device.' : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>
+        <h1>${checkingCameraPermission ? 'Getting ready' : paused ? 'Paused' : isError ? 'Camera needed' : desktop ? 'Hello' : 'Move a little, when you need it'}</h1>
+        <p class="description">${checkingCameraPermission ? '' : paused ? 'Resume from the menu bar.' : isError ? cameraErrorMessage : desktop ? 'Enable your camera to begin. Video stays on your device.' : 'MoveBreak keeps time while you stay seated, then asks you to stand up and move.'}</p>
         ${!isError && !desktop ? `<label class="duration-control">Inactivity reminder after<select data-action="duration">${demoConfig.inactivityDurationOptions.map((seconds) => `<option value="${seconds}" ${state.inactivityDurationMs === seconds * 1_000 ? 'selected' : ''}>${inactivityLabel(seconds)}</option>`).join('')}</select></label>` : ''}
-        <button class="primary-button" type="button" data-action="enable-camera">${paused ? 'Resume' : isError ? 'Try camera again' : 'Enable camera'}</button>
+        ${!desktop || (!checkingCameraPermission && !paused && !hasCameraPermission) ? `<button class="primary-button" type="button" data-action="enable-camera">${paused ? 'Resume' : isError ? 'Try camera again' : 'Enable camera'}</button>` : ''}
         <p class="privacy-note">Camera processing stays on your device. Nothing is recorded or uploaded.</p>
       </section>`;
     root.querySelector<HTMLButtonElement>('[data-action="enable-camera"]')?.addEventListener('click', enableCamera);
@@ -314,7 +317,13 @@ export const createAppController = (root: HTMLElement) => {
     if (state.phase === 'ready' || state.phase === 'camera-required') state.inactivityDurationMs = inactivityMs();
   };
   if (desktop) {
-    void desktop.getSettings().then(applySettings);
+    void desktop.getSettings().then(async (next) => {
+      applySettings(next);
+      hasCameraPermission = await desktop.hasCameraPermission();
+      checkingCameraPermission = false;
+      if (hasCameraPermission && !paused) await enableCamera();
+      else render();
+    }).catch(() => { checkingCameraPermission = false; render(); });
     desktop.onSettings(applySettings);
     desktop.onCommand((command) => {
       if (command === 'pause') {
