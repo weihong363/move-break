@@ -29,7 +29,7 @@ const scheduleNote = (context: AudioContext, note: Note) => {
   const start = context.currentTime + note.offset;
   oscillator.frequency.value = note.frequency;
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(note.volume, start + 0.01);
+  gain.gain.exponentialRampToValueAtTime(note.volume * 2, start + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
   oscillator.connect(gain).connect(context.destination);
   oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
