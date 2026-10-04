@@ -4,6 +4,7 @@ import { createMovementVerifier, type VerifierSnapshot } from './movement-verifi
 import { createPoseDetector } from './pose-detector';
 import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
 import type { AppState } from './types';
+import { createRoutineSoundTracker, createSoundPlayer } from './sound';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/movement-cue-atlas.png';
 
@@ -30,10 +31,10 @@ export const createAppController = (root: HTMLElement) => {
   let debugPreview = false;
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   const previewMode = import.meta.env.DEV && new URLSearchParams(location.search).has('preview');
-  let notificationAudio: AudioContext | undefined;
+  const sound = createSoundPlayer();
+  const routineSounds = createRoutineSoundTracker(demoConfig.routineHoldDurationMs);
   let routineAdvanceTimer: number | undefined;
   let routineCompleteTimer: number | undefined;
-  let lastRoutineSecond: number | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
   const detector = createPoseDetector();
   let verifier = createVerifier();
@@ -53,46 +54,11 @@ export const createAppController = (root: HTMLElement) => {
   const resetMonitoring = () => {
     verifier = createVerifier();
     routine.reset();
-    lastRoutineSecond = undefined;
+    routineSounds.reset();
     if (routineAdvanceTimer) window.clearTimeout(routineAdvanceTimer);
     if (routineCompleteTimer) window.clearTimeout(routineCompleteTimer);
     routineAdvanceTimer = undefined;
     routineCompleteTimer = undefined;
-  };
-
-  const primeNotificationAudio = async () => {
-    notificationAudio ??= new AudioContext();
-    if (notificationAudio.state === 'suspended') await notificationAudio.resume();
-  };
-
-  const playNotification = () => {
-    const context = notificationAudio;
-    if (!context || context.state !== 'running') return;
-    [0, 0.12].forEach((offset, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.frequency.value = index === 0 ? 523 : 659;
-      gain.gain.setValueAtTime(0.0001, context.currentTime + offset);
-      gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + offset + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + offset + 0.18);
-      oscillator.connect(gain).connect(context.destination);
-      oscillator.start(context.currentTime + offset);
-      oscillator.stop(context.currentTime + offset + 0.2);
-    });
-  };
-
-  const playRoutineTick = (finalSecond: boolean) => {
-    const context = notificationAudio;
-    if (!context || context.state !== 'running') return;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.frequency.value = finalSecond ? 880 : 660;
-    gain.gain.setValueAtTime(0.0001, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.11);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.12);
   };
 
   const enableCamera = async () => {
@@ -103,7 +69,7 @@ export const createAppController = (root: HTMLElement) => {
 
     try {
       resetMonitoring();
-      void primeNotificationAudio();
+      void sound.prime();
       stream = await requestCamera(video);
       state.phase = 'camera-active';
       render();
@@ -114,7 +80,7 @@ export const createAppController = (root: HTMLElement) => {
       await detector.start(activeVideo, (frame) => {
         const snapshot = verifier.processFrame(frame);
         const startsRoutine = snapshot.phase === 'routine' && lastVerifierPhase !== 'routine';
-        if (startsRoutine) { routine.reset(); lastRoutineSecond = undefined; }
+        if (startsRoutine) { routine.reset(); routineSounds.reset(); }
         if (snapshot.phase === 'routine' || (snapshot.phase === 'paused-tracking' && lastVerifierPhase === 'routine')) { updateRoutine(routine.processFrame(frame)); return; }
         updateVerification(snapshot);
       }, handleDetectorError);
@@ -164,6 +130,7 @@ export const createAppController = (root: HTMLElement) => {
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     const step = root.querySelector<HTMLElement>('[data-step]');
     if (!status || !progress) return;
+    routineSounds.update(snapshot).forEach(sound.play);
     lastVerifierPhase = 'routine';
     showMovementCue(snapshot.movement);
     setPreviewVisible(debugPreview);
@@ -179,12 +146,10 @@ export const createAppController = (root: HTMLElement) => {
     } else if (snapshot.phase === 'movement-complete') {
       status.textContent = 'Nice!';
       progress.textContent = 'Moving to the next stretch…';
-      if (!previewMode && !routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routine.advance(); routineAdvanceTimer = undefined; lastRoutineSecond = undefined; }, demoConfig.routineAdvanceDelayMs);
+      if (!previewMode && !routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routineAdvanceTimer = undefined; updateRoutine(routine.advance()); }, demoConfig.routineAdvanceDelayMs);
     } else if (snapshot.phase === 'demo') {
       progress.textContent = 'Follow the movement cue to begin.';
-    } else if (snapshot.phase === 'holding' && seconds !== lastRoutineSecond) {
-      lastRoutineSecond = seconds;
-      playRoutineTick(seconds <= 1);
+
     }
   };
 
@@ -192,7 +157,7 @@ export const createAppController = (root: HTMLElement) => {
     const status = root.querySelector<HTMLElement>('[data-status]');
     const progress = root.querySelector<HTMLElement>('[data-progress]');
     if (!status || !progress) return;
-    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') playNotification();
+    if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') sound.play('reminder');
     const previousPhase = lastVerifierPhase;
     if (snapshot.phase !== 'paused-tracking') lastVerifierPhase = snapshot.phase;
     setPreviewVisible(debugPreview);
@@ -304,7 +269,7 @@ export const createAppController = (root: HTMLElement) => {
       const index = Math.max(0, movements.indexOf(name as RoutineSnapshot['movement']));
       updateRoutine({ movement: name === 'completed' ? 'torso-rotation' : movements[index], movementIndex: name === 'completed' ? 3 : index, instruction: ['Reach up', 'Bend left', 'Bend right', 'Turn your upper body'][index], progress: 0.5, phase: name === 'completed' ? 'complete' : name === 'tracking-paused' ? 'paused-tracking' : name === 'step-success' ? 'movement-complete' : 'holding' });
     };
-    controls.querySelector('select')?.addEventListener('change', (event) => preview((event.target as HTMLSelectElement).value));
+    controls.querySelector('select')?.addEventListener('change', (event) => { void sound.prime(); preview((event.target as HTMLSelectElement).value); });
     preview('stand');
   }
 };

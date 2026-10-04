@@ -169,3 +169,7 @@ move-break/
 - **Clarified uncertainty:** reliable seated classification is not required. The agreed fallback is low-movement baseline → normalized torso rise → four coarse upper-body pose holds, which the first spike will verify against the available camera framing.
 - **Implementation check before UI integration:** confirm model asset loading, usable landmarks, and threshold behavior with live camera input. MoveNet is evaluated only if this check fails materially.
 - **Presentation checkpoint:** seated monitoring uses one static illustration. The stand prompt, four routine steps, success, and completion use movement cues only. Legacy standing/rig rendering has been removed. Development-only `?preview` controls allow each UI state to be checked without starting the camera.
+
+## Audio cues
+
+Web Audio generates short sine-tone cues locally after the Enable camera gesture unlocks audio. The rising reminder melody is reused when the whole routine completes. Each step (and the second rotation direction) has a start cue; valid hold seconds have short ticks, with a higher final-second tone; individual step completion has a distinct success cue. Events are deduplicated across pose frames. Tracking loss pauses ticks, and unavailable audio cannot block the movement flow. The supplied Bilibili reference could not be played in the preview browser, so these tones are an original implementation pending listening feedback.
