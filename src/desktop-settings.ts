@@ -12,6 +12,7 @@ export type DesktopSettings = {
 export type CompanionStatus = { monitoring: boolean; label: string; remainingSeconds?: number };
 export type DesktopCommand = 'pause' | 'resume' | 'demo-break' | 'settings-saved';
 export interface DesktopBridge {
+  controlWindow(action: 'hide' | 'minimize'): void;
   hasCameraPermission(): Promise<boolean>;
   requestCameraAccess(): Promise<boolean>;
   getSettings(): Promise<DesktopSettings>;

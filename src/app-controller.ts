@@ -213,6 +213,7 @@ export const createAppController = (root: HTMLElement) => {
     if (!status || !progress) return;
     if (snapshot.phase === 'awaiting-rise' && lastVerifierPhase !== 'awaiting-rise') sound.play('reminder');
     const previousPhase = lastVerifierPhase;
+    const remainingSeconds = Math.max(0, Math.ceil((1 - snapshot.inactivityProgress) * state.inactivityDurationMs / 1000));
     if (snapshot.phase === 'monitoring' && previousPhase === 'awaiting-return') {
       state.inactivityDurationMs = inactivityMs(); verifier.setInactivityDuration(state.inactivityDurationMs); sound.play('new-cycle');
     }
@@ -240,7 +241,7 @@ export const createAppController = (root: HTMLElement) => {
       showMonitoringArt();
       setPreviewVisible(debugPreview);
       status.textContent = 'Monitoring';
-      progress.textContent = desktop ? `${Math.ceil((1 - snapshot.inactivityProgress) * state.inactivityDurationMs / (settings.demoMode ? 1000 : 60_000))} ${settings.demoMode ? 'sec' : 'min'} until break` : `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
+      progress.textContent = desktop ? `${Math.floor(remainingSeconds / 60)}:${String(remainingSeconds % 60).padStart(2, '0')} until break` : `${Math.round(snapshot.inactivityProgress * 100)}% until a movement reminder`;
     } else if (snapshot.phase === 'awaiting-rise') {
       showStandPrompt();
       status.textContent = desktop ? 'Time to move' : 'Stand up';
@@ -268,10 +269,18 @@ export const createAppController = (root: HTMLElement) => {
     render();
   };
 
+  const windowControls = () => desktop ? `<div class="companion-titlebar" aria-label="Window controls">
+    <button class="window-control window-hide" type="button" aria-label="Hide companion" data-window="hide"></button>
+    <button class="window-control window-minimize" type="button" aria-label="Minimize companion" data-window="minimize"></button>
+  </div>` : '';
+  const bindWindowControls = () => {
+    root.querySelector('[data-window="hide"]')?.addEventListener('click', () => desktop?.controlWindow('hide'));
+    root.querySelector('[data-window="minimize"]')?.addEventListener('click', () => desktop?.controlWindow('minimize'));
+  };
   const render = () => {
     if (state.phase === 'camera-active' || state.phase === 'camera-loading') {
       const isLoading = state.phase === 'camera-loading';
-      root.innerHTML = `
+      root.innerHTML = `${windowControls()}
         <section class="proof-card" aria-live="polite">
           <p class="eyebrow">MOVE BREAK</p>
           ${characterMarkup()}
@@ -286,6 +295,7 @@ export const createAppController = (root: HTMLElement) => {
           ${isLoading ? '' : '<button class="text-button debug-toggle" type="button" data-action="toggle-debug">Show camera debug</button>'}
           <p class="privacy-note">Camera processing stays on your device.</p>
         </section>`;
+      bindWindowControls();
       root.querySelector<HTMLButtonElement>('[data-action="toggle-debug"]')?.addEventListener('click', () => {
         debugPreview = !debugPreview;
         setPreviewVisible(debugPreview);
@@ -294,7 +304,7 @@ export const createAppController = (root: HTMLElement) => {
     }
 
     const isError = state.phase === 'camera-required';
-    root.innerHTML = `
+    root.innerHTML = `${windowControls()}
       <section class="home-card" aria-live="polite">
         <p class="eyebrow">MOVE BREAK</p>
         ${characterMarkup()}
@@ -305,6 +315,7 @@ export const createAppController = (root: HTMLElement) => {
         ${!desktop || (!checkingCameraPermission && !paused && !hasCameraPermission) ? `<button class="primary-button" type="button" data-action="enable-camera">${paused ? 'Resume' : isError ? 'Try camera again' : 'Enable camera'}</button>` : ''}
         <p class="privacy-note">Camera processing stays on your device. Nothing is recorded or uploaded.</p>
       </section>`;
+    bindWindowControls();
     root.querySelector<HTMLButtonElement>('[data-action="enable-camera"]')?.addEventListener('click', enableCamera);
     root.querySelector<HTMLSelectElement>('[data-action="duration"]')?.addEventListener('change', (event) => {
       setInactivityDuration(Number((event.target as HTMLSelectElement).value));

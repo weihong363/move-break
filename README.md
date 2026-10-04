@@ -13,7 +13,7 @@ Build a local macOS app with `pnpm desktop:package`. Open `release/MoveBreak-dar
 
 ## Three surfaces
 
-- **Companion:** small, draggable, lightweight window with native macOS close/minimize controls. The red control hides the companion; the yellow control minimizes it. Avatar, instruction, and progress only. Camera authorization appears once; later launches start monitoring automatically when macOS permission is already granted.
+- **Companion:** small, draggable, lightweight window with two macOS-style hide/minimize controls. The red control hides the companion; the yellow control minimizes it. Avatar, instruction, and progress only. Drag the top bar or avatar to move it; remaining reminder time shows minutes and seconds. Camera authorization appears once; later launches start monitoring automatically when macOS permission is already granted.
 - **Menu bar:** labeled MoveBreak entry, monitoring status, next reminder, show companion, Settings, pause/resume, and Quit. Hiding the companion keeps monitoring active; pausing releases the camera.
 - **Settings:** independent native window. Open from the menu bar, app menu (⌘,), Dock context menu, or companion context menu. Reminder duration, 1–4 movements, hold time, sound, always-on-top, visibility, and launch at login. Local preferences survive restarts; video and pose data are not saved. Developer options are collapsed by default.
 

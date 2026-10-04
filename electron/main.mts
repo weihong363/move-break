@@ -65,6 +65,11 @@ const applySettings = (next: DesktopSettings) => {
   return settings;
 };
 const registerIpc = () => {
+  ipcMain.on('companion:window', (event, action: unknown) => {
+    if (event.sender !== companion.webContents) return;
+    if (action === 'hide') companion.close();
+    else if (action === 'minimize') companion.minimize();
+  });
   ipcMain.handle('settings:get', (event) => { if (trusted(event)) return settings; throw new Error('Untrusted window'); });
   ipcMain.handle('camera:granted', (event) => event.sender === companion.webContents && process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('camera') === 'granted');
   ipcMain.handle('camera:request', async (event) => {
@@ -95,7 +100,7 @@ const registerAssets = () => {
 };
 const createCompanion = () => {
   const area = screen.getPrimaryDisplay().workArea;
-  companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: process.platform === 'darwin', titleBarStyle: 'hidden', trafficLightPosition: { x: 16, y: 16 }, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
+  companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: false, movable: true, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
   secureWindow(companion);
   companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }]).popup({ window: companion }));
   companion.on('close', (event) => { if (!quitting) { event.preventDefault(); companion.hide(); settings.showCompanion = false; broadcast(); } });

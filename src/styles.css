@@ -160,8 +160,8 @@ html:has(body.desktop-surface), body.desktop-surface { background: transparent; 
 body.desktop-surface { min-width: 0; }
 .desktop-surface #app { display: block; padding: 0; }
 .desktop-surface .home-card, .desktop-surface .proof-card { width: 100%; min-height: 100vh; padding: 44px 16px 16px; border: 0; background: rgb(255 253 247 / 93%); isolation: isolate; box-shadow: none; border-radius: 26px; }
-.desktop-surface .companion, .desktop-surface .eyebrow, .desktop-surface .readiness { -webkit-app-region: drag; }
-.desktop-surface button, .desktop-surface video { -webkit-app-region: no-drag; }
+.desktop-surface .home-card, .desktop-surface .proof-card, .companion-titlebar { -webkit-app-region: drag; user-select: none; }
+.desktop-surface button, .desktop-surface video, .desktop-surface .progress, .desktop-surface .description, .desktop-surface .tracking-guidance { -webkit-app-region: no-drag; }
 .desktop-surface .companion { width: 210px; height: 210px; }
 .desktop-surface .eyebrow, .desktop-surface .privacy-note, .desktop-surface .duration-control, .desktop-surface .debug-toggle { display: none; }
 .desktop-surface .state-label { display: none; }
@@ -189,3 +189,12 @@ body.desktop-surface { min-width: 0; }
 .settings-footer { position: sticky; bottom: 0; padding: 10px 0; background: #f8f3e8; }
 .settings-footer .settings-result { margin: 0 0 8px; }
 .settings-footer button:disabled { opacity: 0.6; cursor: wait; }
+
+.companion-titlebar { position: fixed; top: 0; left: 0; right: 0; height: 44px; display: flex; gap: 9px; align-items: center; padding: 0 16px; z-index: 10; }
+.window-control { position: relative; width: 14px; height: 14px; padding: 0; border: 1px solid rgb(0 0 0 / 12%); border-radius: 50%; -webkit-app-region: no-drag; }
+.window-hide { background: #ff5f57; }
+.window-minimize { background: #febc2e; }
+.window-control::after { opacity: 0; color: #613b24; position: absolute; inset: -1px; line-height: 14px; font-size: 13px; font-weight: 600; }
+.window-hide::after { content: '×'; }
+.window-minimize::after { content: '−'; }
+.companion-titlebar:hover .window-control::after { opacity: 1; }
