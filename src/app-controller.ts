@@ -32,7 +32,7 @@ export const createAppController = (root: HTMLElement) => {
   let lastVerifierPhase: VerifierSnapshot['phase'] | undefined;
   const previewMode = import.meta.env.DEV && new URLSearchParams(location.search).has('preview');
   const sound = createSoundPlayer();
-  const routineSounds = createRoutineSoundTracker(demoConfig.routineHoldDurationMs);
+  const routineSounds = createRoutineSoundTracker(demoConfig.routineHoldDurationMs, demoConfig.routinePulseIntervalMs);
   let routineAdvanceTimer: number | undefined;
   let routineCompleteTimer: number | undefined;
   let cameraErrorMessage = 'MoveBreak needs camera access to start local movement monitoring.';
@@ -138,7 +138,9 @@ export const createAppController = (root: HTMLElement) => {
     if (step) step.textContent = `Step ${snapshot.movementIndex + 1} of 4 · ${routineLabel(snapshot.movement)}`;
     status.textContent = snapshot.instruction;
     const seconds = Math.max(0, Math.ceil((1 - snapshot.progress) * demoConfig.routineHoldDurationMs / 1_000));
-    progress.textContent = `Hold it · ${seconds} seconds remaining`;
+    progress.textContent = snapshot.poseMatched
+      ? `Matched — hold it · ${seconds} seconds remaining`
+      : `Match the movement to continue · ${seconds} seconds remaining`;
     if (snapshot.phase === 'complete') {
       status.textContent = 'Movement break completed';
       progress.textContent = 'Nice. Sit back down when you are ready.';
@@ -149,7 +151,6 @@ export const createAppController = (root: HTMLElement) => {
       if (!previewMode && !routineAdvanceTimer) routineAdvanceTimer = window.setTimeout(() => { routineAdvanceTimer = undefined; updateRoutine(routine.advance()); }, demoConfig.routineAdvanceDelayMs);
     } else if (snapshot.phase === 'demo') {
       progress.textContent = 'Follow the movement cue to begin.';
-
     }
   };
 
@@ -267,7 +268,7 @@ export const createAppController = (root: HTMLElement) => {
       }
       const movements: RoutineSnapshot['movement'][] = ['overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation'];
       const index = Math.max(0, movements.indexOf(name as RoutineSnapshot['movement']));
-      updateRoutine({ movement: name === 'completed' ? 'torso-rotation' : movements[index], movementIndex: name === 'completed' ? 3 : index, instruction: ['Reach up', 'Bend left', 'Bend right', 'Turn your upper body'][index], progress: 0.5, phase: name === 'completed' ? 'complete' : name === 'tracking-paused' ? 'paused-tracking' : name === 'step-success' ? 'movement-complete' : 'holding' });
+      updateRoutine({ movement: name === 'completed' ? 'torso-rotation' : movements[index], movementIndex: name === 'completed' ? 3 : index, instruction: ['Reach up', 'Bend left', 'Bend right', 'Turn your upper body'][index], progress: 0.5, poseMatched: !['completed', 'tracking-paused', 'step-success'].includes(name), phase: name === 'completed' ? 'complete' : name === 'tracking-paused' ? 'paused-tracking' : name === 'step-success' ? 'movement-complete' : 'holding' });
     };
     controls.querySelector('select')?.addEventListener('change', (event) => { void sound.prime(); preview((event.target as HTMLSelectElement).value); });
     preview('stand');

@@ -23,6 +23,15 @@ describe('routine verifier', () => {
     expect(held(routine, reach).phase).toBe('movement-complete');
   });
 
+  it('reports current matching separately from retained hold progress', () => {
+    const routine = createRoutineVerifier(config);
+    expect(routine.processFrame(reach(0))).toMatchObject({ phase: 'holding', poseMatched: true });
+    const matched = routine.processFrame(reach(100));
+    const lost = routine.processFrame(frameAt(200));
+    expect(lost).toMatchObject({ phase: 'holding', poseMatched: false, progress: matched.progress });
+    expect(routine.processFrame(reach(250)).poseMatched).toBe(true);
+  });
+
   it('accepts left and right bends with normalized torso shift', () => {
     const routine = createRoutineVerifier(config);
     held(routine, reach); routine.advance();

@@ -3,7 +3,7 @@ import { createRoutineSoundTracker, createSoundPlayer } from './sound';
 import type { RoutineSnapshot } from './routine-verifier';
 
 const frame = (overrides: Partial<RoutineSnapshot> = {}): RoutineSnapshot => ({
-  movement: 'overhead-reach', movementIndex: 0, instruction: 'Reach up', phase: 'demo', progress: 0, ...overrides,
+  poseMatched: overrides.phase === 'holding', movement: 'overhead-reach', movementIndex: 0, instruction: 'Reach up', phase: 'demo', progress: 0, ...overrides,
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -27,11 +27,26 @@ it('schedules notes only after audio is unlocked and tolerates unavailable audio
 });
 
 describe('routine sound transitions', () => {
+  it('confirms a match, keeps a beat only while matched, and stops on pause or completion', () => {
+    const sounds = createRoutineSoundTracker(3000, 750);
+    expect(sounds.update(frame(), 0)).toEqual(['start']);
+    expect(sounds.update(frame(), 700)).toEqual([]);
+    expect(sounds.update(frame(), 750)).toEqual([]);
+    const hold = frame({ phase: 'holding', progress: 0.1 });
+    expect(sounds.update(hold, 1000)).toEqual(['matched']);
+    expect(sounds.update(hold, 1750)).toEqual(['pulse']);
+    expect(sounds.update({ ...hold, phase: 'paused-tracking', poseMatched: false }, 2500)).toEqual([]);
+    expect(sounds.update(hold, 2600)).toEqual(['matched']);
+    expect(sounds.update(hold, 3350)).toEqual(['pulse']);
+    expect(sounds.update(frame({ phase: 'movement-complete' }), 3300)).toEqual(['step-complete']);
+    expect(sounds.update(frame({ phase: 'movement-complete' }), 5000)).toEqual([]);
+  });
+
   it('plays start once, then ticks only when valid hold time crosses a second', () => {
     const sounds = createRoutineSoundTracker(3000);
     expect(sounds.update(frame())).toEqual(['start']);
     expect(sounds.update(frame())).toEqual([]);
-    expect(sounds.update(frame({ phase: 'holding', progress: 0.1 }))).toEqual(['tick']);
+    expect(sounds.update(frame({ phase: 'holding', progress: 0.1 }))).toEqual(['matched']);
     expect(sounds.update(frame({ phase: 'holding', progress: 0.2 }))).toEqual([]);
     expect(sounds.update(frame({ phase: 'holding', progress: 0.4 }))).toEqual(['tick']);
     expect(sounds.update(frame({ phase: 'paused-tracking', progress: 0.4 }))).toEqual([]);

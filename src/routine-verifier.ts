@@ -18,6 +18,7 @@ export type RoutineSnapshot = {
   movementIndex: number;
   instruction: string;
   progress: number;
+  poseMatched: boolean;
   rotationStep?: 'first-side' | 'other-side';
 };
 
@@ -77,7 +78,7 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
 
   const reset = () => { samples = []; index = 0; holdMs = 0; lastTimestamp = undefined; baselineWidth = undefined; baselineBend = undefined; rotationDirection = undefined; rotationStep = 'first-side'; phase = 'demo'; };
   const current = () => movements[Math.min(index, movements.length - 1)];
-  const snapshot = (nextPhase: RoutinePhase): RoutineSnapshot => ({ phase: nextPhase, movement: current(), movementIndex: Math.min(index, movements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
+  const snapshot = (nextPhase: RoutinePhase, poseMatched = false): RoutineSnapshot => ({ phase: nextPhase, poseMatched, movement: current(), movementIndex: Math.min(index, movements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
 
   const matches = (metrics: Metrics) => {
     const movement = current();
@@ -109,7 +110,7 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
     if (!matches(metrics)) return snapshot(phase === 'demo' ? 'demo' : 'holding');
     holdMs += elapsed;
     phase = 'holding';
-    if (holdMs < config.holdDurationMs) return snapshot(phase);
+    if (holdMs < config.holdDurationMs) return snapshot(phase, true);
     if (current() === 'torso-rotation' && rotationStep === 'first-side') { holdMs = 0; rotationStep = 'other-side'; return snapshot('demo'); }
     phase = 'movement-complete';
     return snapshot(phase);
