@@ -3,6 +3,7 @@ const paths = await packager({
   dir: '.', name: 'MoveBreak', out: 'release', overwrite: true,
   platform: 'darwin', arch: process.arch, appBundleId: 'com.movebreak.companion',
   appCategoryType: 'public.app-category.utilities',
+  icon: 'electron/assets/movebreak.icns',
   extendInfo: 'electron/Info.plist', prune: false,
   ignore: [/^\/node_modules($|\/)/, /^\/src($|\/)/, /^\/devpost($|\/)/, /^\/\.git($|\/)/, /^\/release($|\/)/],
 });

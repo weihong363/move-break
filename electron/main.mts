@@ -126,9 +126,8 @@ const createTray = () => {
     // visible position once; macOS retains subsequent user repositioning.
     systemPreferences.registerDefaults({ [`NSStatusItem Preferred Position ${trayId}`]: 220 });
   }
-  const icon = nativeImage.createFromPath(join(__dirname, '../../electron/assets/movebreakTemplate.png'));
+  const icon = nativeImage.createFromPath(join(__dirname, '../../electron/assets/movebreakTray.png'));
   if (icon.isEmpty()) throw new Error('MoveBreak tray icon could not load');
-  icon.setTemplateImage(true);
   tray = new Tray(icon, trayId);
   tray.setToolTip('MoveBreak');
   if (process.platform === 'darwin') tray.setTitle('MB');
@@ -138,6 +137,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (companion) showCompanion(); });
   void app.whenReady().then(() => {
+    if (process.platform === 'darwin') app.dock?.setIcon(join(__dirname, '../../electron/assets/movebreak-icon.png'));
     try { settings = validateSettings(JSON.parse(readFileSync(settingsPath(), 'utf8'))); } catch { settings = { ...defaultSettings }; }
     registerAssets(); createCompanion(); createTray(); registerIpc();
     if (process.platform === 'darwin') app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Open MoveBreak', click: showCompanion }]));
