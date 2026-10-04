@@ -326,7 +326,18 @@ export const createAppController = (root: HTMLElement) => {
     }).catch(() => { checkingCameraPermission = false; render(); });
     desktop.onSettings(applySettings);
     desktop.onCommand((command) => {
-      if (command === 'pause') {
+      if (command === 'settings-saved') {
+        state.inactivityDurationMs = inactivityMs();
+        verifier.setInactivityDuration(state.inactivityDurationMs);
+        if (state.phase !== 'camera-active') return;
+        if (routineAdvanceTimer) window.clearTimeout(routineAdvanceTimer);
+        routineAdvanceTimer = undefined;
+        if (lastVerifierPhase === 'routine') {
+          routine = makeRoutine();
+          routineSounds = createRoutineSoundTracker(settings.holdSeconds * 1000, demoConfig.routinePulseIntervalMs);
+          updateRoutine(routine.advance());
+        } else updateVerification(verifier.getSnapshot());
+      } else if (command === 'pause') {
         paused = true; cameraAttempt++; detector.stop(); stopCamera(stream); stream = undefined;
         if (routineAdvanceTimer) window.clearTimeout(routineAdvanceTimer);
         routineAdvanceTimer = undefined;

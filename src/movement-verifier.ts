@@ -162,5 +162,5 @@ export const createMovementVerifier = (config: MovementConfig) => {
 
   const setInactivityDuration = (durationMs: number) => { config.inactivityDurationMs = durationMs; inactivityElapsedMs = 0; };
   const requestBreak = () => { if (phase === 'monitoring') { phase = 'awaiting-rise'; riseFrames = 0; } };
-  return { processFrame, completeRoutine, setInactivityDuration, requestBreak };
+  return { processFrame, completeRoutine, setInactivityDuration, requestBreak, getSnapshot: () => snapshot(phase) };
 };

@@ -19,8 +19,8 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     <fieldset><legend>Window</legend>${checkbox('alwaysOnTop', 'Always on top', values)}${checkbox('showCompanion', 'Show companion', values)}</fieldset>
     <fieldset><legend>Startup</legend>${checkbox('launchAtLogin', 'Launch at login', values)}${startupAvailable ? '' : '<small>Available in the installed app.</small>'}</fieldset>
     <fieldset><legend>Privacy</legend><p>Camera processing stays on your device. Video is never recorded or uploaded.</p></fieldset>
-    <details><summary>Developer</summary>${checkbox('demoMode', 'Demo mode · 5-second reminder', values)}${checkbox('debugCamera', 'Show camera debug view', values)}<small>Timing changes apply to the next monitoring session.</small></details>
-    <p class="settings-result" role="status"></p>
+    <details><summary>Developer</summary>${checkbox('demoMode', 'Demo mode · 5-second reminder', values)}${checkbox('debugCamera', 'Show camera debug view', values)}<small>Save applies changes immediately.</small></details>
+    <div class="settings-footer"><p class="settings-result" role="status"></p><button class="primary-button" type="submit">Save settings</button></div>
   </form>`;
   root.querySelector<HTMLInputElement>('[name="launchAtLogin"]')!.disabled = !startupAvailable;
   const form = root.querySelector<HTMLFormElement>('form')!;
@@ -32,15 +32,21 @@ export const createSettingsWindow = async (root: HTMLElement) => {
       if (typeof value === 'boolean') input.checked = value; else input.value = String(value);
     }
   };
-  form.addEventListener('submit', (event) => event.preventDefault());
-  form.addEventListener('change', async () => {
+  let dirty = false;
+  const save = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  form.addEventListener('input', () => { dirty = true; message.textContent = 'Unsaved changes'; });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (save.disabled) return;
     if (!form.reportValidity()) return;
     const next = Object.fromEntries(Object.keys(values).map((key) => {
       const input = form.elements.namedItem(key) as HTMLInputElement;
       return [key, input.type === 'checkbox' ? input.checked : Number(input.value)];
     }));
-    try { sync(bridge ? await bridge.saveSettings(validateSettings(next)) : validateSettings(next)); message.textContent = 'Saved'; }
+    save.disabled = true;
+    try { sync(bridge ? await bridge.saveSettings(validateSettings(next)) : validateSettings(next)); dirty = false; message.textContent = 'Saved'; }
     catch { message.textContent = 'Could not save settings. Try again.'; }
+    finally { save.disabled = false; }
   });
-  bridge?.onSettings(sync);
+  bridge?.onSettings((next) => { if (!dirty) sync(next); });
 };

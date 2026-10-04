@@ -185,3 +185,7 @@ body.desktop-surface { min-width: 0; }
 .settings-form details { padding: 6px 12px; }
 .settings-form summary { font-size: 13px; cursor: pointer; }
 .settings-result { min-height: 18px; color: #5f8672; }
+
+.settings-footer { position: sticky; bottom: 0; padding: 10px 0; background: #f8f3e8; }
+.settings-footer .settings-result { margin: 0 0 8px; }
+.settings-footer button:disabled { opacity: 0.6; cursor: wait; }

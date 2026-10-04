@@ -60,7 +60,7 @@ const applySettings = (next: DesktopSettings) => {
   writeFileSync(settingsPath(), JSON.stringify(settings, null, 2));
   companion.setAlwaysOnTop(settings.alwaysOnTop);
   if (settings.showCompanion) companion.show(); else companion.hide();
-  broadcast(); refreshTray();
+  broadcast(); command('settings-saved'); refreshTray();
   return settings;
 };
 const registerIpc = () => {

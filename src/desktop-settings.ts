@@ -10,7 +10,7 @@ export type DesktopSettings = {
   debugCamera: boolean;
 };
 export type CompanionStatus = { monitoring: boolean; label: string; remainingSeconds?: number };
-export type DesktopCommand = 'pause' | 'resume' | 'demo-break';
+export type DesktopCommand = 'pause' | 'resume' | 'demo-break' | 'settings-saved';
 export interface DesktopBridge {
   hasCameraPermission(): Promise<boolean>;
   requestCameraAccess(): Promise<boolean>;
