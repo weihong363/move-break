@@ -149,3 +149,13 @@ Activity mode: focused alternative for an experienced plan-first developer
 - [x] Unit tests, renderer/native TypeScript builds and local `.app` packaging.
 - [x] Native smoke check: explicit camera activation, local pose loading, Monitoring state, separate titled Settings, visibility save and packaged startup option.
 - [ ] Experience checkpoint: four-step native routine, hidden monitoring, Tray controls, and login launch after installing app at its final location.
+
+## Detection and lifecycle follow-up
+
+- [x] Pause reminder accumulation on a confirmed early rise; wait for seated return and restart from zero. Use a stable shoulder reference across hip occlusion changes.
+- [x] Verify anatomical bends and both turn directions; add a depth-free turn rule using width contraction and signed head offset, rejecting width-only/head-only changes.
+- [x] Exclude long inference gaps from routine holds and clear stale smoothing history while retaining earned progress.
+- [x] Replace animation-frame inference with timer scheduling; regression test continued inference and stop cancellation.
+- [x] Native smoke check: hidden inference 62 → 90 frames over five seconds; automatic startup AudioContext running; login registration enabled successfully and restored to previous off setting.
+- [x] Read actual macOS login registration when loading Settings. 36 tests across six files and renderer/native builds passed.
+- [ ] Final human experience check: two complete camera routines, audibility, Tray menu interactions and actual login-session startup. This requires physical movement/login and is not replaced by synthetic landmark tests.

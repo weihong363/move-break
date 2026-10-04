@@ -119,3 +119,34 @@ describe('routine verifier', () => {
     expect(routine.processFrame(reach(300)).progress).toBeGreaterThan(0);
   });
 });
+
+describe('routine recovery', () => {
+  it('retains progress without crediting long gaps or missing tracking', () => {
+    const routine = createRoutineVerifier(config);
+    routine.processFrame(reach(0));
+    const progress = routine.processFrame(reach(100)).progress;
+    expect(routine.processFrame(reach(10000)).progress).toBe(progress);
+    const missing = reach(10100); missing.landmarks[15].visibility = 0;
+    routine.processFrame(missing);
+    expect(routine.processFrame(reach(20000)).progress).toBe(progress);
+    expect(routine.processFrame(reach(20100)).progress).toBeGreaterThan(progress);
+  });
+  it('accepts opposite turns without depth and rejects width-only/head-only changes', () => {
+    const routine = createRoutineVerifier(config);
+    const withHead = (frame: PoseFrame) => { frame.landmarks[0] = { x: 0.5, y: 0.2, visibility: 1 }; return frame; };
+    held(routine, t => withHead(reach(t))); routine.advance();
+    held(routine, t => withHead(leftBend(t)),400); routine.advance();
+    held(routine, t => withHead(rightBend(t)),800); routine.advance();
+    const turn = (t: number, direction: number, narrow = true) => {
+      const frame = withHead(frameAt(t));
+      if (narrow) { frame.landmarks[11].x = 0.43; frame.landmarks[12].x = 0.57; }
+      frame.landmarks[0].x += direction * 0.06;
+      return frame;
+    };
+    expect(held(routine,t => turn(t,0),1200).progress).toBe(0);
+    expect(held(routine,t => turn(t,1,false),1600).progress).toBe(0);
+    expect(held(routine,t => turn(t,-1),2000).rotationStep).toBe('other-side');
+    expect(held(routine,t => turn(t,-1),2400)).toMatchObject({ progress: 0, poseMatched: false });
+    expect(held(routine,t => turn(t,1),2800).phase).toBe('movement-complete');
+  });
+});

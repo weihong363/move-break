@@ -82,3 +82,33 @@ describe('movement verifier', () => {
     expect(verifier.processFrame(frameAt(20_000))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0.02 });
   });
 });
+
+describe('early standing', () => {
+  it('stops counting before a reminder and waits for seated return', () => {
+    const verifier = createMovementVerifier({ ...config, smoothingWindow: 1, inactivityDurationMs: 5000 });
+    [0,100,200,300,400].forEach(t => verifier.processFrame(frameAt(t)));
+    [500,600,700].forEach(t => verifier.processFrame(frameAt(t, -0.2)));
+    expect(verifier.processFrame(frameAt(2000, -0.2))).toMatchObject({ phase: 'awaiting-return', inactivityProgress: 0 });
+    [2100,2200,2300,2400].forEach(t => verifier.processFrame(frameAt(t)));
+    expect(verifier.getSnapshot()).toMatchObject({ phase: 'monitoring', inactivityProgress: 0 });
+  });
+  it('does not mistake changing hip coverage for a rise', () => {
+    const verifier = createMovementVerifier({ ...config, smoothingWindow: 1, inactivityDurationMs: 5000 });
+    [0,100,200,300].forEach(t => verifier.processFrame(frameAt(t)));
+    for (const t of [400,500,600,700]) {
+      const frame = frameAt(t); frame.landmarks[23].visibility = 0; frame.landmarks[24].visibility = 0;
+      expect(verifier.processFrame(frame).phase).toBe('monitoring');
+    }
+  });
+});
+
+it('keeps seated time through arm movement and small torso jitter without false standing', () => {
+  const verifier = createMovementVerifier({ ...config, smoothingWindow: 1, inactivityDurationMs: 1000 });
+  [0,100,200,300].forEach(t => verifier.processFrame(frameAt(t)));
+  for (let t=400;t<1300;t+=100) {
+    const frame = frameAt(t, t % 200 === 0 ? -0.005 : 0.005);
+    frame.landmarks[15].y = t % 200 === 0 ? 0.2 : 0.65;
+    expect(verifier.processFrame(frame).phase).toBe('monitoring');
+  }
+  expect(verifier.processFrame(frameAt(1300)).phase).toBe('awaiting-rise');
+});

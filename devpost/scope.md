@@ -19,7 +19,7 @@ The routine is Overhead Reach → Side Bend Left → Side Bend Right → Torso R
 
 ## Demo assumptions and remaining proof
 
-Start seated with a stationary camera and usable shoulders; precise seated classification and leg visibility are not required. Final native validation must cover repeated cycles and hidden monitoring. Current monitoring does not yet exclude standing before the prompt; two-sided rotation depends on shoulder-depth quality. These are implementation gaps within the existing scope, not new product features. See `spec.md > Known implementation and validation gaps`.
+Start seated with a stationary camera and usable shoulders; precise seated classification and leg visibility are not required. Final native validation must cover repeated cycles and hidden monitoring. Standing before the prompt pauses seated monitoring until a stable seated return. Rotation uses shoulder depth or a width-plus-head-offset direction fallback. Real-camera reliability and login-session startup remain final experience checks. See `spec.md > Validation and demo assumptions`.
 
 ## Excluded
 

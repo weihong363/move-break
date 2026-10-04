@@ -11,6 +11,8 @@ export type RoutineConfig = {
   sideBendThreshold: number;
   rotationWidthThreshold: number;
   rotationDepthThreshold: number;
+  rotationLateralThreshold?: number;
+  maxFrameGapMs?: number;
 };
 
 export type RoutineSnapshot = {
@@ -24,7 +26,7 @@ export type RoutineSnapshot = {
 };
 
 type Point = { x: number; y: number; z?: number };
-type Metrics = { leftShoulder: Point; rightShoulder: Point; leftWrist?: Point; rightWrist?: Point; shoulderCenter: Point; hipCenter?: Point; shoulderWidth: number; depthDelta?: number };
+type Metrics = { leftShoulder: Point; rightShoulder: Point; leftWrist?: Point; rightWrist?: Point; shoulderCenter: Point; hipCenter?: Point; shoulderWidth: number; depthDelta?: number; headOffset?: number };
 
 const movements: RoutineMovement[] = ['overhead-reach', 'side-bend-left', 'side-bend-right', 'torso-rotation'];
 const indexes = { leftShoulder: 11, rightShoulder: 12, leftWrist: 15, rightWrist: 16, leftHip: 23, rightHip: 24 };
@@ -50,7 +52,9 @@ const metricsFor = (frames: PoseFrame[], movement: RoutineMovement): Metrics | u
   if (movement === 'overhead-reach' && (!leftWrist || !rightWrist)) return undefined;
   const leftHip = visible(latest[indexes.leftHip]) ? smooth(frames, indexes.leftHip) : undefined;
   const rightHip = visible(latest[indexes.rightHip]) ? smooth(frames, indexes.rightHip) : undefined;
-  return { leftShoulder, rightShoulder, leftWrist, rightWrist, shoulderCenter: midpoint(leftShoulder, rightShoulder), hipCenter: leftHip && rightHip ? midpoint(leftHip, rightHip) : undefined, shoulderWidth, depthDelta: leftShoulder.z !== undefined && rightShoulder.z !== undefined ? leftShoulder.z - rightShoulder.z : undefined };
+  const shoulderCenter = midpoint(leftShoulder, rightShoulder);
+  const nose = visible(latest[0]) ? smooth(frames, 0) : undefined;
+  return { leftShoulder, rightShoulder, leftWrist, rightWrist, shoulderCenter, hipCenter: leftHip && rightHip ? midpoint(leftHip, rightHip) : undefined, shoulderWidth, depthDelta: leftShoulder.z !== undefined && rightShoulder.z !== undefined ? leftShoulder.z - rightShoulder.z : undefined, headOffset: nose ? (nose.x - shoulderCenter.x) / shoulderWidth : undefined };
 };
 
 // Anatomical left follows MediaPipe's left shoulder, independent of preview mirroring.
@@ -73,12 +77,13 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
   let holdMs = 0;
   let lastTimestamp: number | undefined;
   let baselineWidth: number | undefined;
+  let baselineHeadOffset: number | undefined;
   let baselineBend: ReturnType<typeof bendSignals> | undefined;
   let rotationDirection: -1 | 1 | undefined;
   let rotationStep: 'first-side' | 'other-side' = 'first-side';
   let phase: RoutinePhase = 'demo';
 
-  const reset = () => { samples = []; index = 0; holdMs = 0; lastTimestamp = undefined; baselineWidth = undefined; baselineBend = undefined; rotationDirection = undefined; rotationStep = 'first-side'; phase = 'demo'; };
+  const reset = () => { samples = []; index = 0; holdMs = 0; lastTimestamp = undefined; baselineWidth = undefined; baselineHeadOffset = undefined; baselineBend = undefined; rotationDirection = undefined; rotationStep = 'first-side'; phase = 'demo'; };
   const current = () => selectedMovements[Math.min(index, selectedMovements.length - 1)];
   const snapshot = (nextPhase: RoutinePhase, poseMatched = false): RoutineSnapshot => ({ phase: nextPhase, poseMatched, movement: current(), movementIndex: Math.min(index, selectedMovements.length - 1), instruction: instructionFor(current(), rotationStep), progress: Math.min(1, holdMs / config.holdDurationMs), rotationStep: current() === 'torso-rotation' ? rotationStep : undefined });
 
@@ -94,7 +99,9 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
     }
     const depthDirection = metrics.depthDelta === undefined || Math.abs(metrics.depthDelta) / metrics.shoulderWidth < config.rotationDepthThreshold ? undefined : (metrics.depthDelta < 0 ? -1 : 1);
     const widthChanged = baselineWidth !== undefined && metrics.shoulderWidth / baselineWidth <= config.rotationWidthThreshold;
-    const direction = depthDirection ?? (widthChanged ? 1 : undefined);
+    const headShift = metrics.headOffset !== undefined && baselineHeadOffset !== undefined ? metrics.headOffset - baselineHeadOffset : 0;
+    const lateralDirection = widthChanged && Math.abs(headShift) >= (config.rotationLateralThreshold ?? 0.12) ? (headShift < 0 ? -1 : 1) : undefined;
+    const direction = depthDirection ?? lateralDirection;
     if (!direction) return false;
     if (rotationDirection === undefined) rotationDirection = direction;
     return rotationStep === 'first-side' ? direction === rotationDirection : direction === -rotationDirection;
@@ -102,12 +109,15 @@ export const createRoutineVerifier = (config: RoutineConfig) => {
 
   const processFrame = (frame: PoseFrame): RoutineSnapshot => {
     if (phase === 'complete' || phase === 'movement-complete') return snapshot(phase);
-    const elapsed = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
+    const gap = lastTimestamp === undefined ? 0 : Math.max(0, frame.timestamp - lastTimestamp);
+    const elapsed = gap <= (config.maxFrameGapMs ?? 500) ? gap : 0;
+    if (gap > (config.maxFrameGapMs ?? 500)) samples = [];
     lastTimestamp = frame.timestamp;
     samples = [...samples, frame].slice(-config.smoothingWindow);
     const metrics = metricsFor(samples, current());
-    if (!metrics) { lastTimestamp = undefined; return snapshot('paused-tracking'); }
+    if (!metrics) { lastTimestamp = undefined; samples = []; return snapshot('paused-tracking'); }
     baselineWidth ??= metrics.shoulderWidth;
+    if (current() !== 'torso-rotation' || metrics.shoulderWidth / baselineWidth >= 0.9) baselineHeadOffset ??= metrics.headOffset;
     baselineBend ??= bendSignals(metrics);
     if (!matches(metrics)) return snapshot(phase === 'demo' ? 'demo' : 'holding');
     holdMs += elapsed;

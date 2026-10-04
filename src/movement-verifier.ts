@@ -51,6 +51,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
   let movementElapsedMs = 0;
   let baselineTorsoY: number | undefined;
   let baselineShoulderWidth: number | undefined;
+  let baselineScale: number | undefined;
   let riseFrames = 0;
   let returnFrames = 0;
   let returnElapsedMs = 0;
@@ -68,7 +69,8 @@ export const createMovementVerifier = (config: MovementConfig) => {
     const torso = torsoIndexes.map((index) => byIndex.get(index)).filter((point): point is PoseLandmark => point !== undefined);
     const shoulders = shoulderIndexes.map((index) => byIndex.get(index)).filter((point): point is PoseLandmark => point !== undefined);
     if (torso.length < 2 || shoulders.length < 2) return undefined;
-    const torsoY = average(torso.map((point) => point.y));
+    // Keep the reference consistent when hips enter or leave the camera frame.
+    const torsoY = average(shoulders.map((point) => point.y));
     const hips = [byIndex.get(23), byIndex.get(24)].filter((point): point is PoseLandmark => point !== undefined);
     const bodyScale = hips.length === 2 ? distance(shoulders[0], hips[0]) : distance(shoulders[0], shoulders[1]);
     if (bodyScale === 0) return undefined;
@@ -113,12 +115,20 @@ export const createMovementVerifier = (config: MovementConfig) => {
       if (baselineElapsedMs >= config.baselineDurationMs) {
         baselineTorsoY = metrics.torsoY;
         baselineShoulderWidth = metrics.shoulderWidth;
+        baselineScale = metrics.bodyScale;
         phase = 'monitoring';
       }
       return snapshot(phase);
     }
 
     if (phase === 'monitoring') {
+      const rising = baselineTorsoY !== undefined && (baselineTorsoY - metrics.torsoY) / (baselineScale ?? metrics.bodyScale) >= config.riseThreshold;
+      riseFrames = rising ? riseFrames + 1 : 0;
+      if (riseFrames >= config.consecutiveRiseFrames) {
+        inactivityElapsedMs = 0; returnFrames = 0; returnElapsedMs = 0;
+        phase = 'awaiting-return';
+      }
+      if (rising) return snapshot(phase);
       inactivityElapsedMs += elapsedMs;
       if (inactivityElapsedMs >= config.inactivityDurationMs) {
         riseFrames = 0;
@@ -128,7 +138,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
     }
 
     if (phase === 'awaiting-rise' && baselineTorsoY !== undefined) {
-      const normalizedRise = (baselineTorsoY - metrics.torsoY) / metrics.bodyScale;
+      const normalizedRise = (baselineTorsoY - metrics.torsoY) / (baselineScale ?? metrics.bodyScale);
       riseFrames = normalizedRise >= config.riseThreshold ? riseFrames + 1 : 0;
       if (riseFrames >= config.consecutiveRiseFrames) phase = 'routine';
       return snapshot(phase);
@@ -137,7 +147,7 @@ export const createMovementVerifier = (config: MovementConfig) => {
     if (phase === 'routine') return snapshot(phase);
 
     if (phase === 'awaiting-return' && baselineTorsoY !== undefined) {
-      const normalizedReturn = Math.abs(metrics.torsoY - baselineTorsoY) / metrics.bodyScale;
+      const normalizedReturn = Math.abs(metrics.torsoY - baselineTorsoY) / (baselineScale ?? metrics.bodyScale);
       const settled = normalizedReturn <= config.returnThreshold && metrics.shoulderMovement <= config.seatedReturnMotionThreshold;
       returnFrames = settled ? returnFrames + 1 : 0;
       returnElapsedMs = returnFrames > 1 ? returnElapsedMs + elapsedMs : 0;

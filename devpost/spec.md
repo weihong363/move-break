@@ -18,7 +18,7 @@ The browser app remains a development prototype. Static hosting is optional and 
 - `src/app-controller.ts`: camera lifecycle, verifier handoff, presentation, audio and desktop status.
 - `src/movement-verifier.ts`: baseline → monitoring → awaiting-rise → routine → awaiting-return. Unusable tracking reports a paused snapshot without advancing the underlying phase.
 - `src/routine-verifier.ts`: demonstration → accumulated valid hold → step success → next movement → routine complete.
-- `src/pose-detector.ts`: one pose, VIDEO mode, synchronous inference throttled to approximately one frame per 150 ms; detection/presence/tracking confidence 0.5.
+- `src/pose-detector.ts`: one pose, VIDEO mode, synchronous inference scheduled by a 150 ms timeout, independent of animation frames; detection/presence/tracking confidence 0.5.
 - `src/window-drag.ts`: pointer capture sends start/move/end coordinates through validated IPC. Main moves the window by the pointer delta; controls and camera debug view are excluded.
 - `src/settings-window.ts`, `src/desktop-settings.ts`: draft form, explicit save and validated local preferences.
 - `src/sound.ts`: local synthesized feedback; audio failure never blocks verification.
@@ -29,14 +29,14 @@ The browser app remains a development prototype. Static hosting is optional and 
 
 1. First use requires Enable camera and macOS permission. Denial/device/model errors show actionable guidance. A retry cannot reset an OS-denied permission.
 2. Later launches automatically start camera monitoring when permission is already granted. Pause releases the detector and camera; resume establishes a new baseline.
-3. Baseline collection uses the user's current desk position and distance, with both shoulders visible. Hips are optional. The user is expected to begin seated; this is not a seated-pose classifier.
-4. Monitoring counts valid time toward the configured reminder; small seated hand/head/body movement does not reset it.
+3. Baseline collection uses the user's current desk position and distance, with both shoulders visible. Hips are optional. The user is expected to begin seated; this is not a seated-pose classifier. Shoulder-center height remains the reference when hip coverage changes, using scale captured at baseline.
+4. Monitoring counts valid time toward the configured reminder; small seated hand/head/body movement does not reset it. A stable early rise enters seated-return waiting and clears reminder progress without forcing an exercise routine.
 5. At the reminder, the cyan standing cue remains visible until a stable rise is confirmed. No routine pose may complete before that handoff.
 6. Each selected movement accumulates matched time. Mismatch or invalid landmarks pauses progress rather than clearing the hold. A 650 ms step-success interval precedes automatic advancement.
 7. Completion immediately begins seated-return detection, with the cyan neutral cue and “Sit down when ready”. Preserve the original baseline while the user remains standing.
 8. A stable return near that baseline resets reminder time to zero and plays the new-cycle chime. Every cycle requires a new rise and the full selected routine.
 
-Hiding or closing the companion keeps the process/camera active; Quit stops the app. Background throttling is disabled, but hidden-window inference cadence still requires a native experience check.
+Hiding or closing the companion keeps the process/camera active; Quit stops the app. Background throttling is disabled, and native smoke testing confirmed inference continues while hidden (62 → 90 frames over five seconds).
 
 ## Landmark rules and current thresholds
 
@@ -46,13 +46,13 @@ All thresholds are heuristics for a demo, not exercise scoring. Positions use a 
 | --- | --- |
 | Baseline | Collect 1,500 ms of usable shoulder frames; capture smoothed torso height and shoulder width. No explicit stillness gate currently. |
 | Scale | Shoulder-to-hip distance if both hips are usable; otherwise shoulder width. |
-| Rise | `(baseline torso Y − current torso Y) / scale ≥ 0.16` for three consecutive usable frames. |
-| Seated return | Torso distance from baseline / scale ≤ 0.16, shoulder motion ≤ 0.025, at least three confirming frames and 750 ms settled time. |
+| Rise | `(baseline shoulder Y − current shoulder Y) / baseline scale ≥ 0.16` for three consecutive usable frames. |
+| Seated return | Shoulder-center distance from baseline / baseline scale ≤ 0.16, shoulder motion ≤ 0.025, at least three confirming frames and 750 ms settled time. |
 | Overhead Reach | Both wrists visible and above their shoulders by at least 0.30 shoulder widths. |
 | Side Bend Left/Right | Anatomical direction, independent of mirrored preview. Shoulder-line tilt change ≥ 0.15, or shoulder-center/hip-center lateral shift change ≥ 0.15 shoulder widths. Hip-free tilt fallback permits one arm overhead. Reference captured at routine start. |
-| Torso Rotation | Shoulder depth difference / width ≥ 0.20 gives direction; shoulder width ≤ 0.78 of the routine reference is a coarse turn fallback. Hold either direction first, then its opposite. Each side requires the configured hold duration. |
+| Torso Rotation | Shoulder depth difference / width ≥ 0.20 gives direction; shoulder width ≤ 0.78 of the routine reference is a coarse turn fallback. Without usable depth, require shoulder-width contraction plus signed nose offset relative to the shoulders (change ≥ 0.12 shoulder widths). Width alone cannot indicate direction. Hold either direction first, then its opposite. Each side requires the configured hold duration. |
 
-The monitor/rise/return verifier excludes frame gaps longer than 500 ms and pauses on missing shoulders. The routine verifier clears its timestamp on missing required landmarks; it currently has no equivalent long-gap cutoff. See validation gaps below.
+The monitor/rise/return verifier excludes frame gaps longer than 500 ms and pauses on missing shoulders. The routine also excludes gaps longer than 500 ms and clears smoothing history after gaps or missing required landmarks. Existing hold progress is retained.
 
 ## Configuration and persistence
 
@@ -85,17 +85,17 @@ Save settings validates and persists the draft, applies native window/startup op
 ## Build and verification
 
 - `pnpm install` then `pnpm dev`: browser development.
-- `pnpm test`: current suite has 30 tests across five files, covering verifier/routine/sound/settings behavior.
+- `pnpm test`: current suite has 36 tests across six files, covering verifier/routine/sound/settings behavior.
 - `pnpm desktop:build`: renderer and Electron main/preload TypeScript builds.
 - `pnpm desktop:package`: local architecture-specific macOS `.app` in `release/`, with camera usage description and ICNS icon. Signing, notarization and an installer are outside the current local demo.
 - Development-only `?preview` exercises presentation states without camera verification; it is not evidence of live pose matching.
 
-Native smoke checks have covered local camera/model loading, separate Settings/save refresh, explicit dragging with actual position changes, hide controls and Tray placement metadata. Final acceptance still needs a complete repeated native routine, hidden-window monitoring, the latest visible icons/Tray menu, and launch-at-login at the final installed location. Unit tests do not establish real-camera reliability.
+Native smoke checks have covered local camera/model loading, separate Settings/save refresh, explicit dragging with actual position changes, hide controls and Tray placement metadata. Additional native checks confirmed automatic startup audio is running and login registration can be enabled and restored (previously off). Launch settings now read actual macOS registration at startup. Final acceptance still needs a complete repeated native routine, visible Tray menu checks, and an actual login session at the final installed location. Unit tests do not establish real-camera reliability.
 
-## Known implementation and validation gaps
+## Validation and demo assumptions
 
-1. **Sedentary semantics:** monitoring currently counts all usable shoulder frames without checking baseline-relative standing/movement. The intended behavior counts seated time and ignores small seated movements, but standing before the prompt can still count. Do not describe this as robust continuous seated classification; validate/fix this within the existing heuristic scope before claiming that behavior.
-2. **Rotation fallback:** shoulder-width contraction detects a turn but cannot identify both opposite directions. The second side needs a usable shoulder-depth signal; test this with the demo camera before claiming a hip-free two-sided rotation always works.
-3. **Routine timing gaps:** long inference interruptions may be credited to a matched hold because the routine lacks the monitor's 500 ms gap guard. Validate interruptions before final demo acceptance.
-4. **Camera stability:** initial standing, camera relocation, and changes in hip visibility can distort baseline-relative rise/return. Initial seated setup and a stationary camera remain demo assumptions.
-5. **Native lifecycle:** confirm hidden monitoring, audio after automatic startup, Tray accessibility on the actual menu bar, and login launch. These remain experience checks, not additional product features.
+- Start seated with a stationary camera. Initial standing is not automatically classified; this remains outside precise posture classification scope.
+- Early-rise pause/return, changing hip coverage, small seated movements, opposite rotation without depth, gap exclusion, and timer-based inference are covered by regression tests.
+- Rotation still requires directional evidence: usable shoulder depth, or visible nose displacement together with shoulder-width contraction. Head-only or width-only changes cannot complete it.
+- Camera movement and poor framing remain limitations of a local heuristic demo. Retain the cue and pause when required landmarks are missing.
+- Native hidden inference, automatic audio initialization and login registration passed smoke checks. Actual audibility, a full human-followed routine, Tray interactions and startup after logout/login still require the final experience checkpoint. No logout was performed and the user's login preference was restored.

@@ -14,7 +14,7 @@ export const createPoseDetector = (): Detector => {
 
   const stop = () => {
     generation++;
-    if (frameId !== undefined) window.cancelAnimationFrame(frameId);
+    if (frameId !== undefined) window.clearTimeout(frameId);
     frameId = undefined;
     landmarker?.close();
     landmarker = undefined;
@@ -40,17 +40,18 @@ export const createPoseDetector = (): Detector => {
       return;
     }
 
-    const detect = (timestamp: number) => {
+    const detect = () => {
       if (!landmarker) return;
+      const timestamp = performance.now();
       if (timestamp - lastDetectionAt >= 150 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         lastDetectionAt = timestamp;
         const result = landmarker.detectForVideo(video, timestamp);
         onFrame({ timestamp, landmarks: (result.landmarks[0] ?? []) as PoseLandmark[] });
       }
-      frameId = window.requestAnimationFrame(detect);
+      frameId = window.setTimeout(detect, 150);
     };
 
-    frameId = window.requestAnimationFrame(detect);
+    frameId = window.setTimeout(detect, 0);
   };
 
   return { start, stop };

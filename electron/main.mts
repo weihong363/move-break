@@ -139,6 +139,7 @@ else {
   void app.whenReady().then(() => {
     if (process.platform === 'darwin') app.dock?.setIcon(join(__dirname, '../../electron/assets/movebreak-icon.png'));
     try { settings = validateSettings(JSON.parse(readFileSync(settingsPath(), 'utf8'))); } catch { settings = { ...defaultSettings }; }
+    settings.launchAtLogin = app.isPackaged && app.getLoginItemSettings().openAtLogin;
     registerAssets(); createCompanion(); createTray(); registerIpc();
     if (process.platform === 'darwin') app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Open MoveBreak', click: showCompanion }]));
     Menu.setApplicationMenu(Menu.buildFromTemplate([{ label: 'MoveBreak', submenu: [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { role: 'quit' }] }, { role: 'editMenu' }]));

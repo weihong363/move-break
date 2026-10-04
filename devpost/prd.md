@@ -40,9 +40,9 @@ Camera permission denial blocks monitoring and completion. Retry includes guidan
 ## Remaining acceptance checks
 
 - Complete two consecutive native cycles: reminder → confirmed rise → selected routine → seated return → full fresh reminder duration.
-- Small seated movements must not reset timing; standing before the reminder should not count as seated time. The latter is not yet enforced by the current monitor.
-- Check both bend directions and both rotation directions with the demo camera; shoulder-width-only rotation cannot confirm the opposite side.
-- Tracking loss or a long detection interruption must not advance a hold. A long-gap guard remains to be verified in the routine.
-- Verify monitoring while hidden, menu-bar reopen/Settings/pause/resume/Quit, audio after automatic startup, latest icons, and login launch at the final installed location.
+- Small seated movements must not reset timing; standing before the reminder should not count as seated time. A confirmed early rise now waits for seated return and resets the reminder.
+- Check both bend directions and both rotation directions with the demo camera; a depth-free fallback combines shoulder-width contraction with signed head offset; width alone cannot complete a turn.
+- Tracking loss or a long detection interruption must not advance a hold. The routine now excludes gaps longer than 500 ms.
+- Verify monitoring while hidden, menu-bar reopen/Settings/pause/resume/Quit, audio after automatic startup, latest icons, and login launch at the final installed location. Hidden inference and automatic audio startup have passed native smoke checks; login registration was verified and restored to its previous setting.
 
 Current build/test and smoke evidence are recorded in the spec. These checks distinguish the intended behavior from what has already been validated.
