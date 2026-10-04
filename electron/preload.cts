@@ -6,6 +6,7 @@ const subscribe = <T,>(channel: string, callback: (value: T) => void) => {
   return () => ipcRenderer.removeListener(channel, listener);
 };
 contextBridge.exposeInMainWorld('moveBreak', {
+  dragWindow: (phase: 'start' | 'move' | 'end', x: number, y: number) => ipcRenderer.send('companion:drag', phase, x, y),
   controlWindow: (action: 'hide' | 'minimize') => ipcRenderer.send('companion:window', action),
   hasCameraPermission: () => ipcRenderer.invoke('camera:granted'),
   requestCameraAccess: () => ipcRenderer.invoke('camera:request'),

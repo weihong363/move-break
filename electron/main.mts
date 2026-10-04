@@ -66,6 +66,18 @@ const applySettings = (next: DesktopSettings) => {
   return settings;
 };
 const registerIpc = () => {
+  let drag: { cursorX: number; cursorY: number; windowX: number; windowY: number } | undefined;
+  ipcMain.on('companion:drag', (event, phase: unknown, x: unknown, y: unknown) => {
+    if (event.sender !== companion.webContents) return;
+    if (phase === 'end') { drag = undefined; return; }
+    if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (phase === 'start') {
+      const [windowX, windowY] = companion.getPosition();
+      drag = { cursorX: x, cursorY: y, windowX, windowY };
+    } else if (phase === 'move' && drag) {
+      companion.setPosition(Math.round(drag.windowX + x - drag.cursorX), Math.round(drag.windowY + y - drag.cursorY));
+    }
+  });
   ipcMain.on('companion:window', (event, action: unknown) => {
     if (event.sender !== companion.webContents) return;
     if (action === 'hide' || action === 'minimize') hideCompanion();
@@ -102,6 +114,7 @@ const createCompanion = () => {
   const area = screen.getPrimaryDisplay().workArea;
   companion = new BrowserWindow({ width: 320, height: 480, x: area.x + area.width - 340, y: area.y + area.height - 500, frame: false, movable: true, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
   secureWindow(companion);
+
   companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }]).popup({ window: companion }));
   companion.on('close', (event) => { if (!quitting) { event.preventDefault(); hideCompanion(); } });
   void companion.loadURL('movebreak://app/index.html');
