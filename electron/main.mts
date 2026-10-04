@@ -100,7 +100,7 @@ const registerAssets = () => {
 };
 const createCompanion = () => {
   const area = screen.getPrimaryDisplay().workArea;
-  companion = new BrowserWindow({ width: 300, height: 390, x: area.x + area.width - 320, y: area.y + area.height - 410, frame: false, movable: true, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
+  companion = new BrowserWindow({ width: 320, height: 480, x: area.x + area.width - 340, y: area.y + area.height - 500, frame: false, movable: true, transparent: true, resizable: false, minimizable: true, fullscreenable: false, alwaysOnTop: settings.alwaysOnTop, show: settings.showCompanion, webPreferences: preferences() });
   secureWindow(companion);
   companion.webContents.on('context-menu', () => Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }]).popup({ window: companion }));
   companion.on('close', (event) => { if (!quitting) { event.preventDefault(); companion.hide(); settings.showCompanion = false; broadcast(); } });

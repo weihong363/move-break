@@ -180,7 +180,7 @@ The stand prompt uses the supplied cyan neutral-standing illustration, with no r
 
 ## Desktop companion cutover
 
-Electron main owns Tray, a 300 × 390 frameless transparent CompanionWindow, and singleton 450 × 710 SettingsWindow. Vite renderer selects the settings surface by query. A sandboxed preload exposes only typed settings, status, command and explicit macOS camera-permission IPC. Node integration stays off; external renderer navigation is blocked. Secure `movebreak://app` serves bundled UI, WASM and pose model locally.
+Electron main owns Tray, a 320 × 480 frameless transparent CompanionWindow, and singleton 450 × 710 SettingsWindow. Vite renderer selects the settings surface by query. A sandboxed preload exposes only typed settings, status, command and explicit macOS camera-permission IPC. Node integration stays off; external renderer navigation is blocked. Secure `movebreak://app` serves bundled UI, WASM and pose model locally.
 
 Validated preferences are stored in Electron userData/settings.json; no camera or pose data persists. Native always-on-top and show/hide changes apply immediately. The explicit Save settings action applies configuration, resets reminder progress with the original seated baseline intact, and restarts an active routine using the new timing/count. Pause stops detector/camera, resume starts a new baseline. Background throttling is disabled so hiding does not intentionally suspend monitoring. Packaged startup integration opens the app and resumes camera monitoring when permission was already granted.
 

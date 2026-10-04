@@ -156,20 +156,20 @@ button:hover { filter: brightness(0.96); }
 button:focus-visible, select:focus-visible { outline: 3px solid #e9a869; outline-offset: 3px; }
 
 /* Desktop companion: draggable art and concise state, configuration lives elsewhere. */
-html:has(body.desktop-surface), body.desktop-surface { background: transparent; }
+html:has(body.desktop-surface), body.desktop-surface { background: transparent; height: 100%; overflow: hidden; }
 body.desktop-surface { min-width: 0; }
-.desktop-surface #app { display: block; padding: 0; }
-.desktop-surface .home-card, .desktop-surface .proof-card { width: 100%; min-height: 100vh; padding: 44px 16px 16px; border: 0; background: #fffdf7; isolation: isolate; box-shadow: none; border-radius: 26px; }
+.desktop-surface #app { display: block; height: 100vh; padding: 0; overflow: hidden; }
+.desktop-surface .home-card, .desktop-surface .proof-card { width: 100%; height: 100vh; display: grid; grid-template-rows: 210px 60px 64px 80px; align-content: start; padding: 44px 16px 16px; border: 0; background: #fffdf7; isolation: isolate; box-shadow: none; border-radius: 26px; }
 .desktop-surface .home-card, .desktop-surface .proof-card, .companion-titlebar { -webkit-app-region: drag; user-select: none; }
 .desktop-surface button, .desktop-surface video, .desktop-surface .progress, .desktop-surface .description, .desktop-surface .tracking-guidance { -webkit-app-region: no-drag; }
-.desktop-surface .companion { width: 210px; height: 210px; }
+.desktop-surface .companion { width: 210px; height: 210px; margin: 0 auto; }
 .desktop-surface .eyebrow, .desktop-surface .privacy-note, .desktop-surface .duration-control, .desktop-surface .debug-toggle { display: none; }
 .desktop-surface .state-label { display: none; }
-.desktop-surface h1 { font-size: 20px; margin: 8px 0; letter-spacing: -0.03em; }
-.desktop-surface .progress { font-size: 13px; margin: 8px 0; min-height: 20px; }
-.desktop-surface .description { margin: 8px 0; font-size: 12px; }
-.desktop-surface .primary-button { padding: 10px 18px; font-size: 13px; }
-.desktop-surface .tracking-guidance { font-size: 12px; margin: 8px 0; }
+.desktop-surface h1 { align-self: center; font-size: 20px; margin: 0; letter-spacing: -0.03em; }
+.desktop-surface .progress { align-self: center; font-size: 13px; line-height: 18px; margin: 0; }
+.desktop-surface .description { align-self: center; margin: 0; font-size: 12px; line-height: 18px; }
+.desktop-surface .primary-button { align-self: start; padding: 10px 18px; font-size: 13px; }
+.desktop-surface .tracking-guidance { align-self: start; font-size: 12px; line-height: 18px; margin: 0; }
 .desktop-surface .camera-shell.camera-visible { position: fixed; inset: auto 8px 8px; background: #fffdf7; padding: 6px; border-radius: 16px; }
 .desktop-surface .camera-preview { min-height: 0; max-height: 140px; }
 .desktop-surface .camera-shell p { display: none; }

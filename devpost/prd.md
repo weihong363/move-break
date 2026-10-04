@@ -7,7 +7,7 @@ status: approved
 
 ## Surfaces
 
-- **Companion:** 300 × 390 frameless, draggable, lightweight window, always-on-top optional. Approved translucent characters, concise instruction and progress. No configuration controls. Webcam hidden except developer debug view.
+- **Companion:** 320 × 480 frameless, draggable, lightweight window, always-on-top optional. Approved translucent characters, concise instruction and progress. No configuration controls. Webcam hidden except developer debug view.
 - **Menu bar:** persistent icon, monitoring status, next reminder, Open MoveBreak, Settings…, pause/resume, Quit. Demo break action appears only in developer demo mode. Available while companion is hidden.
 - **Settings:** separate compact normal window with General, Window, Startup, Privacy, collapsed Developer sections. Local configuration persists; no video or pose history is stored.
 
