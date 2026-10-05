@@ -23,4 +23,4 @@ The running packaged app displays some earlier copy, such as “Reach up”, rat
 
 Observed runtime states include reach, turn, seated return, Monitoring, and a subsequent stand prompt. No simulated completion was used. These captures do not establish five consecutive reliable routines, audible cues, a matched highlight/hold countdown, or correct recognition of every movement. Those require the human acceptance pass and video described in `TESTING.md` and `DEMO.md`.
 
-Prepared locally only; gallery images have not been uploaded to Devpost. Review the five recommended images before publication. A real matched-highlight screenshot and native menu-bar menu capture would strengthen the packet.
+The five recommended images were uploaded successfully to the MoveBreak Devpost gallery on 2026-10-05, in the order above (photo IDs: 5517285, 5517287, 5517289, 5517291, 5517293). Each upload returned success and the fifth confirmed a gallery count of five. Review the five recommended images before publication. A real matched-highlight screenshot and native menu-bar menu capture would strengthen the packet.

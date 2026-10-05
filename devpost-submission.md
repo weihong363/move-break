@@ -1,6 +1,6 @@
 # MoveBreak
 
-> Updated 2026-10-05: current Devpost account and registration verified. Existing project 1447201 has been updated with the correct MoveBreak title, tagline, project description, and technology tags. The update interface changed the project page to `published`; no final submission was performed. Saved description: `devpost/project-writeup.md`. Source is now public. Runtime screenshots are being collected in `devpost/screenshots/`; the personal statement is drafted locally in the Git-ignored `devpost/personal-declaration.local.md`. Personal confirmations, video, and final live-demo acceptance remain pending.
+> Updated 2026-10-05: current Devpost account and registration verified. Existing project 1447201 has been updated with the correct MoveBreak title, tagline, project description, and technology tags. The update interface changed the project page to `published`; no final submission was performed. Saved description: `devpost/project-writeup.md`. Source is now public. Five runtime screenshots and English captions are uploaded to the Devpost gallery; originals are in `devpost/screenshots/`; the personal statement is drafted locally in the Git-ignored `devpost/personal-declaration.local.md`. Personal confirmations, video, and final live-demo acceptance remain pending.
 
 ## One-line Summary
 
@@ -63,7 +63,7 @@ https://github.com/weihong363/move-break — current source and required plannin
 
 ## Demo Video
 
-Pending recording and publication. Aim for a 75–90 second video showing the packaged app and real movement verification. The live submission requirements request 1–3 minutes; target this range while remaining under three minutes.
+Participant confirmed on 2026-10-05 that the video has not been recorded. This is a required submission deliverable and prevents final entry submission. Pending recording and publication. Aim for a 75–90 second video showing the packaged app and real movement verification. The live submission requirements request 1–3 minutes; target this range while remaining under three minutes.
 
 Suggested English narration (the detailed seven-scene recording plan is in `DEMO.md`):
 
