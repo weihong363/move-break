@@ -90,7 +90,7 @@ Do not use developer state previews as evidence of camera verification. Review t
 
 Completed locally: source and planning documents, 37 automated tests, clean-clone installation/build, unsigned native packaging, README workflow/limitations, and dependency/model provenance inventory.
 
-Remaining: code license decision, final real-camera acceptance, menu/audio acceptance, recorded video, participant confirmation of personal form answers, and explicit final submission confirmation. Screenshot inventory and captions: `devpost/screenshots/README.md`. The local personal statement includes copy-ready learning and Skill Pack answers; individual entry, China residence, local age of majority, creation timing, resource use (None), cost impact (none), confidence (4), and artwork rights have participant answers recorded locally. Full eligibility, precise cost-option wording, and value-category selection remain pending.
+Remaining: code license decision, final real-camera acceptance, menu/audio acceptance, recorded video, participant confirmation of personal form answers, and explicit final submission confirmation. Screenshot inventory and captions: `devpost/screenshots/README.md`. The local personal statement includes copy-ready learning and Skill Pack answers; individual entry, China residence, local age of majority, creation timing, resource use (None), cost impact (none), confidence (4), and artwork rights have participant answers recorded locally. Value category confirmed: Created delight / was just fun. Full eligibility and precise cost-option wording remain pending.
 
 ## Known Limitations
 
@@ -115,7 +115,7 @@ Live requirements fetched on 2026-10-05. Personal selections below must come fro
 | 28619 | AI cost effects | Participant selects actual cost/limit experience. |
 | 28620 | Confidence, 1–5 | Participant provides their own rating. |
 | 28621 | Improvement feedback, optional | Suggested topic: clearer scope-change checkpoints and a concise boundary between mechanical verification and human camera acceptance. Confirm that this reflects your view. |
-| 28624 | Value categories | Participant selects actual value categories. |
+| 28624 | Value categories | Created delight / was just fun — confirmed by participant. |
 | 28625 | Value explanation, optional | Suggested draft: “I used MoveBreak to compare a structured scope → PRD → spec workflow with my existing plan-first process and to practice keeping an AI-assisted project small enough to ship.” |
 | 28916 | Main technology requirement | “I used the Devpost Learn Skill Pack to define scope, user requirements, a technical specification, and a sequenced implementation checklist. Codex implemented and verified small slices, while I supplied product constraints and experience feedback. The planning documents are included in the repository and reflect the final desktop companion and guided routine.” |
 | 28917 | Age of majority | Participant must personally confirm. |
