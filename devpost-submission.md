@@ -1,6 +1,6 @@
 # MoveBreak
 
-> Local draft prepared at the user's request on 2026-10-05. Nothing has been sent to Devpost. Current connected account does not show registration for Build With AI: Basics. Account eligibility, registration, public links, artwork rights, and final live-demo evidence remain open; the formal prepare stage is not marked complete.
+> Updated 2026-10-05: current Devpost account and registration verified. Existing project 1447201 has been updated with the correct MoveBreak title, tagline, project description, and technology tags. The update interface changed the project page to `published`; the hackathon entry still has no submission timestamp, and no final submission was performed. Saved description: `devpost/project-writeup.md`. Personal declarations, source publication, video/screenshots, and final live-demo acceptance remain pending.
 
 ## One-line Summary
 
@@ -90,7 +90,7 @@ Do not use developer state previews as evidence of camera verification. Review t
 
 Completed locally: source and planning documents, 37 automated tests, clean-clone installation/build, unsigned native packaging, README workflow/limitations, and dependency/model provenance inventory.
 
-Remaining: registration, code license decision, supplied-artwork rights, final real-camera acceptance, menu/audio acceptance, public repository, recorded video, personal form answers, and explicit final submission confirmation.
+Remaining: code license decision, supplied-artwork rights, final real-camera acceptance, menu/audio acceptance, public repository, recorded video, personal form answers, and explicit final submission confirmation.
 
 ## Known Limitations
 
