@@ -52,7 +52,6 @@ function refreshTray() {
     { label: 'Open MoveBreak', click: showCompanion },
     { label: 'Settings…', click: openSettings },
     { label: status.monitoring ? 'Pause monitoring' : 'Resume monitoring', click: () => command(status.monitoring ? 'pause' : 'resume') },
-    ...(settings.demoMode ? [{ label: 'Start demo break', enabled: status.monitoring, click: () => { showCompanion(); command('demo-break'); } }] : []),
     { type: 'separator' }, { label: 'Quit MoveBreak', click: () => app.quit() },
   ]));
 }

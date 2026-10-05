@@ -6,7 +6,7 @@ import { createPoseDetector } from './pose-detector';
 import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
 import type { AppState } from './types';
 import { createRoutineSoundTracker, createSoundPlayer } from './sound';
-import { defaultSettings, reminderDurationMs, type DesktopSettings, type CompanionStatus } from './desktop-settings';
+import { defaultSettings, type DesktopSettings, type CompanionStatus } from './desktop-settings';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/movement-cue-atlas.png';
 import standPromptUrl from './assets/stand-prompt.png';
@@ -36,7 +36,7 @@ export const createAppController = (root: HTMLElement) => {
   let checkingCameraPermission = Boolean(desktop);
   let cameraAttempt = 0;
   let lastReported = '';
-  const inactivityMs = () => reminderDurationMs(settings);
+  const inactivityMs = () => settings.inactivitySeconds * 1000;
   const report = (label: string, remainingSeconds?: number) => {
     const status: CompanionStatus = { monitoring: state.phase === 'camera-active' && !paused, label, remainingSeconds };
     const serialized = JSON.stringify(status);
@@ -366,7 +366,6 @@ export const createAppController = (root: HTMLElement) => {
         routineAdvanceTimer = undefined;
         state.phase = 'ready'; render(); report('Paused');
       } else if (command === 'resume') void enableCamera();
-      else if (settings.demoMode && state.phase === 'camera-active') verifier.requestBreak();
     });
     report('Camera not enabled');
   }

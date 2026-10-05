@@ -6,11 +6,10 @@ export type DesktopSettings = {
   alwaysOnTop: boolean;
   showCompanion: boolean;
   launchAtLogin: boolean;
-  demoMode: boolean;
   debugCamera: boolean;
 };
 export type CompanionStatus = { monitoring: boolean; label: string; remainingSeconds?: number };
-export type DesktopCommand = 'pause' | 'resume' | 'demo-break' | 'settings-saved';
+export type DesktopCommand = 'pause' | 'resume' | 'settings-saved';
 export interface DesktopBridge {
   dragWindow(phase: 'start' | 'move' | 'end', x: number, y: number): void;
   controlWindow(action: 'hide' | 'minimize'): void;
@@ -27,15 +26,13 @@ declare global { interface Window { moveBreak?: DesktopBridge } }
 
 export const defaultSettings: DesktopSettings = {
   inactivitySeconds: 1500, movementCount: 4, holdSeconds: 3, sound: true,
-  alwaysOnTop: true, showCompanion: true, launchAtLogin: false, demoMode: false, debugCamera: false,
+  alwaysOnTop: true, showCompanion: true, launchAtLogin: false, debugCamera: false,
 };
-export const reminderDurationMs = (settings: DesktopSettings): number =>
-  (settings.demoMode ? 10 : settings.inactivitySeconds) * 1000;
 export const validateSettings = (input: unknown): DesktopSettings => {
   const values = input as Record<string, unknown> | null;
   if (!values || typeof values !== 'object') throw new Error('Invalid settings');
   const result = { ...defaultSettings };
-  for (const key of ['sound', 'alwaysOnTop', 'showCompanion', 'launchAtLogin', 'demoMode', 'debugCamera'] as const) {
+  for (const key of ['sound', 'alwaysOnTop', 'showCompanion', 'launchAtLogin', 'debugCamera'] as const) {
     if (typeof values[key] !== 'boolean') throw new Error(`Invalid ${key}`);
     result[key] = values[key];
   }

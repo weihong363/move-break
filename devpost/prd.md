@@ -8,7 +8,7 @@ status: approved
 ## Surfaces
 
 - **Companion:** 320 × 480 frameless, draggable, lightweight window, always-on-top optional. Approved translucent characters, concise instruction and progress. No configuration controls. Webcam hidden except developer debug view.
-- **Menu bar:** persistent icon, monitoring status, next reminder, Open MoveBreak, Settings…, pause/resume, Quit. Demo break action appears only in developer demo mode. Available while companion is hidden.
+- **Menu bar:** persistent icon, monitoring status, next reminder, Open MoveBreak, Settings…, pause/resume, Quit. Available while companion is hidden.
 - **Settings:** separate compact normal window with General, Window, Startup, Privacy, collapsed Developer sections. Local configuration persists; no video or pose history is stored.
 
 The companion has one fixed footprint across all normal states, a uniform cream background, and no scrollbar. Background/artwork/text are draggable. Red close and yellow minimize controls both hide the companion to the menu bar; Quit is a separate menu action. The menu-bar icon is the black figure from the application logo with a transparent background and no text title. The application icon retains only the supplied rounded tile.
@@ -29,7 +29,7 @@ Cues demonstrate real pose changes in short loops, with stable centering. The cy
 
 ## Configuration
 
-Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. General includes an “Only for demo” ten-second reminder switch, off by default. Collapsed Developer contains debug camera. Changes apply only after Save settings; the companion immediately refreshes its timer and routine. Camera permission is requested on first use; granted permission enables automatic monitoring on later launches. Pause/resume stays in the menu bar.
+Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. Collapsed Developer contains debug camera. Changes apply only after Save settings; the companion immediately refreshes its timer and routine. Camera permission is requested on first use; granted permission enables automatic monitoring on later launches. Pause/resume stays in the menu bar.
 
 ## Privacy and acceptance
 

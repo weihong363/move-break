@@ -1,14 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSettings, reminderDurationMs, restoreSettings, validateSettings } from './desktop-settings';
+import { defaultSettings, restoreSettings, validateSettings } from './desktop-settings';
 
 describe('desktop settings boundary', () => {
-  it('defaults demo off and restores the normal reminder after demo is disabled', () => {
-    const settings = { ...defaultSettings, inactivitySeconds: 90 };
-    expect(settings.demoMode).toBe(false);
-    expect(reminderDurationMs(settings)).toBe(90_000);
-    expect(reminderDurationMs({ ...settings, demoMode: true })).toBe(10_000);
-    expect(settings.inactivitySeconds).toBe(90);
-    expect(reminderDurationMs({ ...settings, demoMode: false })).toBe(90_000);
+  it('ignores obsolete demo flags without changing the configured reminder', () => {
+    expect(restoreSettings({ ...defaultSettings, inactivitySeconds: 60, demoMode: true }))
+      .toEqual({ ...defaultSettings, inactivitySeconds: 60 });
   });
   it('accepts the daily defaults and strips unrelated input', () => {
     expect(validateSettings({ ...defaultSettings, arbitrary: 'discard' })).toEqual(defaultSettings);

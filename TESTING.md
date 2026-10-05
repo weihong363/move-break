@@ -22,15 +22,15 @@ Open `release/MoveBreak-darwin-arm64/MoveBreak.app` on Apple Silicon. The unsign
 
 ## Final acceptance run
 
-Start seated at a stationary camera, with good lighting and both shoulders visible. Open Settings, expand Developer, enable demo mode, select four movements and a three-second hold, keep debug camera off, and Save. Restore daily preferences after testing.
+Start seated at a stationary camera, with good lighting and both shoulders visible. Open Settings, set Reminder after to one minute, select four movements and a three-second hold, keep debug camera off, and Save. Restore daily preferences after testing.
 
-1. Baseline completes, then the ten-second reminder counts down. Small head/hand movement should not restart it.
+1. Baseline completes, then the configured reminder counts down. Small head/hand movement should not restart it.
 2. “Time to move” waits for an actual stable rise. Remain seated briefly to check that no routine starts early.
 3. Raise both wrists above shoulders. The cue stays visible, a green matched highlight appears, and matched/hold sounds play.
 4. Follow left bend, right bend, and rotation in both directions. Each advances after valid held time.
 5. Briefly leave the frame during a step. Progress pauses, current cue remains, and visibility guidance appears. Return and finish without losing accumulated progress.
 6. Completion shows the resting figure. Stay standing: no new seated cycle should begin.
-7. Sit near the original baseline. A distinct new-cycle cue plays; the next cycle receives the full ten seconds.
+7. Sit near the original baseline. A distinct new-cycle cue plays; the next cycle receives the full configured interval.
 8. Repeat the whole loop five times. Record pass/fail and any stuck/false completion state.
 
 ## Desktop and audio checks

@@ -11,8 +11,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
   root.innerHTML = `<form class="settings-form">
     <h1>Settings</h1>
     <fieldset><legend>General</legend>
-      <label class="setting-row reminder-setting"><span>Reminder after (minutes)</span><input type="number" name="inactivitySeconds" min="${1 / 60}" max="120" step="any" value="${values.inactivitySeconds / 60}"></label>
-      ${checkbox('demoMode', 'Only for demo · 10-second reminder', values)}
+      <label class="setting-row"><span>Reminder after (minutes)</span><input type="number" name="inactivitySeconds" min="${1 / 60}" max="120" step="any" value="${values.inactivitySeconds / 60}"></label>
       ${numeric('movementCount', 'Movements per break', 1, 4, values)}
       ${numeric('holdSeconds', 'Hold duration (seconds)', 1, 15, values)}
       ${checkbox('sound', 'Sound', values)}
@@ -26,12 +25,6 @@ export const createSettingsWindow = async (root: HTMLElement) => {
   root.querySelector<HTMLInputElement>('[name="launchAtLogin"]')!.disabled = !startupAvailable;
   const form = root.querySelector<HTMLFormElement>('form')!;
   const message = root.querySelector<HTMLElement>('[role="status"]')!;
-  const reminder = form.elements.namedItem('inactivitySeconds') as HTMLInputElement;
-  const demo = form.elements.namedItem('demoMode') as HTMLInputElement;
-  const updateDemoControl = () => {
-    reminder.disabled = demo.checked;
-    reminder.closest('label')?.classList.toggle('setting-disabled', demo.checked);
-  };
   const sync = (next: DesktopSettings) => {
     values = next;
     for (const [key, value] of Object.entries(next)) {
@@ -39,19 +32,17 @@ export const createSettingsWindow = async (root: HTMLElement) => {
       if (typeof value === 'boolean') input.checked = value;
       else input.value = String(key === 'inactivitySeconds' ? value / 60 : value);
     }
-    updateDemoControl();
   };
-  updateDemoControl();
   let dirty = false;
   const save = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-  form.addEventListener('input', () => { updateDemoControl(); dirty = true; message.textContent = 'Unsaved changes'; });
+  form.addEventListener('input', () => { dirty = true; message.textContent = 'Unsaved changes'; });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (save.disabled) return;
     if (!form.reportValidity()) return;
     const next = Object.fromEntries(Object.keys(values).map((key) => {
       const input = form.elements.namedItem(key) as HTMLInputElement;
-      if (key === 'inactivitySeconds') return [key, demo.checked ? values.inactivitySeconds : Math.round(Number(input.value) * 60)];
+      if (key === 'inactivitySeconds') return [key, Math.round(Number(input.value) * 60)];
       return [key, input.type === 'checkbox' ? input.checked : Number(input.value)];
     }));
     save.disabled = true;
