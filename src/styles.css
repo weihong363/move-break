@@ -193,6 +193,8 @@ body.desktop-surface { min-width: 0; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 13px; }
 .setting-row input[type="number"] { width: 62px; padding: 5px; border: 1px solid #cfdbcc; border-radius: 7px; background: #fffdf7; color: #24483d; }
 .setting-row input[type="checkbox"] { accent-color: #5f8672; }
+.reminder-setting.setting-disabled { opacity: 0.45; }
+.reminder-setting input:disabled { cursor: not-allowed; background: #ece9e2; }
 .settings-form p, .settings-form small { font-size: 12px; line-height: 1.5; }
 .settings-form details { padding: 6px 12px; }
 .settings-form summary { font-size: 13px; cursor: pointer; }
