@@ -1,5 +1,5 @@
 export type DesktopSettings = {
-  inactivityMinutes: number;
+  inactivitySeconds: number;
   movementCount: number;
   holdSeconds: number;
   sound: boolean;
@@ -26,7 +26,7 @@ export interface DesktopBridge {
 declare global { interface Window { moveBreak?: DesktopBridge } }
 
 export const defaultSettings: DesktopSettings = {
-  inactivityMinutes: 25, movementCount: 4, holdSeconds: 3, sound: true,
+  inactivitySeconds: 1500, movementCount: 4, holdSeconds: 3, sound: true,
   alwaysOnTop: true, showCompanion: true, launchAtLogin: false, demoMode: false, debugCamera: false,
 };
 export const validateSettings = (input: unknown): DesktopSettings => {
@@ -37,10 +37,19 @@ export const validateSettings = (input: unknown): DesktopSettings => {
     if (typeof values[key] !== 'boolean') throw new Error(`Invalid ${key}`);
     result[key] = values[key];
   }
-  for (const [key, min, max] of [['inactivityMinutes', 1, 120], ['movementCount', 1, 4], ['holdSeconds', 1, 15]] as const) {
+  for (const [key, min, max] of [['inactivitySeconds', 1, 7200], ['movementCount', 1, 4], ['holdSeconds', 1, 15]] as const) {
     const value = values[key];
     if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) throw new Error(`Invalid ${key}`);
     result[key] = value;
   }
   return result;
+};
+
+export const restoreSettings = (input: unknown): DesktopSettings => {
+  if (!input || typeof input !== 'object') return validateSettings(input);
+  const stored = input as Record<string, unknown>;
+  if (stored.inactivitySeconds === undefined && typeof stored.inactivityMinutes === 'number') {
+    return validateSettings({ ...stored, inactivitySeconds: stored.inactivityMinutes * 60 });
+  }
+  return validateSettings(stored);
 };

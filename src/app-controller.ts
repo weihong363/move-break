@@ -36,7 +36,7 @@ export const createAppController = (root: HTMLElement) => {
   let checkingCameraPermission = Boolean(desktop);
   let cameraAttempt = 0;
   let lastReported = '';
-  const inactivityMs = () => settings.demoMode ? 5000 : settings.inactivityMinutes * 60_000;
+  const inactivityMs = () => settings.demoMode ? 5000 : settings.inactivitySeconds * 1000;
   const report = (label: string, remainingSeconds?: number) => {
     const status: CompanionStatus = { monitoring: state.phase === 'camera-active' && !paused, label, remainingSeconds };
     const serialized = JSON.stringify(status);
