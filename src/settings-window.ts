@@ -12,6 +12,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     <h1>Settings</h1>
     <fieldset><legend>General</legend>
       ${numeric('inactivitySeconds', 'Reminder after (seconds)', 1, 7200, values)}
+      ${checkbox('demoMode', 'Only for demo · 10-second reminder', values)}
       ${numeric('movementCount', 'Movements per break', 1, 4, values)}
       ${numeric('holdSeconds', 'Hold duration (seconds)', 1, 15, values)}
       ${checkbox('sound', 'Sound', values)}
@@ -19,7 +20,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     <fieldset><legend>Window</legend>${checkbox('alwaysOnTop', 'Always on top', values)}${checkbox('showCompanion', 'Show companion', values)}</fieldset>
     <fieldset><legend>Startup</legend>${checkbox('launchAtLogin', 'Launch at login', values)}${startupAvailable ? '' : '<small>Available in the installed app.</small>'}</fieldset>
     <fieldset><legend>Privacy</legend><p>Camera processing stays on your device. Video is never recorded or uploaded.</p></fieldset>
-    <details><summary>Developer</summary>${checkbox('demoMode', 'Demo mode · overrides reminder to 5 seconds', values)}${checkbox('debugCamera', 'Show camera debug view', values)}<small>Save applies changes immediately.</small></details>
+    <details><summary>Developer</summary>${checkbox('debugCamera', 'Show camera debug view', values)}<small>Save applies changes immediately.</small></details>
     <div class="settings-footer"><p class="settings-result" role="status"></p><button class="primary-button" type="submit">Save settings</button></div>
   </form>`;
   root.querySelector<HTMLInputElement>('[name="launchAtLogin"]')!.disabled = !startupAvailable;

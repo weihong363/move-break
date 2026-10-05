@@ -29,7 +29,7 @@ Cues demonstrate real pose changes in short loops, with stable centering. The cy
 
 ## Configuration
 
-Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. Collapsed Developer: five-second demo reminder and debug camera. Changes apply only after Save settings; the companion immediately refreshes its timer and routine. Camera permission is requested on first use; granted permission enables automatic monitoring on later launches. Pause/resume stays in the menu bar.
+Reminder 1–120 minutes; movement count 1–4 in routine order; hold 1–15 seconds; sound; always-on-top; companion visibility; launch at login in packaged macOS app. General includes an “Only for demo” ten-second reminder switch, off by default. Collapsed Developer contains debug camera. Changes apply only after Save settings; the companion immediately refreshes its timer and routine. Camera permission is requested on first use; granted permission enables automatic monitoring on later launches. Pause/resume stays in the menu bar.
 
 ## Privacy and acceptance
 

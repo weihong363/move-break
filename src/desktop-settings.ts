@@ -29,6 +29,8 @@ export const defaultSettings: DesktopSettings = {
   inactivitySeconds: 1500, movementCount: 4, holdSeconds: 3, sound: true,
   alwaysOnTop: true, showCompanion: true, launchAtLogin: false, demoMode: false, debugCamera: false,
 };
+export const reminderDurationMs = (settings: DesktopSettings): number =>
+  (settings.demoMode ? 10 : settings.inactivitySeconds) * 1000;
 export const validateSettings = (input: unknown): DesktopSettings => {
   const values = input as Record<string, unknown> | null;
   if (!values || typeof values !== 'object') throw new Error('Invalid settings');

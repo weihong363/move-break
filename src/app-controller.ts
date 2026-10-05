@@ -6,7 +6,7 @@ import { createPoseDetector } from './pose-detector';
 import { createRoutineVerifier, type RoutineSnapshot } from './routine-verifier';
 import type { AppState } from './types';
 import { createRoutineSoundTracker, createSoundPlayer } from './sound';
-import { defaultSettings, type DesktopSettings, type CompanionStatus } from './desktop-settings';
+import { defaultSettings, reminderDurationMs, type DesktopSettings, type CompanionStatus } from './desktop-settings';
 import seatedArtUrl from './assets/translucent-seated-clean.png';
 import routineArtUrl from './assets/movement-cue-atlas.png';
 import standPromptUrl from './assets/stand-prompt.png';
@@ -30,13 +30,13 @@ const characterMarkup = () => `
 
 export const createAppController = (root: HTMLElement) => {
   const desktop = window.moveBreak;
-  let settings: DesktopSettings = { ...defaultSettings, demoMode: !desktop };
+  let settings: DesktopSettings = { ...defaultSettings };
   let paused = false;
   let hasCameraPermission = false;
   let checkingCameraPermission = Boolean(desktop);
   let cameraAttempt = 0;
   let lastReported = '';
-  const inactivityMs = () => settings.demoMode ? 5000 : settings.inactivitySeconds * 1000;
+  const inactivityMs = () => reminderDurationMs(settings);
   const report = (label: string, remainingSeconds?: number) => {
     const status: CompanionStatus = { monitoring: state.phase === 'camera-active' && !paused, label, remainingSeconds };
     const serialized = JSON.stringify(status);

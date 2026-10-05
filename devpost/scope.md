@@ -13,7 +13,7 @@ First-use camera activation → seated reference at the user's desk position →
 
 ## MVP boundary
 
-Electron companion and Tray, independent Settings, existing colorful translucent movement cues, local MediaPipe, tolerant upper-body heuristics, sound feedback, configurable demo timing. Defaults: 25 minutes, four movements, three-second holds; developer demo reminder: five seconds. Only local configuration persists.
+Electron companion and Tray, independent Settings, existing colorful translucent movement cues, local MediaPipe, tolerant upper-body heuristics, sound feedback, configurable demo timing. Defaults: 25 minutes, four movements, three-second holds; demo reminder: ten seconds. Only local configuration persists.
 
 The routine is Overhead Reach → Side Bend Left → Side Bend Right → Torso Rotation (both sides). Settings may select the first 1–4 movements. Avatar animations guide the user; pose landmarks verify the target rather than mirror the avatar. Hiding the companion keeps monitoring active; pause releases the camera.
 
