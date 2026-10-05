@@ -59,7 +59,7 @@ Pending. This is a desktop app; local run instructions are provided above. No ho
 
 ## Public Repository Link
 
-https://github.com/weihong363/move-break — current source and required planning documents are published. Main requires PRs and passing CI. License choice and artwork-rights confirmation remain pending.
+https://github.com/weihong363/move-break — current source and required planning documents are published. Main requires PRs and passing CI. The participant confirms that all artwork was generated using ChatGPT and that they have permission to use and distribute it. The code-license choice remains pending.
 
 ## Demo Video
 
@@ -90,7 +90,7 @@ Do not use developer state previews as evidence of camera verification. Review t
 
 Completed locally: source and planning documents, 37 automated tests, clean-clone installation/build, unsigned native packaging, README workflow/limitations, and dependency/model provenance inventory.
 
-Remaining: code license decision, supplied-artwork rights, final real-camera acceptance, menu/audio acceptance, recorded video, participant confirmation of personal form answers, and explicit final submission confirmation. Screenshot inventory and captions: `devpost/screenshots/README.md`. The local personal statement includes copy-ready learning and Skill Pack answers; eligibility and personal facts remain unconfirmed.
+Remaining: code license decision, final real-camera acceptance, menu/audio acceptance, recorded video, participant confirmation of personal form answers, and explicit final submission confirmation. Screenshot inventory and captions: `devpost/screenshots/README.md`. The local personal statement includes copy-ready learning and Skill Pack answers; individual entry, China residence, local age of majority, creation timing, resource use (None), cost impact (none), confidence (4), and artwork rights have participant answers recorded locally. Full eligibility, precise cost-option wording, and value-category selection remain pending.
 
 ## Known Limitations
 
