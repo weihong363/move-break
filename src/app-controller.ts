@@ -195,7 +195,8 @@ export const createAppController = (root: HTMLElement) => {
     setPreviewVisible(debugPreview);
     setGuidance(snapshot.phase === 'paused-tracking' ? 'Step back so your upper body and hands are visible.' : '');
     if (step) step.textContent = `Step ${snapshot.movementIndex + 1} of ${activeRoutineSettings.movementCount} · ${routineLabel(snapshot.movement)}`;
-    status.textContent = desktop && snapshot.movement === 'torso-rotation' ? 'Turn' : snapshot.instruction;
+    const instruction = snapshot.movement === 'torso-rotation' && snapshot.rotationStep !== 'other-side' ? 'Turn' : snapshot.instruction;
+    status.textContent = desktop ? `${snapshot.movementIndex + 1} / ${activeRoutineSettings.movementCount} — ${instruction}` : snapshot.instruction;
     const seconds = Math.max(0, Math.ceil((1 - snapshot.progress) * activeRoutineSettings.holdSeconds));
     progress.textContent = snapshot.poseMatched
       ? desktop ? `Matched · hold ${seconds}s` : `Matched — hold it · ${seconds} seconds remaining`
