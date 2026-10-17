@@ -1,6 +1,6 @@
 # MoveBreak
 
-> Updated 2026-10-05: current Devpost account and registration verified. Existing project 1447201 has been updated with the correct MoveBreak title, tagline, project description, and technology tags. The update interface changed the project page to `published`; the hackathon entry still has no submission timestamp, and no final submission was performed. Saved description: `devpost/project-writeup.md`. Personal declarations, source publication, video/screenshots, and final live-demo acceptance remain pending.
+> Updated 2026-10-05: current Devpost account and registration verified. Existing project 1447201 has been updated with the correct MoveBreak title, tagline, project description, and technology tags. The update interface changed the project page to `published`; no final submission was performed. Saved description: `devpost/project-writeup.md`. Source is now public. Five runtime screenshots and English captions are uploaded to the Devpost gallery; originals are in `devpost/screenshots/`; the personal statement is drafted locally in the Git-ignored `devpost/personal-declaration.local.md`. Personal confirmations, video, and final live-demo acceptance remain pending.
 
 ## One-line Summary
 
@@ -59,11 +59,11 @@ Pending. This is a desktop app; local run instructions are provided above. No ho
 
 ## Public Repository Link
 
-https://github.com/weihong363/move-break — verified public; current project source has not yet been pushed. License choice and artwork-rights confirmation remain pending.
+https://github.com/weihong363/move-break — current source and required planning documents are published. Main requires PRs and passing CI. The participant confirms that all artwork was generated using ChatGPT and that they have permission to use and distribute it. The code-license choice remains pending.
 
 ## Demo Video
 
-Pending recording and publication. Aim for a 75–90 second video showing the packaged app and real movement verification. The live submission requirements request 1–3 minutes; target this range while remaining under three minutes.
+Participant confirmed on 2026-10-05 that the video has not been recorded. This is a required submission deliverable and prevents final entry submission. Pending recording and publication. Aim for a 75–90 second video showing the packaged app and real movement verification. The live submission requirements request 1–3 minutes; target this range while remaining under three minutes.
 
 Suggested English narration (the detailed seven-scene recording plan is in `DEMO.md`):
 
@@ -90,7 +90,7 @@ Do not use developer state previews as evidence of camera verification. Review t
 
 Completed locally: source and planning documents, 37 automated tests, clean-clone installation/build, unsigned native packaging, README workflow/limitations, and dependency/model provenance inventory.
 
-Remaining: code license decision, supplied-artwork rights, final real-camera acceptance, menu/audio acceptance, public repository, recorded video, personal form answers, and explicit final submission confirmation.
+Remaining: code license decision, final real-camera acceptance, menu/audio acceptance, recorded video, participant confirmation of personal form answers, and explicit final submission confirmation. Screenshot inventory and captions: `devpost/screenshots/README.md`. The local personal statement includes copy-ready learning and Skill Pack answers; individual entry, China residence, local age of majority, creation timing, resource use (None), cost impact (none), confidence (4), and artwork rights have participant answers recorded locally. Value category confirmed: Created delight / was just fun. Full eligibility and precise cost-option wording remain pending.
 
 ## Known Limitations
 
@@ -115,7 +115,7 @@ Live requirements fetched on 2026-10-05. Personal selections below must come fro
 | 28619 | AI cost effects | Participant selects actual cost/limit experience. |
 | 28620 | Confidence, 1–5 | Participant provides their own rating. |
 | 28621 | Improvement feedback, optional | Suggested topic: clearer scope-change checkpoints and a concise boundary between mechanical verification and human camera acceptance. Confirm that this reflects your view. |
-| 28624 | Value categories | Participant selects actual value categories. |
+| 28624 | Value categories | Created delight / was just fun — confirmed by participant. |
 | 28625 | Value explanation, optional | Suggested draft: “I used MoveBreak to compare a structured scope → PRD → spec workflow with my existing plan-first process and to practice keeping an AI-assisted project small enough to ship.” |
 | 28916 | Main technology requirement | “I used the Devpost Learn Skill Pack to define scope, user requirements, a technical specification, and a sequenced implementation checklist. Codex implemented and verified small slices, while I supplied product constraints and experience feedback. The planning documents are included in the repository and reflect the final desktop companion and guided routine.” |
 | 28917 | Age of majority | Participant must personally confirm. |

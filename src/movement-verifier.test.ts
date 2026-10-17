@@ -23,10 +23,23 @@ describe('movement verifier', () => {
     const verifier = createMovementVerifier({ ...config });
     [0, 100, 200, 300].forEach((time) => verifier.processFrame(frameAt(time)));
     verifier.setInactivityDuration(5000);
-    expect(verifier.processFrame(frameAt(400))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0.02 });
+    expect(verifier.processFrame(frameAt(400))).toMatchObject({ phase: 'monitoring', inactivityProgress: 0 });
     verifier.requestBreak();
     expect(verifier.processFrame(frameAt(500)).phase).toBe('awaiting-rise');
   });
+  it('restarts the full changed reminder without counting time before save', () => {
+    const verifier = createMovementVerifier({ ...config });
+    [0, 100, 200, 300, 400, 500, 600].forEach((time) => verifier.processFrame(frameAt(time)));
+    expect(verifier.getSnapshot().phase).toBe('awaiting-rise');
+    verifier.setInactivityDuration(1000);
+    expect(verifier.getSnapshot()).toMatchObject({ phase: 'monitoring', inactivityProgress: 0 });
+    expect(verifier.processFrame(frameAt(900)).inactivityProgress).toBe(0);
+    for (let time = 1000; time < 1900; time += 100) {
+      expect(verifier.processFrame(frameAt(time)).phase).toBe('monitoring');
+    }
+    expect(verifier.processFrame(frameAt(1900)).phase).toBe('awaiting-rise');
+  });
+
   it('keeps seated inactivity time through small upper-body movement', () => {
     const verifier = createMovementVerifier(config);
     [0, 100, 200, 300, 400, 500].forEach((timestamp) => verifier.processFrame(frameAt(timestamp)));

@@ -23,7 +23,7 @@ Copied MediaPipe runtimes are unmodified. Their `/home/web_user` string is an up
 - `src/assets/translucent-seated-clean.png`, `stand-prompt.png`, `seated-return-prompt.png`: supplied/derived character images prepared during this project.
 - `electron/assets/movebreak-icon.png`, `movebreak.icns`, and template Tray PNGs: derived from the user-supplied application icon, resized/converted for native use.
 
-**Publication gate:** The maintainer must confirm ownership or permission to distribute the supplied references and their derivatives. AI generation/editing does not establish rights to the source reference. These assets are not automatically covered by a future code license.
+**Participant confirmation — 2026-10-05:** The maintainer states that all artwork, including the character references and application icon, was generated using ChatGPT and confirms permission to use and distribute it in MoveBreak. The animation frames and native icons were prepared from those assets. This records the participant's provenance and rights confirmation; artwork licensing remains separate from the pending code-license decision.
 
 ## Audio
 
@@ -33,4 +33,4 @@ Copied MediaPipe runtimes are unmodified. Their `/home/web_user` string is an up
 
 History begins on 2026-10-02 in an isolated repository. Reviewed historical paths are confined to MoveBreak source, assets, configuration, and planning documents. No unrelated parent-project paths were found. This is a history review, not proof of authorship or an eligibility declaration.
 
-The maintainer's code-license decision is pending. Before public release, retain applicable dependency/model notices and confirm artwork rights.
+The maintainer's code-license decision is pending. Retain applicable dependency/model notices. Artwork provenance and usage rights were confirmed by the participant on 2026-10-05.

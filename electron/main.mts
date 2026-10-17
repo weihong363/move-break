@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, net, protocol, screen, 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { defaultSettings, validateSettings } from '../src/desktop-settings.js';
+import { defaultSettings, restoreSettings, validateSettings } from '../src/desktop-settings.js';
 import type { DesktopSettings, CompanionStatus, DesktopCommand } from '../src/desktop-settings.js';
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'movebreak', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
@@ -52,7 +52,6 @@ function refreshTray() {
     { label: 'Open MoveBreak', click: showCompanion },
     { label: 'Settings…', click: openSettings },
     { label: status.monitoring ? 'Pause monitoring' : 'Resume monitoring', click: () => command(status.monitoring ? 'pause' : 'resume') },
-    ...(settings.demoMode ? [{ label: 'Start demo break', enabled: status.monitoring, click: () => { showCompanion(); command('demo-break'); } }] : []),
     { type: 'separator' }, { label: 'Quit MoveBreak', click: () => app.quit() },
   ]));
 }
@@ -138,7 +137,10 @@ else {
   app.on('second-instance', () => { if (companion) showCompanion(); });
   void app.whenReady().then(() => {
     if (process.platform === 'darwin') app.dock?.setIcon(join(__dirname, '../../electron/assets/movebreak-icon.png'));
-    try { settings = validateSettings(JSON.parse(readFileSync(settingsPath(), 'utf8'))); } catch { settings = { ...defaultSettings }; }
+    try {
+      settings = restoreSettings(JSON.parse(readFileSync(settingsPath(), 'utf8')));
+      writeFileSync(settingsPath(), JSON.stringify(settings, null, 2));
+    } catch { settings = { ...defaultSettings }; }
     settings.launchAtLogin = app.isPackaged && app.getLoginItemSettings().openAtLogin;
     registerAssets(); createCompanion(); createTray(); registerIpc();
     if (process.platform === 'darwin') app.dock?.setMenu(Menu.buildFromTemplate([{ label: 'Settings…', click: openSettings }, { label: 'Open MoveBreak', click: showCompanion }]));

@@ -68,7 +68,7 @@ User settings persist only in Electron `userData/settings.json`. Operational pha
 | Launch at login | Off; packaged macOS app only |
 | Developer demo / camera debug | Off / Off; collapsed section |
 
-Developer demo overrides the reminder with 5 seconds. Baseline/rise/return/gap parameters live in `src/config.ts`; routine match thresholds currently live in `makeRoutine()` in `src/app-controller.ts`. They are code tuning values, not additional Settings controls.
+Reminder after uses the saved minute value, converted to seconds internally. Saving restarts the waiting interval; there is no demo override. Baseline/rise/return/gap parameters live in `src/config.ts`; routine match thresholds currently live in `makeRoutine()` in `src/app-controller.ts`. They are code tuning values, not additional Settings controls.
 
 Save settings validates and persists the draft, applies native window/startup options, and refreshes the companion. Reminder progress resets while preserving the session's original seated baseline; an active routine restarts using the new count/hold values. Save does not request camera permission again.
 

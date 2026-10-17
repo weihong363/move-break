@@ -170,7 +170,16 @@ export const createMovementVerifier = (config: MovementConfig) => {
     if (phase === 'routine') { phase = 'awaiting-return'; returnFrames = 0; returnElapsedMs = 0; }
   };
 
-  const setInactivityDuration = (durationMs: number) => { config.inactivityDurationMs = durationMs; inactivityElapsedMs = 0; };
+  const setInactivityDuration = (durationMs: number) => {
+    const changed = durationMs !== config.inactivityDurationMs;
+    config.inactivityDurationMs = durationMs;
+    inactivityElapsedMs = 0;
+    lastTimestamp = undefined;
+    if (changed && phase === 'awaiting-rise') {
+      phase = 'monitoring';
+      riseFrames = 0;
+    }
+  };
   const requestBreak = () => { if (phase === 'monitoring') { phase = 'awaiting-rise'; riseFrames = 0; } };
   return { processFrame, completeRoutine, setInactivityDuration, requestBreak, getSnapshot: () => snapshot(phase) };
 };

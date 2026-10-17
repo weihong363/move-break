@@ -11,7 +11,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
   root.innerHTML = `<form class="settings-form">
     <h1>Settings</h1>
     <fieldset><legend>General</legend>
-      ${numeric('inactivityMinutes', 'Reminder after (minutes)', 1, 120, values)}
+      <label class="setting-row"><span>Reminder after (minutes)</span><input type="number" name="inactivitySeconds" min="${1 / 60}" max="120" step="any" value="${values.inactivitySeconds / 60}"></label>
       ${numeric('movementCount', 'Movements per break', 1, 4, values)}
       ${numeric('holdSeconds', 'Hold duration (seconds)', 1, 15, values)}
       ${checkbox('sound', 'Sound', values)}
@@ -19,7 +19,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     <fieldset><legend>Window</legend>${checkbox('alwaysOnTop', 'Always on top', values)}${checkbox('showCompanion', 'Show companion', values)}</fieldset>
     <fieldset><legend>Startup</legend>${checkbox('launchAtLogin', 'Launch at login', values)}${startupAvailable ? '' : '<small>Available in the installed app.</small>'}</fieldset>
     <fieldset><legend>Privacy</legend><p>Camera processing stays on your device. Video is never recorded or uploaded.</p></fieldset>
-    <details><summary>Developer</summary>${checkbox('demoMode', 'Demo mode · 5-second reminder', values)}${checkbox('debugCamera', 'Show camera debug view', values)}<small>Save applies changes immediately.</small></details>
+    <details><summary>Developer</summary>${checkbox('debugCamera', 'Show camera debug view', values)}<small>Save applies changes immediately.</small></details>
     <div class="settings-footer"><p class="settings-result" role="status"></p><button class="primary-button" type="submit">Save settings</button></div>
   </form>`;
   root.querySelector<HTMLInputElement>('[name="launchAtLogin"]')!.disabled = !startupAvailable;
@@ -29,7 +29,8 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     values = next;
     for (const [key, value] of Object.entries(next)) {
       const input = form.elements.namedItem(key) as HTMLInputElement;
-      if (typeof value === 'boolean') input.checked = value; else input.value = String(value);
+      if (typeof value === 'boolean') input.checked = value;
+      else input.value = String(key === 'inactivitySeconds' ? value / 60 : value);
     }
   };
   let dirty = false;
@@ -41,6 +42,7 @@ export const createSettingsWindow = async (root: HTMLElement) => {
     if (!form.reportValidity()) return;
     const next = Object.fromEntries(Object.keys(values).map((key) => {
       const input = form.elements.namedItem(key) as HTMLInputElement;
+      if (key === 'inactivitySeconds') return [key, Math.round(Number(input.value) * 60)];
       return [key, input.type === 'checkbox' ? input.checked : Number(input.value)];
     }));
     save.disabled = true;

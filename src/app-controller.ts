@@ -30,13 +30,13 @@ const characterMarkup = () => `
 
 export const createAppController = (root: HTMLElement) => {
   const desktop = window.moveBreak;
-  let settings: DesktopSettings = { ...defaultSettings, demoMode: !desktop };
+  let settings: DesktopSettings = { ...defaultSettings };
   let paused = false;
   let hasCameraPermission = false;
   let checkingCameraPermission = Boolean(desktop);
   let cameraAttempt = 0;
   let lastReported = '';
-  const inactivityMs = () => settings.demoMode ? 5000 : settings.inactivityMinutes * 60_000;
+  const inactivityMs = () => settings.inactivitySeconds * 1000;
   const report = (label: string, remainingSeconds?: number) => {
     const status: CompanionStatus = { monitoring: state.phase === 'camera-active' && !paused, label, remainingSeconds };
     const serialized = JSON.stringify(status);
@@ -366,7 +366,6 @@ export const createAppController = (root: HTMLElement) => {
         routineAdvanceTimer = undefined;
         state.phase = 'ready'; render(); report('Paused');
       } else if (command === 'resume') void enableCamera();
-      else if (settings.demoMode && state.phase === 'camera-active') verifier.requestBreak();
     });
     report('Camera not enabled');
   }
